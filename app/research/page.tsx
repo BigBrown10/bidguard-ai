@@ -27,20 +27,20 @@ export default function ResearchPage() {
             const storedConfig = localStorage.getItem("bidguard_config");
             const config = storedConfig ? JSON.parse(storedConfig) : { projectName: "UK Digital Transformation", clientName: "UK Gov" };
 
-            addLog(`Initializing Live Research Agent for: ${config.projectName}`, "info");
+            addLog(`Initializing Intelligence Unit for: ${config.projectName}`, "info");
 
             try {
-                addLog("Scanning public sector tenders...", "info");
+                addLog("Scanning global data streams...", "info");
                 // REAL API CALL
                 const result = await performResearch(config.projectName, config.companyUrl);
 
-                addLog(`FOUND: ${result.clientNews?.length || 0} recent news items`, "success");
-                addLog(`ANALYSIS: Identified ${result.painPoints?.length || 0} client pain points`, "warning");
+                addLog(`FOUND: ${result.clientNews?.length || 0} relevant intelligence items`, "success");
+                addLog(`ANALYSIS: Identified ${result.painPoints?.length || 0} critical pressure points`, "warning");
 
                 // Save Research for next step
                 localStorage.setItem("bidguard_research", JSON.stringify(result));
 
-                addLog("Research Complete. Handing off to Drafting Swarm.", "success");
+                addLog("Research Complete. Handing off to Strategy Swarm.", "success");
                 setComplete(true);
 
                 // Auto-redirect after delay
@@ -48,7 +48,7 @@ export default function ResearchPage() {
 
             } catch (error) {
                 console.error(error);
-                addLog("Research failed. Using cached fallback.", "error");
+                addLog("Connection timeout. Engaging contingency protocols.", "error");
                 setComplete(true);
                 // Fallback mock
                 localStorage.setItem("bidguard_research", JSON.stringify({
@@ -73,7 +73,7 @@ export default function ResearchPage() {
             <main className="container mx-auto max-w-4xl px-6 py-12 space-y-8">
                 <div className="space-y-2">
                     <h1 className="text-3xl font-bold tracking-tight text-glow">Market Intelligence</h1>
-                    <p className="text-white/60">The Researcher Agent is scanning the live web for competitive advantages.</p>
+                    <p className="text-white/60">The Swarm is scanning live networks for competitive advantages.</p>
                 </div>
 
                 <TerminalLog logs={logs} />

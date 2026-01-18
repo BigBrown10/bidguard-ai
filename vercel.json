@@ -1,7 +1,16 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_API_URL": "http://localhost:3000"
+    }
+  },
   "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": ".next"
+  "functions": {
+    "app/draft/page.tsx": {
+      "maxDuration": 60
+    },
+    "app/actions.ts": {
+      "maxDuration": 60
+    }
+  }
 }

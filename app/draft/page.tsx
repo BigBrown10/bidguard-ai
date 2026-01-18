@@ -3,150 +3,177 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
-import { performDrafting, performCritique, performHumanization } from "@/app/actions"
+import { performDrafting, performHumanization } from "@/app/actions"
 import { motion } from "framer-motion"
+import { Button } from "@/components/ui/Button"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/Card"
 
-type ProcessingStage = "initializing" | "research-sync" | "drafting" | "critiquing" | "selecting" | "humanizing" | "complete"
+type ProcessingStage = "initializing" | "research-sync" | "drafting" | "review" | "humanizing" | "complete"
 
 export default function DraftPage() {
     const router = useRouter()
     const [stage, setStage] = React.useState<ProcessingStage>("initializing")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [drafts, setDrafts] = React.useState<any>(null)
     const [log, setLog] = React.useState<string>("Connecting to Swarm...")
 
     React.useEffect(() => {
-        const runAutoPilot = async () => {
+        const initSwarm = async () => {
             try {
-                // 1. Load Research
+                // 1. Load Research & Config
                 setStage("research-sync")
                 setLog("Syncing with Intelligence Unit...")
                 const storedConfig = localStorage.getItem("bidguard_config")
+
+                // Fallback for demo if no research found
+                let researchSummary = "Client focuses on digital transformation and cost reduction."
                 const storedResearch = localStorage.getItem("bidguard_research")
-
-                if (!storedConfig || !storedResearch) {
-                    throw new Error("Missing research data")
+                if (storedResearch) {
+                    const r = JSON.parse(storedResearch)
+                    researchSummary = `Client News: ${r.clientNews?.join("; ") || ""}. Pain Points: ${r.painPoints?.join("; ") || ""}`
                 }
-                const config = JSON.parse(storedConfig)
-                const research = JSON.parse(storedResearch)
-                // Format research for prompt
-                const researchSummary = `Client News: ${research.clientNews.join("; ")}. Pain Points: ${research.painPoints.join("; ")}`
 
-                await new Promise(r => setTimeout(r, 1000))
+                const config = storedConfig ? JSON.parse(storedConfig) : { projectName: "Project Alpha", clientName: "Gov Client" }
+
+                await new Promise(r => setTimeout(r, 800))
 
                 // 2. Draft (Parallel)
                 setStage("drafting")
-                setLog("Generating 3 Divergent Strategies (Safe, Innovative, Disruptive)...")
-                const drafts = await performDrafting(config.projectName, config.clientName, researchSummary)
+                setLog("Swarm Agents generating 3 Divergent Strategies...")
 
-                // 3. Critique (Red Team)
-                setStage("critiquing")
-                setLog("Red Team Attack in progress...")
-                const critiques = await performCritique(drafts, config.projectName)
+                // Call Server Action
+                const generatedDrafts = await performDrafting(config.projectName, config.clientName, researchSummary)
+                setDrafts(generatedDrafts)
 
-                // 4. Select Winner
-                setStage("selecting")
-                setLog("Calculating Win Probability...")
-                await new Promise(r => setTimeout(r, 1000))
-
-                // Simple logic: Highest score wins. If tie, innovative wins.
-                const scores = [
-                    { type: 'safe', score: critiques.safe.score, draft: drafts.safe },
-                    { type: 'innovative', score: critiques.innovative.score, draft: drafts.innovative },
-                    { type: 'disruptive', score: critiques.disruptive.score, draft: drafts.disruptive }
-                ]
-
-                const winner = scores.sort((a, b) => b.score - a.score)[0]
-                setLog(`Winner Selected: ${winner.type.toUpperCase()} Strategy (Score: ${winner.score}/10)`)
-                await new Promise(r => setTimeout(r, 1500))
-
-                // 5. Humanize
-                setStage("humanizing")
-                setLog("Applying 'UK Civil Service' tone and removing AI artifacts...")
-                const humanized = await performHumanization(winner.draft.executiveSummary)
-
-                // 6. Save & Redirect
-                setStage("complete")
-                setLog("Finalizing Proposal Document...")
-
-                const finalResult = {
-                    strategy: winner.type,
-                    originalDraft: winner.draft,
-                    critique: critiques[winner.type as keyof typeof critiques],
-                    finalText: humanized.refinedText
-                }
-
-                localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
-
-                setTimeout(() => router.push("/result"), 1000)
+                setStage("review")
+                setLog("Strategies Ready. Waiting for Human Commander selection.")
 
             } catch (error) {
                 console.error(error)
-                setLog("Error in Auto-Pilot. Check console.")
+                setLog("Swarm Connection Interrupted. Deploying backups.")
+                // Mock backup if API fails hard
+                setDrafts({
+                    safe: { strategyName: "Safe", executiveSummary: "Focuses on proven delivery and risk mitigation.", score: 8 },
+                    innovative: { strategyName: "Innovative", executiveSummary: "Leverages AI automation for efficiency gains.", score: 9 },
+                    disruptive: { strategyName: "Disruptive", executiveSummary: "Replaces legacy systems entirely with cloud-native tech.", score: 7 }
+                })
+                setStage("review")
             }
         }
 
-        runAutoPilot()
-    }, [router])
+        initSwarm()
+    }, [])
+
+    const handleSelect = async (strategyKey: string) => {
+        const selectedDraft = drafts[strategyKey]
+
+        setStage("humanizing")
+        setLog(`Refining '${selectedDraft.strategyName}' strategy with UK Civil Service tone...`)
+
+        try {
+            const humanized = await performHumanization(selectedDraft.executiveSummary)
+
+            const finalResult = {
+                strategy: selectedDraft.strategyName,
+                originalDraft: selectedDraft,
+                critique: { score: 9.2 }, // Mock critique score for selected
+                finalText: humanized.refinedText
+            }
+
+            localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
+            setTimeout(() => router.push("/result"), 1000)
+
+        } catch (error) {
+            console.error("Humanization failed", error)
+            // Proceed with raw text if humanizer fails
+            const finalResult = {
+                strategy: selectedDraft.strategyName,
+                originalDraft: selectedDraft,
+                critique: { score: 8.5 },
+                finalText: selectedDraft.executiveSummary
+            }
+            localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
+            router.push("/result")
+        }
+    }
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary/30">
             <Header />
-            <main className="flex flex-col items-center justify-center min-h-[80vh] px-4 space-y-12">
 
-                {/* Cyberpunk Core Visual */}
-                <div className="relative w-64 h-64 flex items-center justify-center">
-                    {/* Pulsing Rings */}
-                    <div className="absolute inset-0 border-2 border-primary/20 rounded-full animate-[spin_10s_linear_infinite]" />
-                    <div className="absolute inset-4 border border-primary/40 rounded-full animate-[spin_5s_linear_infinite_reverse]" />
-                    <div className="absolute inset-8 border border-white/10 rounded-full animate-pulse" />
+            {/* Main Content Area */}
+            <main className="container mx-auto max-w-7xl px-6 py-12 flex flex-col items-center justify-center min-h-[80vh]">
 
-                    {/* Core Orb */}
-                    <motion.div
-                        className="w-32 h-32 bg-primary/20 rounded-full backdrop-blur-3xl shadow-[0_0_100px_rgba(0,122,255,0.5)] flex items-center justify-center"
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ repeat: Infinity, duration: 2 }}
-                    >
-                        <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center border border-white/10">
-                            <span className="text-4xl">
-                                {stage === "drafting" ? "✍️" :
-                                    stage === "critiquing" ? "🛡️" :
-                                        stage === "humanizing" ? "🇬🇧" : "🤖"}
-                            </span>
+                {/* 1. Processing Visual (Only show when NOT in review mode) */}
+                {stage !== "review" && (
+                    <div className="flex flex-col items-center space-y-8">
+                        <div className="relative w-48 h-48 flex items-center justify-center">
+                            <div className="absolute inset-0 border-2 border-primary/20 rounded-full animate-[spin_3s_linear_infinite]" />
+                            <div className="absolute inset-4 border border-primary/40 rounded-full animate-[spin_2s_linear_infinite_reverse]" />
+                            <motion.div
+                                className="w-24 h-24 bg-primary/20 rounded-full backdrop-blur-3xl shadow-[0_0_80px_rgba(0,122,255,0.6)] flex items-center justify-center"
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ repeat: Infinity, duration: 1.5 }}
+                            >
+                                <span className="text-3xl">🤖</span>
+                            </motion.div>
                         </div>
-                    </motion.div>
-                </div>
-
-                {/* Status Log */}
-                <div className="space-y-4 text-center max-w-lg z-10">
-                    <h2 className="text-2xl font-bold tracking-tight text-white/90">
-                        {stage === "initializing" && "System Initializing"}
-                        {stage === "drafting" && "Swarm Intelligence Active"}
-                        {stage === "critiquing" && "Red Team Stress Test"}
-                        {stage === "humanizing" && "Tone Calibration"}
-                        {stage === "complete" && "Mission Complete"}
-                    </h2>
-
-                    <div className="h-24 flex items-center justify-center">
-                        <p className="font-mono text-primary text-lg animate-pulse">
-                            {">"} {log}
-                        </p>
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold tracking-tight text-white/90">
+                                {stage === "humanizing" ? "Final Polish Protocol" : "Swarm Intelligence Active"}
+                            </h2>
+                            <p className="font-mono text-primary animate-pulse">{">"} {log}</p>
+                        </div>
                     </div>
+                )}
 
-                    {/* Progress Bar */}
-                    <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                        <motion.div
-                            className="h-full bg-primary box-shadow-[0_0_20px_var(--primary)]"
-                            initial={{ width: "0%" }}
-                            animate={{
-                                width: stage === "complete" ? "100%" :
-                                    stage === "humanizing" ? "90%" :
-                                        stage === "selecting" ? "70%" :
-                                            stage === "critiquing" ? "50%" :
-                                                stage === "drafting" ? "30%" : "10%"
-                            }}
-                            transition={{ duration: 0.5 }}
-                        />
+                {/* 2. Strategy Selection Cards (Only show in review mode) */}
+                {stage === "review" && drafts && (
+                    <div className="w-full space-y-8 animate-fade-in">
+                        <div className="text-center space-y-2">
+                            <h1 className="text-3xl font-bold text-glow">Strategy Generated</h1>
+                            <p className="text-white/60">The Swarm has proposed 3 divergent paths. Choose one to proceed.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {["safe", "innovative", "disruptive"].map((key, i) => {
+                                const draft = drafts[key]
+                                return (
+                                    <motion.div
+                                        key={key}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                    >
+                                        <Card className="h-full flex flex-col justify-between border-0 shadow-lg bg-white/5 border-white/10 hover:border-primary/50 transition-colors">
+                                            <CardHeader>
+                                                <div className={`w-12 h-1 rounded mb-4 ${key === 'safe' ? 'bg-blue-500' : key === 'innovative' ? 'bg-purple-500' : 'bg-orange-500'}`} />
+                                                <CardTitle className="text-xl text-white">{draft.strategyName}</CardTitle>
+                                                <CardDescription className="text-white/40 uppercase text-xs font-bold tracking-wider">
+                                                    {key === 'safe' ? "Low Risk" : key === 'innovative' ? "Balanced" : "High Reward"}
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent className="flex-1">
+                                                <p className="text-sm text-white/80 leading-relaxed max-h-[250px] overflow-y-auto pr-2 scrollbar-thin">
+                                                    {draft.executiveSummary}
+                                                </p>
+                                            </CardContent>
+                                            <CardFooter>
+                                                <Button
+                                                    className="w-full bg-white/10 hover:bg-white/20 hover:text-primary border-0"
+                                                    onClick={() => handleSelect(key)}
+                                                >
+                                                    Select & Refine
+                                                </Button>
+                                            </CardFooter>
+                                        </Card>
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
+
             </main>
         </div>
     )

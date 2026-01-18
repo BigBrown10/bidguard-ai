@@ -81,3 +81,10 @@ body {
 .text-glow {
   text-shadow: 0 0 15px rgba(0, 122, 255, 0.5);
 }
+
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+}
