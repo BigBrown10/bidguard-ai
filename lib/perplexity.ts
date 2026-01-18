@@ -21,6 +21,6 @@ export const perplexitySonarReasoning = new ChatOpenAI({
     configuration: {
         baseURL: "https://api.perplexity.ai",
     },
-    modelName: "sonar-reasoning",
-    temperature: 0.4, // Balanced for creative drafting/critique
+    modelName: "sonar-pro", // Switched to sonar-pro for speed (avoiding Vercel timeouts)
+    temperature: 0.5,
 });
