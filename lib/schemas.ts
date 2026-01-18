@@ -5,7 +5,7 @@ export const IngestionSchema = z.object({
     clientName: z.string().optional(),
     rfpFile: z.any()
         .refine((file) => file?.size, "RFP Document is required")
-        .refine((file) => file?.type === "application/pdf", "RFP must be a PDF"),
+        .refine((file) => file?.size, "RFP Document is required"),
     knowledgeFile: z.any().optional(),
     knowledgeUrl: z.string().url().optional(),
 }).refine(data => data.knowledgeFile || data.knowledgeUrl, {
