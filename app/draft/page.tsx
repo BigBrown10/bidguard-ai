@@ -54,10 +54,17 @@ export default function DraftPage() {
 
                         // Update state immediately to show progress (strategies appear one by one)
                         setDrafts({ ...results })
-                    } catch (err) {
+                    } catch (err: any) {
                         console.error(`Failed to draft ${strategy}`, err)
-                        setLog(`Warning: ${strategy} Agent timed out. Using failover protocol.`)
-                        results[strategy.toLowerCase()] = getFallback(strategy)
+                        const errorMsg = err.message || "Unknown API Error"
+                        setLog(`Critical Error on ${strategy}: ${errorMsg}`)
+
+                        // Show Error on Card so user knows WHY it failed
+                        results[strategy.toLowerCase()] = {
+                            strategyName: "GENERATION FAILED",
+                            executiveSummary: `SYSTEM ERROR: ${errorMsg}. \n\nLikely Cause: Missing 'PERPLEXITY_API_KEY' in Vercel Settings or Time out.`,
+                            score: 0
+                        }
                         setDrafts({ ...results })
                     }
                     // Small delay to be gentle on API limits
