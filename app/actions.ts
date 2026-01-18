@@ -11,6 +11,13 @@ export async function performResearch(projectName: string, companyUrl?: string) 
     return await runResearch(projectName);
 }
 
+// Individual Draft Action to avoid Vercel Timeouts/Rate Limits
+export async function performSingleDraft(strategy: "Safe" | "Innovative" | "Disruptive", projectName: string, clientName: string, researchSummary: string) {
+    if (!projectName) throw new Error("Project Name required");
+    return await runDrafter(strategy, projectName, clientName, researchSummary);
+}
+
+// Bulk action (kept for reference, but client will switch to single calls)
 export async function performDrafting(projectName: string, clientName: string, researchSummary: string) {
     console.log("Starting parallel drafting...");
     const [safe, innovative, disruptive] = await Promise.all([
