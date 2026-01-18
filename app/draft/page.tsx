@@ -37,40 +37,40 @@ export default function DraftPage() {
 
                 await new Promise(r => setTimeout(r, 800))
 
-                // 2. Draft (Parallel)
+                // 2. Draft (Sequential to avoid Rate Limits)
                 setStage("drafting")
-                setLog("Swarm Agents generating 3 Divergent Strategies...")
+                setLog("Initializing Swarm Sequence...")
 
-                // Call Server Action
-                const generatedDrafts = await performDrafting(config.projectName, config.clientName, researchSummary)
-                setDrafts(generatedDrafts)
+                // We need to type this explicitly or TS complains during iteration
+                const strategies: ("Safe" | "Innovative" | "Disruptive")[] = ["Safe", "Innovative", "Disruptive"]
+                const results: any = {}
+
+                for (const strategy of strategies) {
+                    setLog(`Generating ${strategy} Strategy...`)
+                    try {
+                        // Call single strategy action
+                        const result = await performSingleDraft(strategy, config.projectName, config.clientName, researchSummary)
+                        results[strategy.toLowerCase()] = result
+
+                        // Update state immediately to show progress (strategies appear one by one)
+                        setDrafts({ ...results })
+                    } catch (err) {
+                        console.error(`Failed to draft ${strategy}`, err)
+                        setLog(`Warning: ${strategy} Agent timed out. Using failover protocol.`)
+                        results[strategy.toLowerCase()] = getFallback(strategy)
+                        setDrafts({ ...results })
+                    }
+                    // Small delay to be gentle on API limits
+                    await new Promise(r => setTimeout(r, 500))
+                }
 
                 setStage("review")
                 setLog("Strategies Ready. Waiting for Human Commander selection.")
 
             } catch (error) {
                 console.error(error)
-                setLog("Swarm Connection Interrupted. Deploying backups.")
-                // Mock backup if API fails hard
-                setLog("Swarm Connection Interrupted. Deploying backups.")
-                // Robust Fallback if API fails hard
-                setDrafts({
-                    safe: {
-                        strategyName: "Safe",
-                        executiveSummary: "We propose a low-risk implementation strategy that prioritizes continuity of service. By leveraging proven COTS (Commercial Off-The-Shelf) solutions and adhering to ISO 27001 standards, we ensure a seamless transition with zero downtime. Our approach isolates critical infrastructure from new development, guaranteeing 99.99% uptime during the migration phase.",
-                        score: 8.2
-                    },
-                    innovative: {
-                        strategyName: "Innovative",
-                        executiveSummary: "Our proposal centers on an AI-first architecture, utilizing a Federated Learning model to enhance data privacy while maximizing insight generation. We introduce a 'Digital Twin' simulation of the client's current workflow to test optimization strategies in real-time before deployment, reducing operational friction by 40%.",
-                        score: 9.1
-                    },
-                    disruptive: {
-                        strategyName: "Disruptive",
-                        executiveSummary: "We challenge the tender's core assumption that a centralized database is necessary. Instead, we propose a decentralized, blockchain-verified ledger system that eliminates administrative overhead entirely. This radical shift moves the client from a 'service consumer' to a 'platform enabler' model, effectively rendering legacy solutions obsolete.",
-                        score: 8.8
-                    }
-                })
+                setLog("Critical Swarm Failure. Deploying emergency backups.")
+                setDrafts(getAllFallbacks())
                 setStage("review")
             }
         }
@@ -79,6 +79,9 @@ export default function DraftPage() {
     }, [])
 
     const handleSelect = async (strategyKey: string) => {
+        // Guard against selecting a strategy that hasn't loaded yet
+        if (!drafts || !drafts[strategyKey]) return
+
         const selectedDraft = drafts[strategyKey]
 
         setStage("humanizing")
@@ -110,6 +113,34 @@ export default function DraftPage() {
             router.push("/result")
         }
     }
+
+    // fallback helpers
+    const getFallback = (strategy: string) => {
+        const fallbacks: any = {
+            Safe: {
+                strategyName: "Safe",
+                executiveSummary: "We propose a low-risk implementation strategy that prioritizes continuity of service. By leveraging proven COTS (Commercial Off-The-Shelf) solutions and adhering to ISO 27001 standards, we ensure a seamless transition with zero downtime. Our approach isolates critical infrastructure from new development, guaranteeing 99.99% uptime during the migration phase.",
+                score: 8.2
+            },
+            Innovative: {
+                strategyName: "Innovative",
+                executiveSummary: "Our proposal centers on an AI-first architecture, utilizing a Federated Learning model to enhance data privacy while maximizing insight generation. We introduce a 'Digital Twin' simulation of the client's current workflow to test optimization strategies in real-time before deployment, reducing operational friction by 40%.",
+                score: 9.1
+            },
+            Disruptive: {
+                strategyName: "Disruptive",
+                executiveSummary: "We challenge the tender's core assumption that a centralized database is necessary. Instead, we propose a decentralized, blockchain-verified ledger system that eliminates administrative overhead entirely. This radical shift moves the client from a 'service consumer' to a 'platform enabler' model, effectively rendering legacy solutions obsolete.",
+                score: 8.8
+            }
+        }
+        return fallbacks[strategy] || fallbacks['Safe']
+    }
+
+    const getAllFallbacks = () => ({
+        safe: getFallback('Safe'),
+        innovative: getFallback('Innovative'),
+        disruptive: getFallback('Disruptive')
+    })
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary/30">
@@ -151,7 +182,9 @@ export default function DraftPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {["safe", "innovative", "disruptive"].map((key, i) => {
-                                const draft = drafts[key]
+                                const draft = drafts ? drafts[key] : null
+                                if (!draft) return null // Hide if not yet loaded (shouldn't happen in review stage with full backup)
+
                                 return (
                                     <motion.div
                                         key={key}
