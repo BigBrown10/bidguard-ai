@@ -5,11 +5,8 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
 import { ProcessingHUD } from "@/components/ProcessingHUD"
 import { TerminalLog, type LogEntry } from "@/components/TerminalLog"
-import { Button } from "@/components/ui/Button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
+import { performResearch } from "@/app/actions"
 
-// In a real app, this would use Server Actions and streaming
-// For prototype, we simulate the agent steps
 export default function ResearchPage() {
     const router = useRouter()
     const [logs, setLogs] = React.useState<LogEntry[]>([])
@@ -25,70 +22,67 @@ export default function ResearchPage() {
     }
 
     React.useEffect(() => {
-        const runSimulation = async () => {
-            addLog("Initializing Research Agent (Model: sonar-pro)...")
-            await new Promise(r => setTimeout(r, 1000))
+        const runLiveResearch = async () => {
+            // Get data from previous step
+            const storedConfig = localStorage.getItem("bidguard_config");
+            const config = storedConfig ? JSON.parse(storedConfig) : { projectName: "UK Digital Transformation", clientName: "UK Gov" };
 
-            addLog("Reading RFP requirements...", "info")
-            await new Promise(r => setTimeout(r, 1500))
+            addLog(`Initializing Live Research Agent for: ${config.projectName}`, "info");
 
-            addLog("Connecting to Perplexity Live Web Index...", "warning")
-            await new Promise(r => setTimeout(r, 1000))
+            try {
+                addLog("Scanning public sector tenders...", "info");
+                // REAL API CALL
+                const result = await performResearch(config.projectName, config.companyUrl);
 
-            addLog("FOUND: Recent contract award £12m to Capita (Nov 2024)", "success")
-            await new Promise(r => setTimeout(r, 800))
+                addLog(`FOUND: ${result.clientNews?.length || 0} recent news items`, "success");
+                addLog(`ANALYSIS: Identified ${result.painPoints?.length || 0} client pain points`, "warning");
 
-            addLog("FOUND: Client strategic shift to 'Cloud First' policy", "success")
-            await new Promise(r => setTimeout(r, 1200))
+                // Save Research for next step
+                localStorage.setItem("bidguard_research", JSON.stringify(result));
 
-            addLog("ANALYZING: Competitor weakness identified in customer service", "info")
-            await new Promise(r => setTimeout(r, 1500))
+                addLog("Research Complete. Handing off to Drafting Swarm.", "success");
+                setComplete(true);
 
-            addLog("Synthesizing evidence bullets...", "info")
-            await new Promise(r => setTimeout(r, 1000))
+                // Auto-redirect after delay
+                setTimeout(() => router.push("/draft"), 2000);
 
-            addLog("Research Complete. Ready for Drafting.", "success")
-            setComplete(true)
+            } catch (error) {
+                console.error(error);
+                addLog("Research failed. Using cached fallback.", "error");
+                setComplete(true);
+                // Fallback mock
+                localStorage.setItem("bidguard_research", JSON.stringify({
+                    clientNews: [],
+                    painPoints: ["Legacy Systems"],
+                    evidenceBullets: ["Proven track record"]
+                }));
+                setTimeout(() => router.push("/draft"), 2000);
+            }
         }
 
-        runSimulation()
+        runLiveResearch()
 
         return () => { }
     }, [])
 
     return (
-        <div className="min-h-screen bg-[#FBFBFD]">
+        <div className="min-h-screen bg-black text-white selection:bg-primary/30">
             <Header />
             <ProcessingHUD isProcessing={!complete} status={complete ? "Waiting" : "Researching..."} />
 
             <main className="container mx-auto max-w-4xl px-6 py-12 space-y-8">
                 <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Market Intelligence</h1>
-                    <p className="text-muted-foreground">The Researcher Agent is scanning the live web for competitive advantages.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-glow">Market Intelligence</h1>
+                    <p className="text-white/60">The Researcher Agent is scanning the live web for competitive advantages.</p>
                 </div>
 
                 <TerminalLog logs={logs} />
 
+                {/* Auto-redirecting message */}
                 {complete && (
-                    <div className="flex justify-end animate-fade-in">
-                        <Button size="lg" onClick={() => router.push("/draft")}>
-                            Proceed to Drafting Strategy
-                        </Button>
+                    <div className="flex justify-center animate-fade-in pt-8">
+                        <p className="text-primary animate-pulse font-mono">Redirecting to Swarm Core...</p>
                     </div>
-                )}
-
-                {/* Preview of gathered data could go here */}
-                {complete && (
-                    <Card className="animate-fade-in delay-100">
-                        <CardHeader><CardTitle>Key Findings</CardTitle></CardHeader>
-                        <CardContent>
-                            <ul className="list-disc pl-5 space-y-2 text-sm">
-                                <li>Recent contract award £12m to Capita (Nov 2024)</li>
-                                <li>Client strategic shift to &quot;Cloud First&quot; policy</li>
-                                <li>Competitor weakness identified in customer service</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
                 )}
             </main>
         </div>

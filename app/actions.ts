@@ -1,0 +1,41 @@
+"use server"
+
+import { runResearch } from "@/lib/agents/researcher";
+import { runDrafter } from "@/lib/agents/drafter";
+import { runCritic } from "@/lib/agents/critic";
+import { runHumanizer } from "@/lib/agents/humanizer";
+
+export async function performResearch(projectName: string, companyUrl?: string) {
+    // In live mode, we would pass the companyUrl if the agent supported it.
+    // For now, prompt handles generic research, but let's just pass project name.
+    return await runResearch(projectName);
+}
+
+export async function performDrafting(projectName: string, clientName: string, researchSummary: string) {
+    console.log("Starting parallel drafting...");
+    const [safe, innovative, disruptive] = await Promise.all([
+        runDrafter("Safe", projectName, clientName, researchSummary),
+        runDrafter("Innovative", projectName, clientName, researchSummary),
+        runDrafter("Disruptive", projectName, clientName, researchSummary)
+    ]);
+    return { safe, innovative, disruptive };
+}
+
+export async function performCritique(drafts: any, projectName: string) {
+    console.log("Starting parallel critique...");
+    const [safeCritique, innovativeCritique, disruptiveCritique] = await Promise.all([
+        runCritic("Safe", projectName, drafts.safe.executiveSummary),
+        runCritic("Innovative", projectName, drafts.innovative.executiveSummary),
+        runCritic("Disruptive", projectName, drafts.disruptive.executiveSummary)
+    ]);
+
+    return {
+        safe: safeCritique,
+        innovative: innovativeCritique,
+        disruptive: disruptiveCritique
+    };
+}
+
+export async function performHumanization(text: string) {
+    return await runHumanizer(text);
+}

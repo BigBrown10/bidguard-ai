@@ -47,34 +47,37 @@ export default function IngestPage() {
         }
         setIsSubmitting(true)
 
+        // Save config for next steps
+        localStorage.setItem("bidguard_config", JSON.stringify({
+            projectName: formData.projectName,
+            clientName: formData.clientName || "Unknown Client",
+            companyUrl: formData.knowledgeUrl
+        }))
+
         // Simulate upload/processing delay
         await new Promise((resolve) => setTimeout(resolve, 1500))
-
-        // In a real app, we would upload files here and create a session
-        // For now, we'll store basic info in local storage or URL params if needed
-        // But since we are mock-first for the "Intelligence" phase, we'll just push to research
 
         router.push("/research")
     }
 
     return (
-        <div className="min-h-screen bg-[#FBFBFD]">
+        <div className="min-h-screen bg-black text-white selection:bg-primary/30">
             <Header />
             <main className="container mx-auto max-w-3xl px-6 py-12">
                 <div className="space-y-6">
                     <div className="space-y-2 text-center">
-                        <h1 className="text-3xl font-bold tracking-tight text-primary">New Bid Strategy</h1>
-                        <p className="text-muted-foreground">Upload your RFP and company knowledge to begin the Red Team process.</p>
+                        <h1 className="text-3xl font-bold tracking-tight text-primary text-glow">New Bid Strategy</h1>
+                        <p className="text-white/60">Upload your RFP and company knowledge to begin the Red Team process.</p>
                     </div>
 
-                    <Card className="border-0 shadow-sm">
+                    <Card className="border-0 shadow-lg">
                         <CardHeader>
                             <CardTitle>Project Details</CardTitle>
                             <CardDescription>Basic information about the procurement opportunity.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Project Name <span className="text-red-500">*</span></label>
+                                <label className="text-sm font-medium text-white/80">Project Name <span className="text-primary">*</span></label>
                                 <Input
                                     placeholder="e.g. UK Government Digital Services Framework"
                                     value={formData.projectName}
@@ -84,7 +87,7 @@ export default function IngestPage() {
                                 {errors.projectName && <p className="text-xs text-red-500">{errors.projectName}</p>}
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Client Name (Optional)</label>
+                                <label className="text-sm font-medium text-white/80">Client Name (Optional)</label>
                                 <Input
                                     placeholder="e.g. Cabinet Office"
                                     value={formData.clientName}
@@ -94,7 +97,7 @@ export default function IngestPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-0 shadow-sm">
+                    <Card className="border-0 shadow-lg">
                         <CardHeader>
                             <CardTitle>Documents</CardTitle>
                             <CardDescription>The system needs the RFP and your company profile.</CardDescription>
@@ -110,10 +113,10 @@ export default function IngestPage() {
                             <div className="space-y-4">
                                 <div className="relative">
                                     <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t" />
+                                        <span className="w-full border-t border-white/10" />
                                     </div>
                                     <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-white px-2 text-muted-foreground">Company Intelligence</span>
+                                        <span className="bg-black px-2 text-white/40">Company Intelligence</span>
                                     </div>
                                 </div>
 
@@ -124,7 +127,6 @@ export default function IngestPage() {
                                     accept=".pdf"
                                     error={errors.knowledgeFile}
                                 />
-                                {/* Fallback to URL if needed, but PDF is primary */}
                             </div>
                         </CardContent>
                     </Card>
@@ -133,7 +135,7 @@ export default function IngestPage() {
                         {Object.keys(errors).length > 0 && (
                             <p className="text-sm text-red-600 font-medium">Please fix the errors above before proceeding.</p>
                         )}
-                        <Button size="lg" onClick={handleSubmit} disabled={isSubmitting} className="min-w-[200px]">
+                        <Button size="lg" onClick={handleSubmit} disabled={isSubmitting} className="min-w-[200px] text-lg">
                             {isSubmitting ? "Analyzing..." : "Initialize Agent Swarm"}
                         </Button>
                     </div>
