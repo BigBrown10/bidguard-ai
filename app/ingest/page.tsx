@@ -36,7 +36,12 @@ export default function IngestPage() {
     }
 
     const handleSubmit = async () => {
-        if (!validate()) return
+        console.log("Submitting form...", formData)
+        if (!validate()) {
+            console.error("Validation failed", IngestionSchema.safeParse(formData))
+            alert("Please check the form for errors. Make sure Project Name is filled.")
+            return
+        }
         setIsSubmitting(true)
 
         // Simulate upload/processing delay
@@ -66,7 +71,7 @@ export default function IngestPage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Project Name</label>
+                                <label className="text-sm font-medium">Project Name <span className="text-red-500">*</span></label>
                                 <Input
                                     placeholder="e.g. UK Government Digital Services Framework"
                                     value={formData.projectName}
@@ -93,7 +98,7 @@ export default function IngestPage() {
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <FileUpload
-                                label="Upload RFP (PDF)"
+                                label="Upload RFP (PDF) *"
                                 value={formData.rfpFile}
                                 onChange={(file) => setFormData({ ...formData, rfpFile: file })}
                                 error={errors.rfpFile}
@@ -110,7 +115,7 @@ export default function IngestPage() {
                                 </div>
 
                                 <FileUpload
-                                    label="Upload Company Profile / Case Studies (PDF)"
+                                    label="Upload Company Profile / Case Studies (PDF) *"
                                     value={formData.knowledgeFile}
                                     onChange={(file) => setFormData({ ...formData, knowledgeFile: file })}
                                     accept=".pdf"
@@ -121,7 +126,10 @@ export default function IngestPage() {
                         </CardContent>
                     </Card>
 
-                    <div className="flex justify-end pt-4">
+                    <div className="flex flex-col items-end gap-2 pt-4">
+                        {Object.keys(errors).length > 0 && (
+                            <p className="text-sm text-red-600 font-medium">Please fix the errors above before proceeding.</p>
+                        )}
                         <Button size="lg" onClick={handleSubmit} disabled={isSubmitting} className="min-w-[200px]">
                             {isSubmitting ? "Analyzing..." : "Initialize Agent Swarm"}
                         </Button>
