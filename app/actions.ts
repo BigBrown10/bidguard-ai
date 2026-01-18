@@ -43,6 +43,12 @@ export async function performCritique(drafts: any, projectName: string) {
     };
 }
 
+import { runWriter } from "@/lib/agents/writer";
+
+export async function performProposaWriting(strategyName: string, originalSummary: string, projectName: string, clientName: string, researchSummary: string) {
+    return await runWriter(strategyName, originalSummary, projectName, clientName, researchSummary);
+}
+
 export async function performHumanization(text: string) {
     return await runHumanizer(text);
 }

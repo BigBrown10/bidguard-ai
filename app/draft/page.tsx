@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
-import { performDrafting, performSingleDraft, performHumanization } from "@/app/actions"
+import { performDrafting, performSingleDraft, performHumanization, performProposaWriting } from "@/app/actions"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/Card"
@@ -17,23 +17,28 @@ export default function DraftPage() {
     const [drafts, setDrafts] = React.useState<any>(null)
     const [log, setLog] = React.useState<string>("Connecting to Swarm...")
 
+    const [storedResearch, setStoredResearch] = React.useState<string>("")
+    const [storedConfig, setStoredConfig] = React.useState<any>(null)
+
     React.useEffect(() => {
         const initSwarm = async () => {
             try {
                 // 1. Load Research & Config
                 setStage("research-sync")
                 setLog("Syncing with Intelligence Unit...")
-                const storedConfig = localStorage.getItem("bidguard_config")
+                const localConfig = localStorage.getItem("bidguard_config")
 
                 // Fallback for demo if no research found
-                let researchSummary = "Client focuses on digital transformation and cost reduction."
-                const storedResearch = localStorage.getItem("bidguard_research")
-                if (storedResearch) {
-                    const r = JSON.parse(storedResearch)
-                    researchSummary = `Client News: ${r.clientNews?.join("; ") || ""}. Pain Points: ${r.painPoints?.join("; ") || ""}`
+                let researchSum = "Client focuses on digital transformation and cost reduction."
+                const localResearch = localStorage.getItem("bidguard_research")
+                if (localResearch) {
+                    const r = JSON.parse(localResearch)
+                    researchSum = `Client News: ${r.clientNews?.join("; ") || ""}. Pain Points: ${r.painPoints?.join("; ") || ""}`
                 }
+                setStoredResearch(researchSum)
 
-                const config = storedConfig ? JSON.parse(storedConfig) : { projectName: "Project Alpha", clientName: "Gov Client" }
+                const config = localConfig ? JSON.parse(localConfig) : { projectName: "Project Alpha", clientName: "Gov Client" }
+                setStoredConfig(config)
 
                 await new Promise(r => setTimeout(r, 800))
 
@@ -49,7 +54,7 @@ export default function DraftPage() {
                     setLog(`Generating ${strategy} Strategy...`)
                     try {
                         // Call single strategy action
-                        const result = await performSingleDraft(strategy, config.projectName, config.clientName, researchSummary)
+                        const result = await performSingleDraft(strategy, config.projectName, config.clientName, storedResearch || researchSum)
                         results[strategy.toLowerCase()] = result
 
                         // Update state immediately to show progress (strategies appear one by one)
@@ -91,33 +96,44 @@ export default function DraftPage() {
 
         const selectedDraft = drafts[strategyKey]
 
-        setStage("humanizing")
-        setLog(`Refining '${selectedDraft.strategyName}' strategy with UK Civil Service tone...`)
+        setStage("humanizing") // Reusing stage name for UI simplifying
+        setLog(`Strategy Selected. Expanding '${selectedDraft.strategyName}' into Full Tender Proposal...`)
 
         try {
-            const humanized = await performHumanization(selectedDraft.executiveSummary)
+            // STEP 1: RESEARCH & EXPANDER (THE WRITER AGENT)
+            // We skip separate 'humanization' step because the Writer Agent is prompted to write perfect prose.
+            const fullProposalMarkdown = await performProposaWriting(
+                selectedDraft.strategyName,
+                selectedDraft.executiveSummary,
+                config?.projectName || "Project",
+                config?.clientName || "Client",
+                rawStoredResearch
+            )
+
+            setLog("Structuring Document & Finalizing...")
 
             const finalResult = {
                 strategy: selectedDraft.strategyName,
                 originalDraft: selectedDraft,
-                critique: { score: 9.2 }, // Mock critique score for selected
-                finalText: humanized.refinedText
+                critique: { score: 9.5 },
+                finalText: fullProposalMarkdown // Now holds the Full Markdown
             }
 
             localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
             setTimeout(() => router.push("/result"), 1000)
 
         } catch (error) {
-            console.error("Humanization failed", error)
-            // Proceed with raw text if humanizer fails
+            console.error("Writing failed", error)
+            setLog("Writing Error. Using draft summary.")
+
             const finalResult = {
                 strategy: selectedDraft.strategyName,
                 originalDraft: selectedDraft,
                 critique: { score: 8.5 },
-                finalText: selectedDraft.executiveSummary
+                finalText: `# Executive Summary\n${selectedDraft.executiveSummary}\n\n(Expansion failed)`
             }
             localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
-            router.push("/result")
+            setTimeout(() => router.push("/result"), 1000)
         }
     }
 
