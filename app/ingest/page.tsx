@@ -38,8 +38,11 @@ export default function IngestPage() {
     const handleSubmit = async () => {
         console.log("Submitting form...", formData)
         if (!validate()) {
-            console.error("Validation failed", IngestionSchema.safeParse(formData))
-            alert("Please check the form for errors. Make sure Project Name is filled.")
+            const validationResult = IngestionSchema.safeParse(formData)
+            if (!validationResult.success) {
+                console.error("Validation failed", validationResult.error)
+                alert(`Validation Failed:\n${validationResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n')}`)
+            }
             return
         }
         setIsSubmitting(true)

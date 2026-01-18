@@ -7,7 +7,7 @@ export const IngestionSchema = z.object({
         .refine((file) => file?.size, "RFP Document is required")
         .refine((file) => file?.size, "RFP Document is required"),
     knowledgeFile: z.any().optional(),
-    knowledgeUrl: z.string().url().optional(),
+    knowledgeUrl: z.union([z.string().url(), z.literal("")]).optional(),
 }).refine(data => data.knowledgeFile || data.knowledgeUrl, {
     message: "Either Company Profile (PDF) or Knowledge URL is required",
     path: ["knowledgeFile"],
