@@ -105,9 +105,9 @@ export default function DraftPage() {
             const fullProposalMarkdown = await performProposaWriting(
                 selectedDraft.strategyName,
                 selectedDraft.executiveSummary,
-                config?.projectName || "Project",
-                config?.clientName || "Client",
-                rawStoredResearch
+                storedConfig?.projectName || "Project",
+                storedConfig?.clientName || "Client",
+                storedResearch
             )
 
             setLog("Structuring Document & Finalizing...")
