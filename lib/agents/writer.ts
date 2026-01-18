@@ -1,4 +1,3 @@
-```
 import { PromptTemplate } from "@langchain/core/prompts";
 import { perplexitySonarReasoning } from "@/lib/perplexity"; // Use pro/reasoning
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -47,7 +46,7 @@ Do not use placeholders.Invent plausible details if necessary to make it robust.
 `;
 
 export async function runWriter(strategyName: string, originalSummary: string, projectName: string, clientName: string, researchSummary: string) {
-    console.log(`Writing full proposal for ${ strategyName }...`);
+    console.log(`Writing full proposal for ${strategyName}...`);
 
     const prompt = PromptTemplate.fromTemplate(writerTemplate);
     const chain = prompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
@@ -64,6 +63,6 @@ export async function runWriter(strategyName: string, originalSummary: string, p
     } catch (error) {
         console.error("Writer Agent Failed:", error);
         // Fallback if writing fails
-        return `# Executive Summary\n${ originalSummary } \n\n## Generation Error\nFull proposal generation timed out.Please retry.`;
+        return `# Executive Summary\n${originalSummary} \n\n## Generation Error\nFull proposal generation timed out.Please retry.`;
     }
 }
