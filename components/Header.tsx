@@ -3,26 +3,26 @@ import Link from "next/link"
 
 export function Header() {
     return (
-        <header className="sticky top-0 z-40 w-full border-b border-black/5 bg-white/80 backdrop-blur-md">
+        <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-xl supports-[backdrop-filter]:bg-black/60">
             <div className="container mx-auto flex h-16 items-center justify-between px-6">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-md bg-black" />
-                    <span className="text-lg font-bold tracking-tight text-black">BidGuard AI</span>
+                <Link href="/" className="flex items-center gap-2 group">
+                    <div className="h-6 w-6 rounded-md bg-primary shadow-[0_0_10px_rgba(0,122,255,0.5)] group-hover:scale-110 transition-transform" />
+                    <span className="text-lg font-bold tracking-tight text-white group-hover:text-primary transition-colors">BidGuard AI</span>
                 </Link>
-                <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                    <Link href="/dashboard" className="transition-colors hover:text-foreground">
+                <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-white/60">
+                    <Link href="/dashboard" className="transition-colors hover:text-white hover:text-glow">
                         Dashboard
                     </Link>
-                    <Link href="/history" className="transition-colors hover:text-foreground">
+                    <Link href="/history" className="transition-colors hover:text-white hover:text-glow">
                         Win History
                     </Link>
-                    <Link href="/settings" className="transition-colors hover:text-foreground">
+                    <Link href="/settings" className="transition-colors hover:text-white hover:text-glow">
                         Settings
                     </Link>
                 </nav>
                 <div className="flex items-center gap-2">
                     {/* Placeholder for user profile or actions */}
-                    <div className="h-8 w-8 rounded-full bg-gray-100 border border-gray-200" />
+                    <div className="h-8 w-8 rounded-full bg-white/10 border border-white/10" />
                 </div>
             </div>
         </header>
