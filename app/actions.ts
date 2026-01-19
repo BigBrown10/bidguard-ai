@@ -61,6 +61,10 @@ export async function triggerProposalGeneration(strategyName: string, executiveS
     // 1. Create the job record in Supabase immediately so polling works
     // Use the admin client (or safe server action client) if needed, but standard client works here
     // Note: We need to import supabase here.
+    if (!supabase) {
+        throw new Error("Supabase client not initialized");
+    }
+
     const { error } = await supabase.from('jobs').insert({
         id: jobId,
         status: 'pending',
