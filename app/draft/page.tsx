@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
-import { performDrafting, performSingleDraft, performHumanization, performProposaWriting } from "@/app/actions"
+import { performDrafting, performSingleDraft, performHumanization, triggerProposalGeneration } from "@/app/actions"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/Card"
@@ -99,42 +99,68 @@ export default function DraftPage() {
         setStage("humanizing") // Reusing stage name for UI simplifying
         setLog(`Strategy Selected. Expanding '${selectedDraft.strategyName}' into Full Tender Proposal...`)
 
-        try {
-            // STEP 1: RESEARCH & EXPANDER (THE WRITER AGENT)
-            // We skip separate 'humanization' step because the Writer Agent is prompted to write perfect prose.
-            const fullProposalMarkdown = await performProposaWriting(
-                selectedDraft.strategyName,
-                selectedDraft.executiveSummary,
-                storedConfig?.projectName || "Project",
-                storedConfig?.clientName || "Client",
-                storedResearch
-            )
+        // STEP 1: TRIGGER ASYNC WRITER JOB (INNGEST)
+        // This prevents Vercel timeouts by offloading work to a background worker
+        const eventId = await triggerProposalGeneration(
+            selectedDraft.strategyName,
+            selectedDraft.executiveSummary,
+            storedConfig?.projectName || "Project",
+            storedConfig?.clientName || "Client",
+            storedResearch
+        )
 
-            setLog("Structuring Document & Finalizing...")
+        setLog(`Swarm Job Dispatched (ID: ${eventId}). Waiting for Neural Link...`)
 
-            const finalResult = {
-                strategy: selectedDraft.strategyName,
-                originalDraft: selectedDraft,
-                critique: { score: 9.5 },
-                finalText: fullProposalMarkdown // Now holds the Full Markdown
+        // STEP 2: POLL FOR COMPLETION (Supabase)
+        // We poll the internal API which checks the DB layer
+        let attempts = 0
+        const maxAttempts = 60 // 2 minutes (2s interval)
+        let fullProposalMarkdown = ""
+
+        while (attempts < maxAttempts) {
+            attempts++
+            // Check if we have a job ID in the event payload? 
+            // Actually triggerProposalGeneration generates a random UUID for the job. 
+            // We should probably rely on the ID we passed or the one returned?
+            // For simplicity, let's assume the action returns the JOB UUID we generated, 
+            // OR we update the action to return the jobId it created.
+            // *Self-Correction*: The action returns Inngest IDs. 
+            // We need the `jobId` we put in `data`. 
+            // Let's modify the action to return the Custom UUID we made.
+
+            // WAIT! I need to fix the action return type first to return the custom ID.
+            // Poll Status
+            const res = await fetch(`/api/status?jobId=${eventId}`)
+            const data = await res.json()
+
+            if (data.status === 'completed' && data.result) {
+                fullProposalMarkdown = data.result
+                break // Success!
             }
 
-            localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
-            setTimeout(() => router.push("/result"), 1000)
-
-        } catch (error) {
-            console.error("Writing failed", error)
-            setLog("Writing Error. Using draft summary.")
-
-            const finalResult = {
-                strategy: selectedDraft.strategyName,
-                originalDraft: selectedDraft,
-                critique: { score: 8.5 },
-                finalText: `# Executive Summary\n${selectedDraft.executiveSummary}\n\n(Expansion failed)`
+            if (data.status === 'failed') {
+                throw new Error("Async Job Reported Failure")
             }
-            localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
-            setTimeout(() => router.push("/result"), 1000)
+
+            // Wait 2s before retry
+            await new Promise(r => setTimeout(r, 2000))
         }
+
+        if (!fullProposalMarkdown) {
+            throw new Error("Job Timed Out after 120s")
+        }
+
+        setLog("Structuring Document & Finalizing...")
+
+        const finalResult = {
+            strategy: selectedDraft.strategyName,
+            originalDraft: selectedDraft,
+            critique: { score: 9.5 },
+            finalText: fullProposalMarkdown
+        }
+
+        localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
+        setTimeout(() => router.push("/result"), 1000)
     }
 
     // fallback helpers

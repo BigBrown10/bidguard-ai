@@ -52,3 +52,22 @@ export async function performProposaWriting(strategyName: string, originalSummar
 export async function performHumanization(text: string) {
     return await runHumanizer(text);
 }
+
+import { inngest } from "@/lib/inngest/client";
+
+export async function triggerProposalGeneration(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string) {
+    const jobId = crypto.randomUUID(); // Generate ID here
+    await inngest.send({
+        name: "app/generate-proposal",
+        data: {
+            jobId,
+            strategyName,
+            executiveSummary,
+            projectName,
+            clientName,
+            researchSummary
+        }
+    });
+    return jobId; // Return the UUID for polling
+}
+
