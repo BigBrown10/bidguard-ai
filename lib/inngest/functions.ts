@@ -75,28 +75,28 @@ export const generateProposalFunction = inngest.createFunction(
                     researchSummary
                 });
             } catch (error) {
-                throw new Error(\`AI Generation Failed: \${error}\`);
-        }
-    });
+                throw new Error(`AI Generation Failed: ${error}`);
+            }
+        });
 
-    // 3. Save to Supabase
-    await step.run("save-result", async () => {
-        if (!supabase) {
-             console.error("Supabase not configured, cannot save job result");
-             return;
-        }
-        
-        const { error } = await supabase
-            .from('jobs')
-            .update({ 
-                status: 'completed',
-                result: resultMarkdown
-            })
-            .eq('id', jobId);
+        // 3. Save to Supabase
+        await step.run("save-result", async () => {
+            if (!supabase) {
+                console.error("Supabase not configured, cannot save job result");
+                return;
+            }
 
-        if (error) throw new Error(\`Supabase Save Failed: \${error.message}\`);
-    });
+            const { error } = await supabase
+                .from('jobs')
+                .update({
+                    status: 'completed',
+                    result: resultMarkdown
+                })
+                .eq('id', jobId);
 
-    return { success: true, jobId };
-  }
+            if (error) throw new Error(`Supabase Save Failed: ${error.message}`);
+        });
+
+        return { success: true, jobId };
+    }
 );
