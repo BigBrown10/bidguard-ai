@@ -5,7 +5,7 @@ import { perplexitySonarReasoning } from "@/lib/perplexity";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 // Re-using the prompt from writer.ts
-const writerTemplate = \`
+const writerTemplate = `
 You are a Senior Bid Writer for a top-tier government consultancy (like McKinsey or Deloitte).
 Your goal is to write a SUBSTANTIAL, DETAILED TENDER PROPOSAL (approx 1500-2000 words) based on the chosen strategy.
 
@@ -46,36 +46,36 @@ STRUCTURE:
 TONE:
 Authoritative, confident, precise. UK English (e.g., 'Programme', 'Mobilisation').
 Do not use placeholders. Invent plausible details if necessary to make it robust.
-\`;
+`;
 
 export const generateProposalFunction = inngest.createFunction(
-  { id: "generate-tender-proposal", concurrency: 5 }, // Allow 5 concurrent jobs
-  { event: "app/generate-proposal" },
-  async ({ event, step }) => {
-    const { jobId, strategyName, executiveSummary, projectName, clientName, researchSummary } = event.data;
+    { id: "generate-tender-proposal", concurrency: 5 }, // Allow 5 concurrent jobs
+    { event: "app/generate-proposal" },
+    async ({ event, step }) => {
+        const { jobId, strategyName, executiveSummary, projectName, clientName, researchSummary } = event.data;
 
-    // 1. Initial Status Update (Optional, beneficial for UI feedback)
-    await step.run("update-status-start", async () => {
-        if (!supabase) return;
-        await supabase.from('jobs').update({ status: 'processing' }).eq('id', jobId);
-    });
+        // 1. Initial Status Update (Optional, beneficial for UI feedback)
+        await step.run("update-status-start", async () => {
+            if (!supabase) return;
+            await supabase.from('jobs').update({ status: 'processing' }).eq('id', jobId);
+        });
 
-    // 2. Generate Content
-    const resultMarkdown = await step.run("generate-ai-response", async () => {
-        const prompt = PromptTemplate.fromTemplate(writerTemplate);
-        // Note: Using the reasoning model (slower but better) because we are in background!
-        const chain = prompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
-        
-        try {
-            return await chain.invoke({
-                strategyName,
-                originalSummary: executiveSummary,
-                projectName,
-                clientName,
-                researchSummary
-            });
-        } catch (error) {
-            throw new Error(\`AI Generation Failed: \${error}\`);
+        // 2. Generate Content
+        const resultMarkdown = await step.run("generate-ai-response", async () => {
+            const prompt = PromptTemplate.fromTemplate(writerTemplate);
+            // Note: Using the reasoning model (slower but better) because we are in background!
+            const chain = prompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+
+            try {
+                return await chain.invoke({
+                    strategyName,
+                    originalSummary: executiveSummary,
+                    projectName,
+                    clientName,
+                    researchSummary
+                });
+            } catch (error) {
+                throw new Error(\`AI Generation Failed: \${error}\`);
         }
     });
 
