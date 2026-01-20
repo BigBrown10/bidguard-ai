@@ -150,6 +150,9 @@ export default function DraftPage() {
 
             // Wait 2s before retry
             await new Promise(r => setTimeout(r, 2000))
+
+            // Update log with current status to show liveness
+            setLog(`Deep Think Status: ${data.status?.toUpperCase() || 'CONNECTING'} (${attempts}/${maxAttempts})...`)
         }
 
         if (!fullProposalMarkdown) {
