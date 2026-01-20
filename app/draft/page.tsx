@@ -133,13 +133,19 @@ export default function DraftPage() {
             const res = await fetch(`/api/status?jobId=${eventId}`)
             const data = await res.json()
 
+            // Critical Fix: Fail fast if the server reports an error (e.g. DB down)
+            if (data.error) {
+                throw new Error(`Polling Error: ${data.error}`);
+            }
+
             if (data.status === 'completed' && data.result) {
                 fullProposalMarkdown = data.result
                 break // Success!
             }
 
             if (data.status === 'failed') {
-                throw new Error("Async Job Reported Failure")
+                // Show the detailed error from the backend if available
+                throw new Error(data.result || "Async Job Reported Failure")
             }
 
             // Wait 2s before retry
