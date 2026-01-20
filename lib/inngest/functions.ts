@@ -98,5 +98,16 @@ export const generateProposalFunction = inngest.createFunction(
         });
 
         return { success: true, jobId };
+    },
+    {
+        onFailure: async ({ event, error }) => {
+            const { jobId } = event.data.event.data;
+            if (jobId && supabase) {
+                await supabase.from('jobs').update({
+                    status: 'failed',
+                    result: `## Generation Failed\n\nSystem encountered an error during processing: ${error.message}`
+                }).eq('id', jobId);
+            }
+        }
     }
 );
