@@ -49,7 +49,19 @@ Do not use placeholders. Invent plausible details if necessary to make it robust
 `;
 
 export const generateProposalFunction = inngest.createFunction(
-    { id: "generate-tender-proposal", concurrency: 5 }, // Allow 5 concurrent jobs
+    {
+        id: "generate-tender-proposal",
+        concurrency: 5,
+        onFailure: async ({ event, error }) => {
+            const { jobId } = event.data.event.data;
+            if (jobId && supabase) {
+                await supabase.from('jobs').update({
+                    status: 'failed',
+                    result: `## Generation Failed\n\nSystem encountered an error during processing: ${error.message}`
+                }).eq('id', jobId);
+            }
+        }
+    },
     { event: "app/generate-proposal" },
     async ({ event, step }) => {
         const { jobId, strategyName, executiveSummary, projectName, clientName, researchSummary } = event.data;
@@ -98,16 +110,5 @@ export const generateProposalFunction = inngest.createFunction(
         });
 
         return { success: true, jobId };
-    },
-    {
-        onFailure: async ({ event, error }) => {
-            const { jobId } = event.data.event.data;
-            if (jobId && supabase) {
-                await supabase.from('jobs').update({
-                    status: 'failed',
-                    result: `## Generation Failed\n\nSystem encountered an error during processing: ${error.message}`
-                }).eq('id', jobId);
-            }
-        }
     }
 );
