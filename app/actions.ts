@@ -58,15 +58,18 @@ import { inngest } from "@/lib/inngest/client";
 export async function triggerProposalGeneration(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string) {
     const jobId = crypto.randomUUID(); // Generate ID here
 
-    // 1. Create the job record in Supabase immediately so polling works
-    // Use the admin client (or safe server action client) if needed, but standard client works here
-    // Note: We need to import supabase here.
+    // 0. Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // 1. Create the job record in Supabase
     if (!supabase) {
         throw new Error("Supabase client not initialized");
     }
 
     const { error } = await supabase.from('jobs').insert({
         id: jobId,
+        // If user is logged in, attach their ID. This enables the AI to find their profile.
+        user_id: user?.id || null,
         status: 'pending',
         result: null
     });

@@ -18,12 +18,17 @@ Selected Strategy: {strategyName}
 Research Context: {researchSummary}
 Strategy Core Concept: {originalSummary}
 
+AUTHOR CONTEXT (YOUR COMPANY):
+Company Name: {companyName}
+Business Bio / About: {businessDescription}
+(Use this context to write the "Proposed Solution" and "Delivery" sections as if you are this specific company. Match their expertise.)
+
 STRICT OUTPUT RULES:
 1. NO MARKDOWN FORMATTING. Do not use hashtags (#), asterisks (*), or bold text.
-2. NO CITATIONS. Do not use brackets like [1] or [2].
-3. NO META COMMENTARY. Do not write "Total words:" or "Here is the proposal". Start directly with the text.
+2. NO CITATIONS. Do not use brackets like [x].
+3. NO META COMMENTARY.
 4. Use standard NUMBERED LISTS (1. 2. 3.) for structure.
-5. Tone: Highly human, professional, persuasive. Avoid buzzwords. Write like a partner at a top consultancy.
+5. Tone: Senior Partner. Expert. Human.
 
 STRUCTURE:
 
@@ -31,7 +36,7 @@ STRUCTURE:
 (200-300 words. Hook the reader.)
 
 2. Proposed Solution
-(500+ words. The detailed technical and methodological approach.)
+(500+ words. The detailed technical and methodological approach specific to {companyName}.)
 
 3. Delivery & Implementation Plan
 (400 words. Timeline and mobilization.)
@@ -68,6 +73,32 @@ export const generateProposalFunction = inngest.createFunction(
 
         // 2. Generate Content
         const resultMarkdown = await step.run("generate-ai-response", async () => {
+            // A. Fetch User Profile Context
+            let authorContext = {
+                companyName: "Our Agency",
+                businessDescription: "A leading provider of professional services."
+            };
+
+            if (supabase) {
+                // Get job to find user_id
+                const { data: job } = await supabase.from('jobs').select('user_id').eq('id', jobId).single();
+
+                if (job?.user_id) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('company_name, business_description')
+                        .eq('id', job.user_id)
+                        .single();
+
+                    if (profile) {
+                        authorContext = {
+                            companyName: profile.company_name || "Our Agency",
+                            businessDescription: profile.business_description || "A leading provider of professional services."
+                        };
+                    }
+                }
+            }
+
             const prompt = PromptTemplate.fromTemplate(writerTemplate);
             // Switch to Standard Pro model for creative writing tasks (less refusal prone)
             const chain = prompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
@@ -78,7 +109,9 @@ export const generateProposalFunction = inngest.createFunction(
                     originalSummary: executiveSummary,
                     projectName,
                     clientName,
-                    researchSummary
+                    researchSummary,
+                    companyName: authorContext.companyName,
+                    businessDescription: authorContext.businessDescription
                 });
             } catch (error) {
                 throw new Error(`AI Generation Failed: ${error}`);
