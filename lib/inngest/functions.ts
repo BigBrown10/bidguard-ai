@@ -73,28 +73,30 @@ export const generateProposalFunction = inngest.createFunction(
         });
 
         // 2. Generate Content
+        import { perplexitySonarPro } from "@/lib/perplexity";
+
+        // ...
+
+        // 2. Generate Content
         const resultMarkdown = await step.run("generate-ai-response", async () => {
-            const prompt = PromptTemplate.fromTemplate(writerTemplate);
-            import { perplexitySonarReasoning, perplexitySonarPro } from "@/lib/perplexity";
-
-            // ...
-
             const prompt = PromptTemplate.fromTemplate(writerTemplate);
             // Switch to Standard Pro model for creative writing tasks (less refusal prone)
             const chain = prompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
 
             try {
-                return await chain.invoke({
-                    strategyName,
-                    originalSummary: executiveSummary,
-                    projectName,
-                    clientName,
-                    researchSummary
-                });
-            } catch (error) {
-                throw new Error(`AI Generation Failed: ${error}`);
-            }
-        });
+
+                try {
+                    return await chain.invoke({
+                        strategyName,
+                        originalSummary: executiveSummary,
+                        projectName,
+                        clientName,
+                        researchSummary
+                    });
+                } catch (error) {
+                    throw new Error(`AI Generation Failed: ${error}`);
+                }
+            });
 
         // 3. Save to Supabase
         await step.run("save-result", async () => {
