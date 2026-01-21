@@ -23,5 +23,12 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({
+        ...data,
+        debug: {
+            hasSigningKey: !!process.env.INNGEST_SIGNING_KEY,
+            hasEventKey: !!process.env.INNGEST_EVENT_KEY,
+            processingTime: Date.now()
+        }
+    });
 }
