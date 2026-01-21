@@ -47,7 +47,8 @@ export default function DraftPage() {
                 setLog("Initializing Swarm Sequence...")
 
                 // We need to type this explicitly or TS complains during iteration
-                const strategies: ("Safe" | "Innovative" | "Disruptive")[] = ["Safe", "Innovative", "Disruptive"]
+                // Cost Optimization: Reduced to 2 strategies per user request
+                const strategies: ("Safe" | "Innovative")[] = ["Safe", "Innovative"]
                 const results: any = {}
 
                 for (const strategy of strategies) {
