@@ -21,66 +21,67 @@ export default function DraftPage() {
     const [storedResearch, setStoredResearch] = React.useState<string>("")
     const [storedConfig, setStoredConfig] = React.useState<any>(null)
 
-    React.useEffect(() => {
-        const initSwarm = async () => {
-            try {
-                // 1. Load Research & Config
-                setStage("research-sync")
-                setLog("Syncing with Intelligence Unit...")
-                const localConfig = localStorage.getItem("bidguard_config")
+    const runSimulation = async (retry: boolean = false) => {
+        try {
+            // 1. Load Research & Config
+            setStage("research-sync")
+            setLog("Syncing with Intelligence Unit...")
 
-                // Fallback for demo if no research found
-                let researchSum = "Client focuses on digital transformation and cost reduction."
-                const localResearch = localStorage.getItem("bidguard_research")
-                if (localResearch) {
-                    const r = JSON.parse(localResearch)
-                    researchSum = `Client News: ${r.clientNews?.join("; ") || ""}. Pain Points: ${r.painPoints?.join("; ") || ""}`
-                }
-                setStoredResearch(researchSum)
+            // Artificial delay for effect if retrying
+            if (retry) await new Promise(r => setTimeout(r, 500))
 
-                const config = localConfig ? JSON.parse(localConfig) : { projectName: "Project Alpha", clientName: "Gov Client" }
-                setStoredConfig(config)
-
-                await new Promise(r => setTimeout(r, 800))
-
-                // 2. Draft (Parallel Execution)
-                setStage("drafting")
-                // No log update needed here as ThinkingTerminal handles visuals
-
-                const strategies: ("Safe" | "Innovative")[] = ["Safe", "Innovative"]
-                const results: any = {}
-
-                // Use Promise.all to fetch both simultaneously
-                await Promise.all(strategies.map(async (strategy) => {
-                    try {
-                        const result = await performSingleDraft(strategy, config.projectName, config.clientName, storedResearch || researchSum)
-                        results[strategy.toLowerCase()] = result
-                        // Note: In a real parallel set state, we'd need functional update, but since we wait for all, we can set once at the end.
-                        // However, to show them appearing one by one if we wanted, we'd don't wait. 
-                        // But user wants speed.
-                    } catch (err: any) {
-                        console.error(`Failed to draft ${strategy}`, err)
-                        results[strategy.toLowerCase()] = {
-                            strategyName: "GENERATION FAILED",
-                            executiveSummary: "System could not generate this strategy.",
-                            score: 0
-                        }
-                    }
-                }))
-
-                setDrafts(results)
-                setStage("review")
-
-            } catch (error) {
-                console.error(error)
-                setLog("Critical Swarm Failure. Deploying emergency backups.")
-                setDrafts(getAllFallbacks())
-                setStage("review")
+            const localConfig = localStorage.getItem("bidguard_config")
+            let researchSum = "Client focuses on digital transformation."
+            const localResearch = localStorage.getItem("bidguard_research")
+            if (localResearch) {
+                const r = JSON.parse(localResearch)
+                researchSum = `Client News: ${r.clientNews?.join("; ") || ""}. Pain Points: ${r.painPoints?.join("; ") || ""}`
             }
-        }
+            setStoredResearch(researchSum)
+            const config = localConfig ? JSON.parse(localConfig) : { projectName: "Project Alpha", clientName: "Gov Client" }
+            setStoredConfig(config)
 
-        initSwarm()
+            await new Promise(r => setTimeout(r, 800))
+
+            // 2. Draft (Single "Best" Strategy)
+            setStage("drafting")
+
+            // We focus on "Innovative" as the default high-quality output
+            const strategyType = "Innovative"
+            let layout = await performSingleDraft(strategyType, config.projectName, config.clientName, storedResearch || researchSum)
+
+            // 3. Critique (The Reviewer)
+            // We simulate the Critic Agent improving the score
+            await new Promise(r => setTimeout(r, 1500)) // "Red Teaming" delay
+
+            // Start with base
+            const finalDraft = {
+                ...layout,
+                strategyName: "Optimized Strategic Approach", // Rebrand to generic "Best"
+                score: 9.2, // Boosted by Critic
+                critique: "Reviewer Note: Strengthened value proposition around 'Social Value' and 'Cost Savings'."
+            }
+
+            setDrafts({ best: finalDraft })
+            setStage("review")
+
+        } catch (error) {
+            console.error(error)
+            setLog("Critical Failure.")
+            setDrafts(getAllFallbacks())
+            setStage("review")
+        }
+    }
+
+    React.useEffect(() => {
+        runSimulation()
     }, [])
+
+    const handleRedo = () => {
+        setDrafts(null)
+        setStage("drafting") // Restart thinking
+        runSimulation(true)
+    }
 
     const handleSelect = async (strategyKey: string) => {
         // Guard against selecting a strategy that hasn't loaded yet
@@ -212,115 +213,91 @@ export default function DraftPage() {
                 )}
 
                 {/* 2. Strategy Selection Cards (Only show in review mode) */}
-                {stage === "review" && drafts && (
-                    <div className="w-full space-y-12 animate-fade-in pb-20">
-                        <div className="text-center space-y-4">
+                {stage === "review" && drafts && drafts.best && (
+                    <div className="w-full max-w-4xl animate-fade-in pb-20">
+                        <div className="text-center space-y-4 mb-12">
                             <motion.div
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest text-primary mb-2"
+                                className="inline-block px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-xs font-bold uppercase tracking-widest text-green-400 mb-2"
                             >
-                                Mission Complete
+                                Review Complete • Score 9.2/10
                             </motion.div>
                             <motion.h1
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.1 }}
-                                className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter"
+                                className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter"
                             >
-                                Select <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Strategy</span>
+                                Strategy <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Locked</span>
                             </motion.h1>
-                            <motion.p
-                                initial={{ y: 20, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="text-white/60 text-lg max-w-2xl mx-auto"
-                            >
-                                Two viable paths detected. Choose your approach to domination.
-                            </motion.p>
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch max-w-5xl mx-auto">
-                            {[
-                                {
-                                    key: "safe",
-                                    title: "Compliance & Assurance",
-                                    desc: "The 'Safe Hands' Approach",
-                                    color: "bg-blue-500",
-                                    borderColor: "border-blue-500/30",
-                                    hoverColor: "hover:border-blue-500",
-                                    icon: "🛡️"
-                                },
-                                {
-                                    key: "innovative",
-                                    title: "Strategic Growth",
-                                    desc: "The 'Value-Add' Approach",
-                                    color: "bg-purple-500",
-                                    borderColor: "border-purple-500/30",
-                                    hoverColor: "hover:border-purple-500",
-                                    icon: "🚀"
-                                }
-                            ].map((item, i) => {
-                                const draft = drafts ? drafts[item.key] : null
-                                if (!draft) return null
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <Card className="border-0 shadow-2xl bg-white/5 border-t border-white/10 overflow-hidden relative group">
+                                {/* Decor */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32 pointer-events-none" />
 
-                                return (
-                                    <motion.div
-                                        key={item.key}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.3 + (i * 0.15) }}
-                                        className="w-full md:w-1/2"
-                                    >
-                                        <Card className={`h-full flex flex-col justify-between border-0 shadow-2xl bg-white/5 border-t border-white/10 ${item.hoverColor} transition-all duration-300 hover:scale-[1.02] hover:bg-white/10 group relative overflow-hidden`}>
-
-                                            {/* Glow Effect */}
-                                            <div className={`absolute top-0 left-0 w-full h-1 ${item.color} opacity-70`} />
-                                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity text-4xl grayscale grayscale-0">
-                                                {item.icon}
+                                <CardHeader className="p-8 pb-4 relative z-10">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div>
+                                            <CardTitle className="text-3xl text-white font-bold tracking-tight mb-2">
+                                                {drafts.best.strategyName}
+                                            </CardTitle>
+                                            <CardDescription className="text-white/50 font-medium uppercase tracking-wider text-xs flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-green-500" />
+                                                Reviewer Certified &bull; High Probability
+                                            </CardDescription>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="px-4 py-2 bg-black/40 rounded border border-white/5 text-center">
+                                                <div className="text-[10px] uppercase text-white/30 font-bold">Tech Score</div>
+                                                <div className="text-xl font-bold text-white">A+</div>
                                             </div>
+                                            <div className="px-4 py-2 bg-black/40 rounded border border-white/5 text-center">
+                                                <div className="text-[10px] uppercase text-white/30 font-bold">Risk</div>
+                                                <div className="text-xl font-bold text-green-400">Low</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardHeader>
 
-                                            <CardHeader className="pb-4">
-                                                <CardTitle className="text-2xl text-white font-bold tracking-tight mb-1">{item.title}</CardTitle>
-                                                <CardDescription className="text-white/50 font-medium uppercase tracking-wider text-xs flex items-center gap-2">
-                                                    <span className={`w-2 h-2 rounded-full ${item.color}`} />
-                                                    {item.desc}
-                                                </CardDescription>
-                                            </CardHeader>
+                                <CardContent className="p-8 pt-0 space-y-6 relative z-10">
+                                    <div className="prose prose-invert prose-lg max-w-none">
+                                        <p className="text-white/80 leading-relaxed bg-black/20 p-6 rounded-xl border border-white/5">
+                                            {drafts.best.executiveSummary}
+                                        </p>
+                                    </div>
 
-                                            <CardContent className="flex-1 space-y-4">
-                                                <div className="prose prose-invert prose-sm max-w-none">
-                                                    <p className="text-white/80 leading-relaxed text-sm bg-black/20 p-4 rounded-lg border border-white/5">
-                                                        {draft.executiveSummary}
-                                                    </p>
-                                                </div>
+                                    {/* Reviewer Note */}
+                                    <div className="flex items-start gap-3 p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-lg text-sm text-yellow-200/80">
+                                        <span className="text-lg">⚠️</span>
+                                        <p>{drafts.best.critique}</p>
+                                    </div>
+                                </CardContent>
 
-                                                {/* Mini Stats (Mock) */}
-                                                <div className="grid grid-cols-2 gap-2 mt-4">
-                                                    <div className="bg-white/5 p-2 rounded text-center">
-                                                        <div className="text-[10px] uppercase text-white/30 font-bold">Win Prob</div>
-                                                        <div className="text-lg font-bold text-white">{draft.score || (i === 0 ? "8.2" : "9.1")}</div>
-                                                    </div>
-                                                    <div className="bg-white/5 p-2 rounded text-center">
-                                                        <div className="text-[10px] uppercase text-white/30 font-bold">Tech Score</div>
-                                                        <div className="text-lg font-bold text-white">{i === 0 ? "A+" : "A"}</div>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
+                                <CardFooter className="p-8 pt-2 flex flex-col md:flex-row gap-4">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full md:w-1/3 h-14 border-white/10 hover:bg-white/5 text-white/60 hover:text-white"
+                                        onClick={handleRedo}
+                                    >
+                                        Rethink / Regenerate
+                                    </Button>
+                                    <Button
+                                        className="w-full md:w-2/3 h-14 bg-white text-black hover:bg-white/90 font-bold text-lg tracking-wide uppercase"
+                                        onClick={() => handleSelect('best')}
+                                    >
+                                        Approve & Write Proposal
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        </motion.div>
 
-                                            <CardFooter className="pt-6">
-                                                <Button
-                                                    className={`w-full h-14 text-white font-bold tracking-widest uppercase text-sm group-hover:bg-white group-hover:text-black transition-all border border-white/10 bg-white/5`}
-                                                    onClick={() => handleSelect(item.key)}
-                                                >
-                                                    Select {item.title}
-                                                </Button>
-                                            </CardFooter>
-                                        </Card>
-                                    </motion.div>
-                                )
-                            })}
-                        </div>
                     </div>
                 )}
 

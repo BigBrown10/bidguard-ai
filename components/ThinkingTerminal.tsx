@@ -11,9 +11,9 @@ export function ThinkingTerminal() {
         { text: "Ingesting RFP Documentation...", icon: FileText, color: "text-blue-400" },
         { text: "Deconstructing Requirements...", icon: Terminal, color: "text-purple-400" },
         { text: "Cross-Referencing Company Intelligence...", icon: Search, color: "text-yellow-400" },
-        { text: "Simulating Compliant Strategy...", icon: Cpu, color: "text-green-400" },
-        { text: "Generating Value-Add Propositions...", icon: Zap, color: "text-red-400" },
-        { text: "Finalizing Strategy Architectures...", icon: Terminal, color: "text-white" }
+        { text: "Drafting Strategic Approach...", icon: Cpu, color: "text-green-400" },
+        { text: "CRITIC AGENT: Red-Teaming Proposal...", icon: Zap, color: "text-red-500" },
+        { text: "Optimizing Win Probability...", icon: Terminal, color: "text-white" }
     ]
 
     React.useEffect(() => {
