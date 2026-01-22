@@ -103,7 +103,7 @@ import { supabase } from "@/lib/supabase";
 
 // SYNCHRONOUS FALLBACK: Run the proposal generation directly if Inngest is offline.
 // This risks timeout on Vercel Hobby (10s), so we use the FAST model and simplified chain.
-export async function generateRapidProposal(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string, keyFocus?: string) {
+export async function generateRapidProposal(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string, keyFocus?: string, companyContext?: string) {
     // 1. "Safe" Prompt that asks for a template/draft rather than impersonation (avoids safety triggers)
     const writerTemplate = `
     CONTEXT: INTERNAL EDUCATIONAL SIMULATION.

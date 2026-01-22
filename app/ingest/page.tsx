@@ -22,7 +22,9 @@ function IngestContent() {
         rfpFile: null,
         knowledgeFile: null,
         knowledgeUrl: "",
+        knowledgeUrl: "",
         companyContext: "",
+        userStrategy: "", // New optional field
     })
     const [errors, setErrors] = React.useState<Record<string, string>>({})
     const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -91,7 +93,9 @@ function IngestContent() {
             projectName: formData.projectName,
             clientName: formData.clientName || "Unknown Client",
             companyUrl: formData.knowledgeUrl,
+            companyUrl: formData.knowledgeUrl,
             companyContext: formData.companyContext, // Pass context
+            userStrategy: formData.userStrategy, // Pass user ideas
             rfpText: formData.rfpText // Store text context
         }))
 
@@ -175,26 +179,31 @@ function IngestContent() {
                         </div>
 
                         <FileUpload
-                            label="Upload Company Profile / Case Studies (PDF) *"
+                            label="Upload Company Profile / Case Studies (PDF)"
                             value={formData.knowledgeFile}
                             onChange={(file) => setFormData({ ...formData, knowledgeFile: file })}
                             accept=".pdf"
                             error={errors.knowledgeFile}
                         />
 
-                        <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-white/10"></div>
-                            <span className="flex-shrink-0 mx-4 text-white/30 text-xs uppercase">OR Paste Description</span>
-                            <div className="flex-grow border-t border-white/10"></div>
-                        </div>
-
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-white/80">Company Overview & Capabilities</label>
                             <textarea
-                                className="cyber-input w-full h-32 p-3 bg-black/40 resize-none text-sm"
-                                placeholder="Paste your company capabilities, achievements, and case study summaries..."
+                                className="cyber-input w-full h-24 p-3 bg-black/40 resize-none text-sm"
+                                placeholder="Paste your capabilities: 'We are ISO 27001 certified, have 50 staff, and specialize in...'"
                                 value={formData.companyContext || ""}
                                 onChange={(e) => setFormData({ ...formData, companyContext: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2 pt-2">
+                            <label className="text-sm font-medium text-primary">Your Strategy / Key Points (Optional)</label>
+                            <p className="text-xs text-white/50 mb-2">Tell the AI what to focus on. If you leave this blank, the AI will invent a strategy.</p>
+                            <textarea
+                                className="cyber-input w-full h-24 p-3 bg-black/40 resize-none text-sm border-primary/30 focus:border-primary"
+                                placeholder="e.g. 'Focus on our local presence in Derby', 'Highlight our apprenticeship scheme', 'We want to undercut on price'"
+                                value={formData.userStrategy || ""}
+                                onChange={(e) => setFormData({ ...formData, userStrategy: e.target.value })}
                             />
                         </div>
                     </div>
