@@ -62,6 +62,9 @@ export function Header() {
                             <Link href="/dashboard" className="transition-colors hover:text-white hover:text-glow">
                                 Dashboard
                             </Link>
+                            <Link href="/ingest" className="text-primary font-bold hover:text-glow transition-colors">
+                                + New Bid
+                            </Link>
                             <Link href="/pricing" className="transition-colors hover:text-white hover:text-glow">
                                 Pricing
                             </Link>

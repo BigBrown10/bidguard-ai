@@ -18,12 +18,16 @@ function IngestContent() {
     const [formData, setFormData] = React.useState<IngestionFormData>({
         projectName: searchParams.get("title") || "",
         clientName: searchParams.get("client") || "",
+        rfpText: searchParams.get("description") || "",
         rfpFile: null,
         knowledgeFile: null,
         knowledgeUrl: "",
     })
     const [errors, setErrors] = React.useState<Record<string, string>>({})
     const [isSubmitting, setIsSubmitting] = React.useState(false)
+
+    // Clear RFP Text if File is uploaded (optional logic, but keeps UI clean)
+    // Actually, let's allow both or manual override.
 
     const validate = () => {
         const result = IngestionSchema.safeParse(formData)
@@ -40,22 +44,15 @@ function IngestContent() {
     }
 
     const handleSubmit = async () => {
-        console.log("Submitting form...", formData)
-        if (!validate()) {
-            const validationResult = IngestionSchema.safeParse(formData)
-            if (!validationResult.success) {
-                console.error("Validation failed", validationResult.error)
-                alert(`Validation Failed:\n${validationResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n')}`)
-            }
-            return
-        }
+        if (!validate()) return
         setIsSubmitting(true)
 
         // Save config for next steps
         localStorage.setItem("bidguard_config", JSON.stringify({
             projectName: formData.projectName,
             clientName: formData.clientName || "Unknown Client",
-            companyUrl: formData.knowledgeUrl
+            companyUrl: formData.knowledgeUrl,
+            rfpText: formData.rfpText // Store text context
         }))
 
         // Simulate upload/processing delay
@@ -100,18 +97,34 @@ function IngestContent() {
 
             <Card className="border-0 shadow-lg">
                 <CardHeader>
-                    <CardTitle>Documents</CardTitle>
-                    <CardDescription>The system needs the RFP and your company profile.</CardDescription>
+                    <CardTitle>RFP Context</CardTitle>
+                    <CardDescription>Provide the requirements. You can upload a PDF or paste text.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/80">Paste Requirements / Description</label>
+                        <textarea
+                            className="cyber-input w-full h-32 p-3 bg-black/40 resize-none text-sm"
+                            placeholder="Paste the tender description or requirements here..."
+                            value={formData.rfpText || ""}
+                            onChange={(e) => setFormData({ ...formData, rfpText: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-white/10"></div>
+                        <span className="flex-shrink-0 mx-4 text-white/30 text-xs uppercase">OR Upload Document</span>
+                        <div className="flex-grow border-t border-white/10"></div>
+                    </div>
+
                     <FileUpload
-                        label="Upload RFP (PDF) *"
+                        label="Upload RFP (PDF)"
                         value={formData.rfpFile}
                         onChange={(file) => setFormData({ ...formData, rfpFile: file })}
                         error={errors.rfpFile}
                     />
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 pt-6 border-t border-white/10">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                                 <span className="w-full border-t border-white/10" />

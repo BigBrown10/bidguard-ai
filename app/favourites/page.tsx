@@ -79,7 +79,7 @@ export default function FavouritesPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
                                 >
-                                    <Link href={`/ingest?title=${encodeURIComponent(tender.title)}&client=${encodeURIComponent(tender.buyer)}`}>
+                                    <Link href={`/ingest?title=${encodeURIComponent(tender.title)}&client=${encodeURIComponent(tender.buyer)}&description=${encodeURIComponent(tender.description)}`}>
                                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors group relative overflow-hidden h-full flex flex-col">
 
                                             {/* Hover Glow */}
