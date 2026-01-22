@@ -4,6 +4,9 @@ import { runResearch } from "@/lib/agents/researcher";
 import { runDrafter } from "@/lib/agents/drafter";
 import { runCritic } from "@/lib/agents/critic";
 import { runHumanizer } from "@/lib/agents/humanizer";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { perplexitySonarPro } from "@/lib/perplexity";
 
 export async function performResearch(projectName: string, companyUrl?: string) {
     // In live mode, we would pass the companyUrl if the agent supported it.

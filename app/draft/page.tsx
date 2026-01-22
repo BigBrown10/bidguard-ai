@@ -151,34 +151,24 @@ export default function DraftPage() {
             attempts++
 
             // SAFETY BYPASS: If backend is dead (no Inngest worker), don't make user wait 2 mins.
-            // After 4 attempts (8 seconds), we assume the worker is offline and switch to simulation.
+            // After 4 attempts (8 seconds), we assume the worker is offline and switch to SYNCHRONOUS FALLBACK.
             if (attempts > 4) {
-                setLog(`Neural Link Unstable (Worker Offline). Engaging On-Device Generator...`)
-                await new Promise(r => setTimeout(r, 1500)) // Fake generation time
+                setLog(`Neural Link Unstable (Worker Offline). Engaging Rapid Response Generator...`)
 
-                fullProposalMarkdown = `# Executive Proposal: ${selectedDraft.strategyName}
+                // Call the "Rapid" Server Action (Real AI, just faster/synchronous)
+                try {
+                    fullProposalMarkdown = await generateRapidProposal(
+                        selectedDraft.strategyName,
+                        selectedDraft.executiveSummary,
+                        storedConfig?.projectName || "Project",
+                        storedConfig?.clientName || "Client",
+                        storedResearch
+                    );
+                } catch (err) {
+                    console.error("Critical: Even Rapid Fallback failed. Using Emergency text.", err);
+                    fullProposalMarkdown = `# Executive Proposal (Emergency Mode)\n\n## Executive Summary\n${selectedDraft.executiveSummary}\n\n(System Note: Partial Recovery due to connection failure.)`;
+                }
 
-## Executive Summary
-${selectedDraft.executiveSummary}
-
-## Strategic Alignment
-This proposal is architected to align perfectly with the client's core objectives. By leveraging our bespoke "Digital Twin" methodology, we ensure that all deliverables are stress-tested in a virtual environment before deployment.
-
-### Key Benefits
-*   **Risk Mitigation**: 99.9% uptime guarantee via redundant failovers.
-*   **Cost Efficiency**: Projected 30% OPEX reduction in Year 1.
-*   **Innovation**: First-to-market implementation of AI-driven compliance checks.
-
-## Implementation Roadmap
-1.  **Phase 1 (Weeks 1-4)**: Discovery & Architecture
-2.  **Phase 2 (Weeks 5-12)**: Development & Integration
-3.  **Phase 3 (Weeks 13-16)**: UAT & Pilot Launch
-
-## Commercials
-We offer a fixed-price engagement model to guarantee budget certainty.
-
-**Total Contract Value**: £1,250,000
-`
                 break // Break loop, we have data.
             }
 
