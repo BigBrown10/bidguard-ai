@@ -95,7 +95,7 @@ export default function RegisterPage() {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="w-full max-w-2xl glass-panel p-8 md:p-12 relative z-10 border border-white/10"
+                className="w-full max-w-md glass-panel p-8 md:p-10 relative z-10 border border-white/10"
             >
                 <div className="text-center mb-8">
                     <Link href="/">
@@ -108,95 +108,96 @@ export default function RegisterPage() {
                     </p>
                 </div>
 
-                <form onSubmit={handleRegister} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleRegister} className="flex flex-col gap-6">
 
-                    {/* Left Column - Auth */}
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Full Name</label>
-                            <div className="relative group">
-                                <UserCircle className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
-                                <input
-                                    type="text"
-                                    required
-                                    className="cyber-input w-full pl-12"
-                                    placeholder="John Doe"
-                                    value={fullName}
-                                    onChange={e => setFullName(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Email Address</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
-                                <input
-                                    type="email"
-                                    required
-                                    className="cyber-input w-full pl-12"
-                                    placeholder="name@company.com"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Password</label>
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    required
-                                    className="cyber-input w-full pl-12 pr-12"
-                                    placeholder="••••••••••••"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-3.5 text-white/30 hover:text-white transition-colors"
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Full Name</label>
+                        <div className="relative group">
+                            <UserCircle className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="text"
+                                required
+                                className="cyber-input w-full pl-12"
+                                placeholder="John Doe"
+                                value={fullName}
+                                onChange={e => setFullName(e.target.value)}
+                            />
                         </div>
                     </div>
 
-                    {/* Right Column - Company */}
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Company URL</label>
-                            <div className="relative group">
-                                <LinkIcon className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
-                                <input
-                                    type="url"
-                                    required
-                                    className="cyber-input w-full pl-12"
-                                    placeholder="https://mycompany.com"
-                                    value={companyUrl}
-                                    onChange={e => setCompanyUrl(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider">About Company (Public)</label>
-                            <div className="relative group h-full">
-                                <FileText className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
-                                <textarea
-                                    className="cyber-input w-full pl-12 h-[124px] resize-none leading-relaxed py-3"
-                                    placeholder="We specialize in..."
-                                    value={aboutCompany}
-                                    onChange={e => setAboutCompany(e.target.value)}
-                                />
-                            </div>
+                    {/* Email Address */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Email Address</label>
+                        <div className="relative group">
+                            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="email"
+                                required
+                                className="cyber-input w-full pl-12"
+                                placeholder="name@company.com"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                            />
                         </div>
                     </div>
 
-                    <div className="md:col-span-2 pt-4">
+                    {/* Password */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Password</label>
+                        <div className="relative group">
+                            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                className="cyber-input w-full pl-12 pr-12"
+                                placeholder="••••••••••••"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-3.5 text-white/30 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-white/5 my-2" />
+
+                    {/* Company URL */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider">Company URL</label>
+                        <div className="relative group">
+                            <LinkIcon className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
+                            <input
+                                type="url"
+                                required
+                                className="cyber-input w-full pl-12"
+                                placeholder="https://mycompany.com"
+                                value={companyUrl}
+                                onChange={e => setCompanyUrl(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* About Company */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider">About Company (Public)</label>
+                        <div className="relative group">
+                            <FileText className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
+                            <textarea
+                                className="cyber-input w-full pl-12 h-[100px] resize-none leading-relaxed py-3"
+                                placeholder="We specialize in..."
+                                value={aboutCompany}
+                                onChange={e => setAboutCompany(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-2">
                         <button
                             disabled={loading}
                             className="w-full cyber-button h-14 flex items-center justify-center gap-2 group text-lg"
