@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
-import { performDrafting, performSingleDraft, performHumanization, triggerProposalGeneration } from "@/app/actions"
+import { performDrafting, performSingleDraft, performHumanization, triggerProposalGeneration, generateRapidProposal } from "@/app/actions"
 import { ThinkingTerminal } from "@/components/ThinkingTerminal"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
