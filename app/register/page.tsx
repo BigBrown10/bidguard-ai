@@ -54,6 +54,12 @@ export default function RegisterPage() {
                     duration: 6000,
                     icon: <Mail className="text-secondary" />
                 })
+
+                // UX: Redirect to login so they are ready
+                setTimeout(() => {
+                    router.push('/login')
+                }, 4000)
+
                 setLoading(false)
                 return
             }
