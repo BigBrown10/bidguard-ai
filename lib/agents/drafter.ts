@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { perplexitySonarReasoning } from "../perplexity";
+import { perplexitySonarPro } from "../perplexity";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -37,7 +37,7 @@ const draftPrompt = PromptTemplate.fromTemplate(
 
 const draftChain = RunnableSequence.from([
     draftPrompt,
-    perplexitySonarReasoning,
+    perplexitySonarPro,
     parser,
 ]);
 
