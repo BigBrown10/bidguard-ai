@@ -7,53 +7,71 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
+  --color-win: var(--win);
 
   --font-sans: var(--font-inter);
 
-  --animate-fade-in: fade-in 0.6s ease-out forwards;
-  --animate-slide-up: slide-up 0.8s ease-out forwards;
-  --animate-glow-pulse: glow-pulse 3s infinite;
+  /* SPATIAL ANIMATIONS */
+  --animate-spatial-fade: spatial-fade 0.5s ease-in-out forwards;
+  --animate-spatial-slide: spatial-slide 0.5s ease-in-out forwards;
 
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  @keyframes spatial-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes spatial-slide {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
 
-  @keyframes glow-pulse {
-    0% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.2); }
-    50% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.6); }
-    100% { box-shadow: 0 0 5px rgba(0, 240, 255, 0.2); }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
 :root {
-  /* CYBERPUNK 2077 INSPIRED PALETTE */
-  --background: #050505; /* Deep Void Black */
-  --foreground: #EDEDED; /* Off-white text */
+  /* APPLE-SPATIAL MINIMALIST PALETTE */
+  --background: #000000;
+  --foreground: #FFFFFF;
 
-  /* Neon Electric Blue */
-  --primary: #00F0FF; 
-  --primary-foreground: #000000;
+  /* Primary: Apple Blue for "Win" states */
+  --primary: #007AFF;
+  --primary-foreground: #FFFFFF;
+  --win: #007AFF;
 
-  /* Samurai Red */
-  --secondary: #FF003C; 
+  /* Secondary: Muted Gray */
+  --secondary: #8E8E93;
   --secondary-foreground: #FFFFFF;
 
-  /* Toxic Yellow */
-  --accent: #FCEE0A;
+  /* Accent: Soft Blue-Gray */
+  --accent: #E5E5EA;
 
-  --card: #0F0F0F;
-  --card-foreground: #EDEDED;
+  --card: #0A0A0A;
+  --card-foreground: #FFFFFF;
 
-  --border: #333333;
-  --input: #1A1A1A;
+  --border: #1C1C1E;
+  --input: #1C1C1E;
 
-  --font-inter: 'Inter', sans-serif;
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* SPATIAL TOKENS */
+  --shadow-spatial: 0 20px 50px rgba(0, 0, 0, 0.15);
+  --shadow-spatial-lg: 0 40px 80px rgba(0, 0, 0, 0.25);
+  --radius-spatial: 1.5rem;
+  /* 24px */
+  --radius-spatial-lg: 2rem;
+  /* 32px */
 }
 
 body {
@@ -61,81 +79,157 @@ body {
   color: var(--foreground);
   font-family: var(--font-inter);
   overflow-x: hidden;
-  /* Cyberpunk Grid Background Pattern */
-  background-image: 
-    linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* HIGH-END GLASSMORPHISM */
+/* SPATIAL TYPOGRAPHY */
+h1,
+h2 {
+  letter-spacing: -0.05em;
+  font-weight: 700;
+}
+
+h3,
+h4 {
+  letter-spacing: -0.03em;
+  font-weight: 600;
+}
+
+p,
+li {
+  line-height: 1.75;
+}
+
+/* SPATIAL GLASS PANEL (Premium Floating Card) */
 .glass-panel {
-  background: rgba(15, 15, 15, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-spatial);
+  border-radius: var(--radius-spatial-lg);
+  transition: all 0.5s ease-in-out;
 }
 
 .glass-panel:hover {
-  border-color: var(--primary);
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-spatial-lg);
+  transform: translateY(-4px);
 }
 
-/* FORM ELEMENTS */
+/* SPATIAL FORM ELEMENTS */
 .cyber-input {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid #333;
+  background: rgba(28, 28, 30, 0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-spatial);
   color: white;
   transition: all 0.3s ease;
+  padding: 1rem;
 }
 
 .cyber-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
   outline: none;
 }
 
+/* SPATIAL BUTTON */
 .cyber-button {
-  background: var(--background);
-  border: 1px solid var(--primary);
-  color: var(--primary);
+  background: var(--primary);
+  border: none;
+  color: white;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: bold;
-  position: relative;
-  overflow: hidden;
+  letter-spacing: 1px;
+  font-weight: 600;
+  border-radius: var(--radius-spatial);
+  padding: 1rem 2rem;
   transition: all 0.3s ease;
 }
 
 .cyber-button:hover {
-  background: var(--primary);
-  color: black;
-  box-shadow: 0 0 20px var(--primary);
+  background: #0056B3;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
 }
 
-/* TYPOGRAPHY */
+.cyber-button:disabled {
+  background: var(--secondary);
+  cursor: not-allowed;
+}
+
+/* SPATIAL UTILITIES */
+.spatial-fade {
+  animation: var(--animate-spatial-fade);
+}
+
+.spatial-slide {
+  animation: var(--animate-spatial-slide);
+}
+
 .text-glow {
-  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+  text-shadow: 0 0 20px rgba(0, 122, 255, 0.4);
 }
 
-.text-glow-red {
-  text-shadow: 0 0 10px rgba(255, 0, 60, 0.6);
+/* MOBILE OPTIMIZATIONS */
+@media (max-width: 768px) {
+  .glass-panel {
+    border-radius: var(--radius-spatial);
+    margin: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .cyber-button {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .cyber-input {
+    font-size: 16px;
+    /* Prevents zoom on iOS */
+  }
 }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #333;
-  border-radius: 4px;
+  border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
+}
+
+/* PRINT/PDF STYLES */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .glass-panel {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
 }

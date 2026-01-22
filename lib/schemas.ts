@@ -18,3 +18,32 @@ export const IngestionSchema = z.object({
 })
 
 export type IngestionFormData = z.infer<typeof IngestionSchema>
+
+// V2: Structured Critique Output for Red Team Agent
+export const CritiqueOutputSchema = z.object({
+    score: z.number().min(0).max(10),
+    complianceChecklist: z.array(z.object({
+        item: z.string(),
+        status: z.boolean()
+    })),
+    harshFeedback: z.array(z.string()),
+    socialValuePresent: z.boolean(),
+    wordCount: z.number()
+})
+
+export type CritiqueOutput = z.infer<typeof CritiqueOutputSchema>
+
+// Banned words list for Humanizer
+export const BANNED_WORDS = [
+    "delve",
+    "comprehensive",
+    "tapestry",
+    "pivotal",
+    "unlock",
+    "synergies",
+    "synergy",
+    "leverage",
+    "holistic",
+    "paradigm"
+]
+
