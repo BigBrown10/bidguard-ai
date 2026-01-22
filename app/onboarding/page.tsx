@@ -19,6 +19,7 @@ export default function OnboardingPage() {
     useEffect(() => {
         // Check if user is logged in
         const checkUser = async () => {
+            if (!supabase) return;
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) {
                 router.push('/login')
@@ -35,6 +36,7 @@ export default function OnboardingPage() {
 
         setLoading(true)
         try {
+            if (!supabase) throw new Error("Supabase client not initialized")
             const { error } = await supabase
                 .from('profiles')
                 .upsert({

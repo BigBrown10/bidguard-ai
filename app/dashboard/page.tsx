@@ -38,6 +38,7 @@ export default function DashboardPage() {
     }
 
     const removeTender = async (id: string) => {
+        if (!supabase) return;
         const { error } = await supabase.from('saved_tenders').delete().eq('id', id)
         if (!error) {
             setSavedTenders(savedTenders.filter(t => t.id !== id))
