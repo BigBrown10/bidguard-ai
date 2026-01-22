@@ -22,6 +22,7 @@ function IngestContent() {
         rfpFile: null,
         knowledgeFile: null,
         knowledgeUrl: "",
+        companyContext: "",
     })
     const [errors, setErrors] = React.useState<Record<string, string>>({})
     const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -43,8 +44,8 @@ function IngestContent() {
                         // Actually, URL params are for RFP, not user profile.
                         // So we fill company URL if not present.
                         knowledgeUrl: prev.knowledgeUrl || profile.website || "",
-                        // We could also map company description to something if we had a field?
-                        // "knowledgeFile" is usually a file upload.
+                        // Auto-fill context from business description
+                        companyContext: prev.companyContext || profile.business_description || "",
                     }))
                 }
             }
@@ -75,6 +76,7 @@ function IngestContent() {
             projectName: formData.projectName,
             clientName: formData.clientName || "Unknown Client",
             companyUrl: formData.knowledgeUrl,
+            companyContext: formData.companyContext, // Pass context
             rfpText: formData.rfpText // Store text context
         }))
 
@@ -164,6 +166,22 @@ function IngestContent() {
                             accept=".pdf"
                             error={errors.knowledgeFile}
                         />
+
+                        <div className="relative flex items-center py-2">
+                            <div className="flex-grow border-t border-white/10"></div>
+                            <span className="flex-shrink-0 mx-4 text-white/30 text-xs uppercase">OR Paste Description</span>
+                            <div className="flex-grow border-t border-white/10"></div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-white/80">Company Overview & Capabilities</label>
+                            <textarea
+                                className="cyber-input w-full h-32 p-3 bg-black/40 resize-none text-sm"
+                                placeholder="Paste your company capabilities, achievements, and case study summaries..."
+                                value={formData.companyContext || ""}
+                                onChange={(e) => setFormData({ ...formData, companyContext: e.target.value })}
+                            />
+                        </div>
                     </div>
                 </CardContent>
             </Card>

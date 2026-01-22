@@ -39,7 +39,7 @@ export default function LoginPage() {
             // Using hard location set to ensure middleware re-runs with fresh cookies
             router.refresh()
             setTimeout(() => {
-                window.location.href = '/tenders'
+                window.location.href = '/'
             }, 800)
 
         } catch (err: any) {

@@ -7,11 +7,12 @@ export const IngestionSchema = z.object({
     rfpFile: z.any().optional(),
     knowledgeFile: z.any().optional(),
     knowledgeUrl: z.union([z.string().url(), z.literal("")]).optional(),
+    companyContext: z.string().optional(),
 }).refine(data => data.rfpFile?.size || (data.rfpText && data.rfpText.length > 10), {
     message: "Either upload an RFP document or paste the requirements text",
     path: ["rfpFile"],
-}).refine(data => data.knowledgeFile || data.knowledgeUrl, {
-    message: "Either Company Profile (PDF) or Knowledge URL is required",
+}).refine(data => data.knowledgeFile || data.knowledgeUrl || (data.companyContext && data.companyContext.length > 50), {
+    message: "Company Profile (PDF), Knowledge URL, or Company Description is required",
     path: ["knowledgeFile"],
 })
 
