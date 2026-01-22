@@ -74,13 +74,32 @@ export default function DraftPage() {
             await new Promise(r => setTimeout(r, 500)) // Short blink
 
             // 2. Draft (Single "Best" Strategy)
+            // 2. Draft (Single "Best" Strategy)
             setStage("drafting")
 
-            // EMERGENCY BYPASS: User reported persistent hanging. One calls the local simulation directly.
-            await new Promise(r => setTimeout(r, 1500)) // Fast "thinking"
+            // SMART GENERATION: Try Real AI first, fallback to simulation if it hangs (>15s)
+            let layout;
+            try {
+                // Create a promise that rejects after 15 seconds
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("AI_TIMEOUT")), 15000)
+                );
 
-            // Hardcoded Logic to ensure NO failures
-            const layout = getFallback("Innovative");
+                // Race the actual generation against the timeout
+                layout = await Promise.race([
+                    performSingleDraft(
+                        "Innovative",
+                        config.projectName || "Project",
+                        config.clientName || "Client",
+                        researchSum
+                    ),
+                    timeoutPromise
+                ]);
+
+            } catch (err) {
+                console.warn("Drafting too slow or failed, using simulation:", err);
+                layout = getFallback("Innovative");
+            }
 
             // 3. Critique (The Reviewer)
             await new Promise(r => setTimeout(r, 100))
