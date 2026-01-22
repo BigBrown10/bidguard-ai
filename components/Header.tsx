@@ -56,6 +56,9 @@ export function Header() {
                     </Link>
                     {user && (
                         <>
+                            <Link href="/favourites" className="transition-colors hover:text-white hover:text-glow">
+                                Favourites
+                            </Link>
                             <Link href="/dashboard" className="transition-colors hover:text-white hover:text-glow">
                                 Dashboard
                             </Link>
@@ -97,6 +100,13 @@ export function Header() {
                                             onClick={() => setMenuOpen(false)}
                                         >
                                             <UserIcon className="w-4 h-4" /> Company Profile
+                                        </Link>
+                                        <Link
+                                            href="/favourites"
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                                            onClick={() => setMenuOpen(false)}
+                                        >
+                                            <span className="text-lg leading-none">♥</span> Favourites
                                         </Link>
                                         <Link
                                             href="/dashboard"

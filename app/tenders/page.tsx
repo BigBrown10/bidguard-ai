@@ -109,14 +109,20 @@ export default function TenderPage() {
 
                 {/* Controls Hint */}
                 <div className="mt-8 flex gap-12 text-white/30 text-xs font-bold uppercase tracking-widest">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full border border-secondary/30 flex items-center justify-center text-secondary">✕</div>
+                    <button
+                        onClick={() => tenders.length > 0 && handleSwipe("left", tenders.length - 1)}
+                        className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors"
+                    >
+                        <div className="w-16 h-16 rounded-full border-2 border-secondary/30 group-hover:border-secondary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-secondary text-2xl">✕</div>
                         Pass
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full border border-primary/30 flex items-center justify-center text-primary">♥</div>
-                        Bit
-                    </div>
+                    </button>
+                    <button
+                        onClick={() => tenders.length > 0 && handleSwipe("right", tenders.length - 1)}
+                        className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors"
+                    >
+                        <div className="w-16 h-16 rounded-full border-2 border-primary/30 group-hover:border-primary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-primary text-2xl">♥</div>
+                        BID
+                    </button>
                 </div>
 
             </main>

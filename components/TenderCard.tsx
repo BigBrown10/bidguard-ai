@@ -72,15 +72,15 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
 
                 {/* Header */}
                 <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs uppercase tracking-widest mb-3">
-                        <ShieldCheck className="w-3 h-3" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs uppercase tracking-widest mb-3">
+                        <ShieldCheck className="w-4 h-4" />
                         {tender.sector}
                     </div>
                     <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-md">
                         {tender.title}
                     </h2>
-                    <p className="text-white/60 font-medium flex items-center gap-2">
-                        <Briefcase className="w-4 h-4" />
+                    <p className="text-white/60 font-medium flex items-center gap-2 text-base">
+                        <Briefcase className="w-5 h-5" />
                         {tender.buyer}
                     </p>
                 </div>
@@ -88,16 +88,16 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
                 {/* Key Stats Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-1">
-                            <PoundSterling className="w-3 h-3" /> Value
+                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
+                            <PoundSterling className="w-4 h-4" /> Value
                         </div>
                         <div className="text-lg font-bold text-secondary text-glow-red truncate">
                             {tender.value}
                         </div>
                     </div>
                     <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> Deadline
+                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" /> Deadline
                         </div>
                         <div className="text-lg font-bold text-white">
                             {tender.deadline}
@@ -116,7 +116,7 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
 
                 {/* Footer Location */}
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm">
-                    <MapPin className="w-4 h-4" />
+                    <MapPin className="w-5 h-5" />
                     {tender.location}
                 </div>
             </div>

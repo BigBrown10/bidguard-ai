@@ -26,7 +26,7 @@ export default function Home() {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-6xl md:text-9xl font-black tracking-tighter text-white mb-6 uppercase"
+            className="text-4xl md:text-7xl font-black tracking-tighter text-white mb-6 uppercase"
           >
             Dominate <span className="text-secondary text-glow-red">The Bid</span>
           </motion.h1>
