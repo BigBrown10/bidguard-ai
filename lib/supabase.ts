@@ -1,12 +1,12 @@
 
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Fallback to null if keys are missing (for dev/build without env vars)
+// Use createBrowserClient so cookies are automatically handled
 export const supabase = (supabaseUrl && supabaseAnonKey)
-    ? createClient(supabaseUrl, supabaseAnonKey)
+    ? createBrowserClient(supabaseUrl, supabaseAnonKey)
     : null
 
 if (!supabase) {
