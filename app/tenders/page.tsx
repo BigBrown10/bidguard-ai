@@ -17,6 +17,7 @@ export default function TenderPage() {
     // Load User ID on mount
     useEffect(() => {
         const loadUser = async () => {
+            if (!supabase) return
             const { data: { user } } = await supabase.auth.getUser()
             if (user) {
                 setUserId(user.id)
