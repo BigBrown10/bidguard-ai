@@ -58,8 +58,8 @@ export default function RegisterPage() {
                 return
             }
 
-            // 2. Create Profile Entry (Only if we have a session)
-            if (authData.session) {
+            // 2. Create Profile Entry (Only if we have a session AND user is defined)
+            if (authData.session && authData.user) {
                 const { error: profileError } = await supabase
                     .from('profiles')
                     .insert({

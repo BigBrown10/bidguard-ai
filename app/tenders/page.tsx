@@ -46,10 +46,16 @@ export default function TenderPage() {
             }
 
             // Optimistic feedback
-            toast.promise(saveTenderAction(swipedTender, userId), {
+            toast.promise(async () => {
+                const result = await saveTenderAction(swipedTender, userId)
+                if (!result.success) {
+                    throw new Error(result.error)
+                }
+                return result
+            }, {
                 loading: 'Securing Opportunity...',
-                success: (_data) => `Added "${swipedTender.title}" to Favourites`,
-                error: (err: Error) => `Failed to save: ${err.message}`
+                success: `Added "${swipedTender.title}" to Favourites`,
+                error: (err: any) => `Failed: ${err.message}`
             })
 
         } else {
