@@ -96,7 +96,16 @@ export function TenderDetailsModal({ tender, onClose }: TenderDetailsModalProps)
                                 >
                                     Close
                                 </Button>
-                                {/* We could add Actions here like 'Save' but that's duplicate of swipe */}
+                                <Button
+                                    className="flex-[2] h-12 text-black bg-white hover:bg-white/90 font-bold uppercase tracking-widest"
+                                    onClick={() => {
+                                        // Save to local storage to pass complex/long data to Ingest page
+                                        localStorage.setItem("pending_tender_import", JSON.stringify(tender))
+                                        window.location.href = "/ingest"
+                                    }}
+                                >
+                                    Draft Proposal
+                                </Button>
                             </div>
 
                         </motion.div>

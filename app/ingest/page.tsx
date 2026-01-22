@@ -30,9 +30,28 @@ function IngestContent() {
     // Clear RFP Text if File is uploaded (optional logic, but keeps UI clean)
     // Actually, let's allow both or manual override.
 
-    // NEW: Auto-fill profile
+    // NEW: Auto-fill profile & Pending Tender Import
     React.useEffect(() => {
-        const loadProfile = async () => {
+        const loadInitData = async () => {
+            // 1. Check for pending tender from Marketplace
+            const pendingImport = localStorage.getItem("pending_tender_import")
+            if (pendingImport) {
+                try {
+                    const tender = JSON.parse(pendingImport)
+                    setFormData(prev => ({
+                        ...prev,
+                        projectName: tender.title || prev.projectName,
+                        clientName: tender.buyer || prev.clientName,
+                        rfpText: tender.description || prev.rfpText,
+                    }))
+                    // Clear it so it doesn't persist on refresh/subsequent visits unwantedly
+                    localStorage.removeItem("pending_tender_import")
+                } catch (e) {
+                    console.error("Failed to parse tender import", e)
+                }
+            }
+
+            // 2. Load User Profile
             if (!supabase) return
             const { data: { user } } = await supabase.auth.getUser()
             if (user) {
@@ -40,17 +59,13 @@ function IngestContent() {
                 if (profile) {
                     setFormData(prev => ({
                         ...prev,
-                        // Only fill if empty to respect query params (though query params usually dominate initial state)
-                        // Actually, URL params are for RFP, not user profile.
-                        // So we fill company URL if not present.
                         knowledgeUrl: prev.knowledgeUrl || profile.website || "",
-                        // Auto-fill context from business description
                         companyContext: prev.companyContext || profile.business_description || "",
                     }))
                 }
             }
         }
-        loadProfile()
+        loadInitData()
     }, [])
 
     const validate = () => {
