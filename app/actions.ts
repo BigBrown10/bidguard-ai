@@ -124,11 +124,18 @@ export async function generateRapidProposal(strategyName: string, executiveSumma
     Do not offer advice. Do not explain what you are doing. 
     Start directly with the "Executive Summary" header.
 
+    FORMATTING RULES (STRICT):
+    - NO CITATIONS OR BRACKETS like [1], [2].
+    - NO BOLD TEXT in the body (use only for headers).
+    - NO EM-DASHES (—), use commas or colons.
+    - NO "Word count:" line at the end.
+    - HEADERS MUST BE CAPITALIZED.
+
     STRUCTURE:
-    1. Executive Summary
-    2. Proposed Solution (Technical & Methodology)
-    3. Delivery & Implementation
-    4. Commercials & Social Value
+    1. EXECUTIVE SUMMARY
+    2. PROPOSED SOLUTION (Technical & Methodology)
+    3. DELIVERY & IMPLEMENTATION
+    4. COMMERCIALS & SOCIAL VALUE
 
     TONE: B2B Professional, Specific, Persuasive.
     `;
