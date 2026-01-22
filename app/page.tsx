@@ -9,8 +9,6 @@ import { motion } from "framer-motion"
 export default function Home() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <Header />
-
       {/* BACKGROUND GRID & GLOW */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[20%] left-[20%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />

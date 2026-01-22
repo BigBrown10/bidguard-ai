@@ -203,8 +203,6 @@ export default function DraftPage() {
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary/30">
-            <Header />
-
             {/* Main Content Area */}
             <main className="container mx-auto max-w-7xl px-6 py-12 flex flex-col items-center justify-center min-h-[80vh]">
 

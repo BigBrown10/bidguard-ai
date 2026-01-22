@@ -52,8 +52,6 @@ export default function FavouritesPage() {
 
     return (
         <div className="min-h-screen bg-background relative">
-            <Header />
-
             <div className="container mx-auto px-6 py-12">
                 <div className="mb-12">
                     <h1 className="text-4xl font-black uppercase tracking-tighter text-white mb-2">

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Header } from "@/components/Header"
+import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
@@ -28,6 +28,29 @@ function IngestContent() {
 
     // Clear RFP Text if File is uploaded (optional logic, but keeps UI clean)
     // Actually, let's allow both or manual override.
+
+    // NEW: Auto-fill profile
+    React.useEffect(() => {
+        const loadProfile = async () => {
+            if (!supabase) return
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+                if (profile) {
+                    setFormData(prev => ({
+                        ...prev,
+                        // Only fill if empty to respect query params (though query params usually dominate initial state)
+                        // Actually, URL params are for RFP, not user profile.
+                        // So we fill company URL if not present.
+                        knowledgeUrl: prev.knowledgeUrl || profile.website || "",
+                        // We could also map company description to something if we had a field?
+                        // "knowledgeFile" is usually a file upload.
+                    }))
+                }
+            }
+        }
+        loadProfile()
+    }, [])
 
     const validate = () => {
         const result = IngestionSchema.safeParse(formData)
@@ -160,7 +183,6 @@ function IngestContent() {
 export default function IngestPage() {
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary/30">
-            <Header />
             <main className="container mx-auto max-w-3xl px-6 py-12">
                 <Suspense fallback={<div className="text-center text-white/50">Loading Interface...</div>}>
                     <IngestContent />

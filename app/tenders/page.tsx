@@ -72,7 +72,6 @@ export default function TenderPage() {
     return (
         <div className="min-h-screen bg-background overflow-hidden relative">
             <Toaster position="top-right" theme="dark" richColors />
-            <Header />
 
             {/* Background Ambience */}
             <div className="absolute inset-0 pointer-events-none">
