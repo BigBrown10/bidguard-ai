@@ -116,6 +116,12 @@ export default function DraftPage() {
 
         // STEP 2: POLL FOR COMPLETION (Supabase)
         // We poll the internal API which checks the DB layer
+        // STEP 2: POLL FOR COMPLETION (Supabase)
+        // We poll the internal API which checks the DB layer
+        let attempts = 0
+        const maxAttempts = 60 // 2 minutes (2s interval)
+        let fullProposalMarkdown = ""
+
         while (attempts < maxAttempts) {
             attempts++
 
