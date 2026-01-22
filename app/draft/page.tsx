@@ -8,6 +8,7 @@ import { ThinkingTerminal } from "@/components/ThinkingTerminal"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/Card"
+import ReactMarkdown from 'react-markdown'
 
 type ProcessingStage = "initializing" | "research-sync" | "drafting" | "review" | "humanizing" | "complete"
 
@@ -324,12 +325,12 @@ export default function DraftPage() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <div className="px-4 py-2 bg-black/40 rounded border border-white/5 text-center">
-                                                <div className="text-[10px] uppercase text-white/30 font-bold">Tech Score</div>
-                                                <div className="text-xl font-bold text-white">A+</div>
+                                                <div className="text-[10px] uppercase text-white/30 font-bold">Bid Score</div>
+                                                <div className="text-xl font-bold text-white">98/100</div>
                                             </div>
                                             <div className="px-4 py-2 bg-black/40 rounded border border-white/5 text-center">
-                                                <div className="text-[10px] uppercase text-white/30 font-bold">Risk</div>
-                                                <div className="text-xl font-bold text-green-400">Low</div>
+                                                <div className="text-[10px] uppercase text-white/30 font-bold">Win Rate</div>
+                                                <div className="text-xl font-bold text-green-400">High</div>
                                             </div>
                                         </div>
                                     </div>
@@ -337,9 +338,16 @@ export default function DraftPage() {
 
                                 <CardContent className="p-8 pt-0 space-y-6 relative z-10">
                                     <div className="prose prose-invert prose-lg max-w-none">
-                                        <p className="text-white/80 leading-relaxed bg-black/20 p-6 rounded-xl border border-white/5">
-                                            {drafts.best.executiveSummary}
-                                        </p>
+                                        <div className="text-white/80 leading-relaxed bg-black/20 p-6 rounded-xl border border-white/5">
+                                            <ReactMarkdown
+                                                components={{
+                                                    p: ({ node, ...props }) => <p className="mb-4 last:mb-0" {...props} />,
+                                                    strong: ({ node, ...props }) => <span className="text-white font-semibold" {...props} />
+                                                }}
+                                            >
+                                                {drafts.best.executiveSummary.replace(/\[\d+\]/g, '')}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
 
                                     {/* Reviewer Note */}
