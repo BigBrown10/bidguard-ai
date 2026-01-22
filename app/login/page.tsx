@@ -4,13 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
-import { motion } from 'framer-motion'
 import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { Toaster, toast } from 'sonner' // Requires sonner usually in layout, but we can add here locally or ensure global
@@ -21,7 +14,6 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
 
-    // Form inputs
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
