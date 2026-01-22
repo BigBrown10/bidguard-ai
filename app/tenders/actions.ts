@@ -57,8 +57,26 @@ export async function saveTenderAction(tender: Tender, _userId: string): Promise
 
         return { success: true }
 
+        return { success: true }
+
     } catch (error: any) {
         console.error("Save Action Unexpected Error:", error)
         return { success: false, error: error.message || "Unknown server error" }
     }
+}
+
+import { fetchGovTenders } from "@/lib/gov-api"
+
+export async function fetchTendersAction(): Promise<Tender[]> {
+    console.log("Fetching live tenders...")
+    const liveData = await fetchGovTenders()
+
+    if (liveData && liveData.length > 0) {
+        return liveData
+    }
+
+    // Fallback if API is empty or down (so the UI is never empty)
+    console.log("Live API empty/failed, using Mock Data")
+    const { MOCK_TENDERS } = await import("@/lib/mock-tenders")
+    return MOCK_TENDERS
 }

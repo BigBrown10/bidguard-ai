@@ -11,22 +11,32 @@ import { Loader2, RefreshCw } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 export default function TenderPage() {
-    const [tenders, setTenders] = useState<Tender[]>(MOCK_TENDERS)
+    const [tenders, setTenders] = useState<Tender[]>([])
     const [userId, setUserId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
-    // Load User ID on mount
+    // Load User ID & Tenders on mount
     useEffect(() => {
-        const loadUser = async () => {
-            if (!supabase) return
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                setUserId(user.id)
-                // Filter out already saved tenders later? For now, just show mock stack.
+        const init = async () => {
+            // 1. Auth check
+            if (supabase) {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) setUserId(user.id)
             }
-            setLoading(false)
+
+            // 2. Data Fetch (Live or Mock fallback)
+            try {
+                const data = await import("./actions").then(mod => mod.fetchTendersAction())
+                setTenders(data)
+            } catch (err) {
+                console.error("Failed to load tenders", err)
+                // Final safety net
+                setTenders(MOCK_TENDERS)
+            } finally {
+                setLoading(false)
+            }
         }
-        loadUser()
+        init()
     }, [])
 
     const handleSwipe = async (direction: "left" | "right", index: number) => {
