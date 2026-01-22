@@ -7,16 +7,29 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Header } from "@/components/Header"
 import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
-import { Loader2, RefreshCw } from "lucide-react"
+import { Loader2, RefreshCw, Filter, ChevronDown } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
 
+const INDUSTRY_FILTERS = [
+    { id: "all", label: "All Sectors" },
+    { id: "Healthcare", label: "Healthcare / NHS" },
+    { id: "Technology", label: "Technology / Digital" },
+    { id: "Defence", label: "Defence / Security" },
+    { id: "Construction", label: "Construction" },
+    { id: "Education", label: "Education" },
+    { id: "Transport", label: "Transport / Infrastructure" },
+]
+
 export default function TenderPage() {
+    const [allTenders, setAllTenders] = useState<Tender[]>([])
     const [tenders, setTenders] = useState<Tender[]>([])
     const [selectedTender, setSelectedTender] = useState<Tender | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
+    const [activeFilter, setActiveFilter] = useState("all")
+    const [filterOpen, setFilterOpen] = useState(false)
 
     // Load User ID & Tenders on mount
     useEffect(() => {
@@ -30,10 +43,11 @@ export default function TenderPage() {
             // 2. Data Fetch (Live or Mock fallback)
             try {
                 const data = await import("./actions").then(mod => mod.fetchTendersAction())
+                setAllTenders(data)
                 setTenders(data)
             } catch (err) {
                 console.error("Failed to load tenders", err)
-                // Final safety net
+                setAllTenders(MOCK_TENDERS)
                 setTenders(MOCK_TENDERS)
             } finally {
                 setLoading(false)
@@ -42,40 +56,41 @@ export default function TenderPage() {
         init()
     }, [])
 
-    const handleSwipe = async (direction: "left" | "right", index: number) => {
-        const swipedTender = tenders[index] // Logic is slightly tricky with index, usually better to pop from top
+    // Filter tenders by industry
+    useEffect(() => {
+        if (activeFilter === "all") {
+            setTenders(allTenders)
+        } else {
+            setTenders(allTenders.filter(t =>
+                t.sector.toLowerCase().includes(activeFilter.toLowerCase())
+            ))
+        }
+    }, [activeFilter, allTenders])
 
-        // Remove the top card (the one at 'index' in the render list is actually best handled by ID)
-        // But since we are rendering the whole array, let's just slice
+    const handleSwipe = async (direction: "left" | "right", index: number) => {
+        const swipedTender = tenders[index]
         const newTenders = [...tenders]
-        newTenders.pop() // Remove the last item (top of stack)
+        newTenders.pop()
         setTenders(newTenders)
+        // Also remove from allTenders to prevent reappearing on filter change
+        setAllTenders(prev => prev.filter(t => t.id !== swipedTender.id))
 
         if (direction === "right") {
             if (!userId) {
-                // Not logged in? Redirect to Register
                 window.location.href = '/register'
                 return
             }
-
-            // Optimistic feedback
             toast.promise(async () => {
                 const result = await saveTenderAction(swipedTender, userId)
-                if (!result.success) {
-                    throw new Error(result.error)
-                }
+                if (!result.success) throw new Error(result.error)
                 return result
             }, {
                 loading: 'Securing Opportunity...',
                 success: `Added "${swipedTender.title}" to Favourites`,
                 error: (err: any) => `Failed: ${err.message}`
             })
-
         } else {
-            // REJECTION LOGIC
-            // We do this silently usually, or with a small toast
             if (userId) {
-                // Fire and forget (don't block UI)
                 rejectTenderAction(swipedTender, userId).catch(err => console.error("Reject failed", err))
             }
         }
@@ -98,12 +113,49 @@ export default function TenderPage() {
 
             <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
 
-                <div className="text-center mb-8">
+                <div className="text-center mb-6">
                     <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
-                    <p className="text-white/40 text-sm tracking-widest uppercase">
-                        {tenders.length} Active Opportunities Detected
+
+                    {/* Industry Filter */}
+                    <div className="relative inline-block mt-4">
+                        <button
+                            onClick={() => setFilterOpen(!filterOpen)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white/70 hover:bg-white/10 transition-colors"
+                        >
+                            <Filter className="w-4 h-4" />
+                            {INDUSTRY_FILTERS.find(f => f.id === activeFilter)?.label || "All Sectors"}
+                            <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {filterOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] z-50"
+                            >
+                                {INDUSTRY_FILTERS.map(filter => (
+                                    <button
+                                        key={filter.id}
+                                        onClick={() => {
+                                            setActiveFilter(filter.id)
+                                            setFilterOpen(false)
+                                        }}
+                                        className={`w-full text-left px-4 py-3 text-sm transition-colors ${activeFilter === filter.id
+                                                ? 'bg-primary/20 text-primary'
+                                                : 'text-white/70 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </div>
+
+                    <p className="text-white/40 text-sm tracking-widest uppercase mt-3">
+                        {tenders.length} Active Opportunities
                     </p>
                 </div>
 

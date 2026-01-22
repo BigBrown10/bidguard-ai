@@ -44,8 +44,21 @@ export async function saveTenderAction(tender: Tender, _userId: string): Promise
             return { success: false, error: "Unauthorized: Invalid session" }
         }
 
+        // Check for duplicate before saving
+        const { data: existing } = await supabase
+            .from('saved_tenders')
+            .select('id')
+            .eq('user_id', user.id)
+            .filter('tender_data->>id', 'eq', tender.id)
+            .maybeSingle()
+
+        if (existing) {
+            console.log("Tender already saved, skipping duplicate")
+            return { success: true } // Silent success - already saved
+        }
+
         const { error } = await supabase.from('saved_tenders').insert({
-            user_id: user.id, // Use the secure user value
+            user_id: user.id,
             tender_data: tender,
             status: 'saved'
         })
@@ -54,8 +67,6 @@ export async function saveTenderAction(tender: Tender, _userId: string): Promise
             console.error("Supabase Insert Error:", error)
             return { success: false, error: `Database Error: ${error.message}` }
         }
-
-        return { success: true }
 
         return { success: true }
     } catch (error: any) {
