@@ -106,18 +106,19 @@ export async function rejectTenderAction(tender: Tender, _userId: string): Promi
     }
 }
 
-import { fetchGovTenders } from "@/lib/gov-api"
+import { getCachedTenders } from "@/lib/gov-api"
 
 export async function fetchTendersAction(): Promise<Tender[]> {
-    console.log("Fetching live tenders...")
+    console.log("[TENDERS ACTION] Fetching tenders from cache...")
     let tenders: Tender[] = []
 
-    // 1. Fetch Source Data
-    const liveData = await fetchGovTenders()
-    if (liveData && liveData.length > 0) {
-        tenders = liveData
+    // 1. Fetch from Supabase cache (or fallback to live API internally)
+    const cachedData = await getCachedTenders()
+    if (cachedData && cachedData.length > 0) {
+        tenders = cachedData
+        console.log(`[TENDERS ACTION] Got ${tenders.length} tenders from cache`)
     } else {
-        console.log("Live API empty/failed, using Mock Data")
+        console.log("[TENDERS ACTION] Cache empty, using Mock Data")
         const { MOCK_TENDERS } = await import("@/lib/mock-tenders")
         tenders = MOCK_TENDERS
     }

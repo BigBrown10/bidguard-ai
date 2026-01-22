@@ -5,9 +5,29 @@ import { perplexitySonarReasoning } from "@/lib/perplexity";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { perplexitySonarPro } from "@/lib/perplexity";
 import { TENDER_MASTERY_GUIDE } from "@/lib/knowledge/tender-mastery";
+import { syncTendersToSupabase } from "@/lib/gov-api";
 
-// Re-using the prompt from writer.ts
-// Re-using the prompt from writer.ts
+// =========================================
+// CRON: Hourly Tender Sync
+// =========================================
+export const syncTendersCron = inngest.createFunction(
+    { id: "sync-tenders-hourly" },
+    { cron: "0 * * * *" }, // Every hour on the hour
+    async ({ step }) => {
+        console.log("[CRON] Starting hourly tender sync...");
+
+        const result = await step.run("sync-tenders", async () => {
+            return await syncTendersToSupabase();
+        });
+
+        console.log(`[CRON] Sync complete: ${result.synced} synced, ${result.errors} errors`);
+        return result;
+    }
+);
+
+// =========================================
+// PROPOSAL GENERATION FUNCTION
+// =========================================
 const writerTemplate = `
 You are a Senior Human Bid Writer. You are NOT an AI.
 Your goal is to write a SUBSTANTIAL, DETAILED DRAFT PROPOSAL (approx 1500 words).
