@@ -48,7 +48,16 @@ export default function DraftPage() {
 
             // We focus on "Innovative" as the default high-quality output
             const strategyType = "Innovative"
-            let layout = await performSingleDraft(strategyType, config.projectName, config.clientName, storedResearch || researchSum)
+
+            // TIMEOUT RACE: If Agent takes > 25 seconds, force fallback to keep UI alive.
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Agent Timeout")), 25000)
+            );
+
+            let layout: any = await Promise.race([
+                performSingleDraft(strategyType, config.projectName, config.clientName, storedResearch || researchSum),
+                timeoutPromise
+            ]);
 
             // 3. Critique (The Reviewer)
             // We simulate the Critic Agent improving the score
