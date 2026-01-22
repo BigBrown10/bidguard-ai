@@ -22,22 +22,6 @@ export default function Home() {
         {/* HERO SECTION */}
         <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-4 md:pt-0">
 
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="mb-6 relative"
-          >
-            <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full" />
-            <Image
-              src="/logo-b.png"
-              alt="BidGuard Cyber Logo"
-              width={200}
-              height={200}
-              className="drop-shadow-[0_0_25px_rgba(0,240,255,0.5)] relative z-10"
-            />
-          </motion.div>
-
           <motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -71,7 +55,7 @@ export default function Home() {
             </Link>
             <Link href="/ingest">
               <button className="h-16 px-10 text-lg md:text-xl text-white border border-white/20 hover:border-primary hover:text-primary transition-all bg-black/40 backdrop-blur-md uppercase tracking-widest clip-path-slant min-w-[240px]">
-                Initialize System
+                Build Proposal
               </button>
             </Link>
           </motion.div>

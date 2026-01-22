@@ -59,8 +59,8 @@ export function Header() {
                             <Link href="/dashboard" className="transition-colors hover:text-white hover:text-glow">
                                 Dashboard
                             </Link>
-                            <Link href="/history" className="transition-colors hover:text-white hover:text-glow">
-                                Win History
+                            <Link href="/pricing" className="transition-colors hover:text-white hover:text-glow">
+                                Pricing
                             </Link>
                         </>
                     )}
