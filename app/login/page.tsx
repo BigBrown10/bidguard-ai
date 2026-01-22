@@ -32,11 +32,15 @@ export default function LoginPage() {
                 if (error) throw error
                 router.push('/ingest')
             } else {
+                const redirectUrl = typeof window !== 'undefined'
+                    ? `${window.origin}/auth/callback`
+                    : undefined
+
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
-                        emailRedirectTo: `${window.location.origin}/auth/callback`
+                        emailRedirectTo: redirectUrl
                     }
                 })
                 if (error) throw error
@@ -73,7 +77,7 @@ export default function LoginPage() {
                         </h1>
                     </Link>
                     <p className="text-white/50 text-sm tracking-widest uppercase">
-                        {isLogin ? "Authenticate Identity" : "Initialize New Operative"}
+                        {isLogin ? "Authenticate" : "Create Account"}
                     </p>
                 </div>
 
@@ -81,14 +85,14 @@ export default function LoginPage() {
 
                     {/* Email Input */}
                     <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Neuro-Link (Email)</label>
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Email Address</label>
                         <div className="relative group">
                             <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
                             <input
                                 type="email"
                                 required
                                 className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-4 text-white placeholder-white/20 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
-                                placeholder="agent@bidguard.ai"
+                                placeholder="name@company.com"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                             />
@@ -97,7 +101,7 @@ export default function LoginPage() {
 
                     {/* Password Input */}
                     <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Access Key</label>
+                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Password</label>
                         <div className="relative group">
                             <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
                             <input
@@ -130,7 +134,7 @@ export default function LoginPage() {
                             <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
                             <>
-                                {isLogin ? "Decrypt & Enter" : "Register Credentials"}
+                                {isLogin ? "Login" : "Register"}
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </>
                         )}
@@ -142,7 +146,7 @@ export default function LoginPage() {
                         onClick={() => setIsLogin(!isLogin)}
                         className="text-white/40 hover:text-primary text-sm transition-colors uppercase tracking-wider"
                     >
-                        {isLogin ? "No Access Key? Request Clearance" : "Already an Agent? Authenticate"}
+                        {isLogin ? "Need an account? Register" : "Already have an account? Login"}
                     </button>
                 </div>
             </motion.div>
