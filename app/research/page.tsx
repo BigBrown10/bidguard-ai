@@ -67,7 +67,6 @@ export default function ResearchPage() {
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-primary/30">
-            <Header />
             <ProcessingHUD isProcessing={!complete} status={complete ? "Waiting" : "Researching..."} />
 
             <main className="container mx-auto max-w-4xl px-6 py-12 space-y-8">
