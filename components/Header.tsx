@@ -13,19 +13,20 @@ export function Header() {
     const [menuOpen, setMenuOpen] = useState(false)
 
     useEffect(() => {
+        if (!supabase) return
+
         const checkUser = async () => {
-            if (!supabase) return
             const { data: { user } } = await supabase.auth.getUser()
             setUser(user)
         }
         checkUser()
 
         // Subscribe to auth changes
-        const { data: { subscription } } = supabase?.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
         })
 
-        return () => subscription?.unsubscribe()
+        return () => subscription.unsubscribe()
     }, [])
 
     const handleSignOut = async () => {
