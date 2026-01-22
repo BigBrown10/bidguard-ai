@@ -105,8 +105,15 @@ import { supabase } from "@/lib/supabase";
 // This risks timeout on Vercel Hobby (10s), so we use the FAST model and simplified chain.
 export async function generateRapidProposal(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string) {
     const writerTemplate = `
-    You are a Senior Human Bid Writer.
-    Write a COMPACT BUT IMPACTFUL DRAFT PROPOSAL (approx 800 words).
+    ROLE: You are an expert Senior Bid Writer for a top-tier consultancy (e.g. McKinsey/Deloitte).
+    TASK: Write a COMPACT BUT IMPACTFUL DRAFT PROPOSAL (approx 800 words).
+    
+    CRITICAL INSTRUCTIONS:
+    - YOU MUST ADOPT THE PERSONA OF THE WRITER.
+    - DO NOT START WITH "I appreciate", "Here is a proposal", or "I cannot".
+    - DO NOT MENTION THAT YOU ARE AN AI.
+    - START DIRECTLY WITH THE TITLE/CONTENT.
+    - USE UK ENGLISH SPELLING.
     
     DETAILS:
     Project: {projectName}
