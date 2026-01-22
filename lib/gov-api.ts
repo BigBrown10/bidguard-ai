@@ -48,6 +48,7 @@ export async function fetchGovTenders(): Promise<Tender[]> {
 
     } catch (error) {
         console.error("Failed to fetch live tenders:", error);
+        console.log("Note: Gov API may be rate-limited or unavailable. Use MOCK_TENDERS as fallback.");
         return [];
     }
 }

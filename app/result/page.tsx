@@ -21,22 +21,21 @@ export default function ResultPage() {
         }
     }, [])
 
-    // Clean text from AI artifacts
+    // Clean text from AI artifacts - PRESERVE MARKDOWN STRUCTURE
     const cleanText = (text: string) => {
         if (!text) return ""
         let cleaned = text
-            .replace(/\[\d+\]/g, '')
-            .replace(/\[.*?\]/g, '')
-            .replace(/\(Word count:.*?\)/gi, '')
-            .replace(/—/g, ', ')
-            .replace(/\*\*/g, '')
+            .replace(/\[\d+\]/g, '')  // Remove [1], [2] citations
+            .replace(/\(Word count:.*?\)/gi, '')  // Remove word count notes
 
+        // Remove banned words (case insensitive) but preserve sentence structure
         BANNED_WORDS.forEach(word => {
             const regex = new RegExp(`\\b${word}\\b`, 'gi')
             cleaned = cleaned.replace(regex, '')
         })
 
-        return cleaned.replace(/\s+/g, ' ').trim()
+        // Clean up double spaces but preserve line breaks for markdown
+        return cleaned.replace(/  +/g, ' ').trim()
     }
 
     // PDF Export

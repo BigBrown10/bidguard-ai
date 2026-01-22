@@ -1,53 +1,78 @@
 
 import { PromptTemplate } from "@langchain/core/prompts";
-import { perplexitySonarReasoning } from "@/lib/perplexity"; // Use pro/reasoning
+import { perplexitySonarReasoning } from "@/lib/perplexity";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
+// V2: 90% RULE + UK VERNACULAR + EVIDENCE DENSITY
 const writerTemplate = `
-You are a Senior Bid Writer for a top - tier government consultancy(like McKinsey or Deloitte).
-Your goal is to write a SUBSTANTIAL, DETAILED TENDER PROPOSAL(approx 800 - 1000 words) based on the chosen strategy.
+You are an elite UK Government Bid Writer with a 92% win rate. Your proposals have secured over £500M in contracts.
 
-    DETAILS:
-Project: { projectName }
-Client: { clientName }
-Selected Strategy: { strategyName }
-Research Context: { researchSummary }
-Strategy Core Concept: { originalSummary }
+## CRITICAL RULES (VIOLATION = AUTOMATIC FAILURE):
 
-TASK:
-Write a comprehensive, professional response. 
-Do not be brief.Expand on every point.Use professional formatting.
+### THE 90% RULE
+If the word limit is 1,000 words, you MUST generate exactly 900-950 words. Not 700. Not 1,100.
+Every word must earn its place. Evidence density over filler.
 
-    STRUCTURE:
+### BANNED WORDS (NEVER USE):
+Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies, Synergy, Leverage, Holistic, Paradigm, Robust
 
-# Executive Summary
-    (200 - 300 words.Hook the reader, summarize the win themes, and explain why this strategy is the only logical choice.)
+### UK VERNACULAR (REQUIRED):
+Use British spelling: Programme (not Program), Mobilisation (not Mobilization), Organisation (not Organization), Colour (not Color), Centre (not Center), Analyse (not Analyze)
 
-# 1. Proposed Solution
-    (500 + words.This is the meat of the proposal.)
-    *   ** Technical Architecture **: Describe the stack, the cloud infrastructure, and security model.
-*   ** Methodology **: Explain the agile / waterfall approach, sprints, and user - centric design.
-*   ** Key Features **: Bullet points of specific value - add capabilities.
+### BURSTINESS RHYTHM:
+Vary sentence length. Short punch. Then a longer explanatory sentence that provides context and detail. Short again.
+Example: "We deliver. Our methodology integrates real-time analytics with proven frameworks, validated across 47 NHS trusts. Results matter."
 
-# 2. Delivery & Implementation Plan
-    (400 words)
-    *   ** Mobilization **: What happens in the first 30 days ?
-*   ** Timeline **: A 6 - month phased rollout plan.
-*   ** Risk Management **: Identification and mitigation of 3 key risks.
+### EVIDENCE DENSITY:
+Every claim MUST be backed by a number, date, percentage, or specific example.
+BAD: "We have extensive experience in healthcare."
+GOOD: "Since 2019, we have delivered 23 NHS Digital programmes, achieving 94% on-time delivery with £2.3M in documented savings."
 
-# 3. Social Value & Innovation
-    (300 words)
-    *   ** Sustainability **: Net Zero commitments.
-*   ** Community **: Apprenticeships and local skills development.
-*   ** Future Innovation **: Roadmap for 12 months + (e.g.AI, Automation).
+---
 
-    TONE:
-    Authoritative, confident, precise.UK English(e.g., 'Programme', 'Mobilisation').
-Do not use placeholders.Invent plausible details if necessary to make it robust.
+## YOUR TASK:
+
+Project: {projectName}
+Client: {clientName}
+Selected Strategy: {strategyName}
+Research Context: {researchSummary}
+Strategy Core Concept: {originalSummary}
+
+Write a WINNING PROPOSAL following this exact structure:
+
+# EXECUTIVE SUMMARY
+(150-200 words. Hard-hitting. State the problem, your solution, and why you will win. Use specific numbers.)
+
+# PROPOSED SOLUTION (Technical & Methodology)
+(300-350 words)
+- Technical Architecture: Specific technologies, cloud infrastructure, security standards (ISO 27001, Cyber Essentials Plus)
+- Methodology: Agile/Hybrid approach with sprint cadence, user validation gates
+- Key Differentiators: 3 bullet points with evidence
+
+# DELIVERY & IMPLEMENTATION
+(200-250 words)
+- Mobilisation: First 30-day activities with named milestones
+- Timeline: Phased delivery with specific dates/durations
+- Risk Management: 3 risks with quantified mitigation strategies
+
+# SOCIAL VALUE
+(150-200 words)
+- Carbon Reduction Plan: Specific Net Zero commitments with dates
+- Community Impact: Apprenticeships (number), local hiring percentage, SME subcontracting
+- Modern Slavery Statement: Compliance confirmation
+
+# COMMERCIALS
+(100-150 words)
+- Fixed-price or capped rate card
+- Payment milestones tied to deliverables
+- Value engineering savings
+
+TOTAL TARGET: 900-950 words. Evidence in every paragraph. No filler. Win this.
 `;
 
 export async function runWriter(strategyName: string, originalSummary: string, projectName: string, clientName: string, researchSummary: string) {
-    console.log(`Writing full proposal for ${strategyName}...`);
+    console.log(`[WRITER AGENT] Drafting proposal for ${strategyName}...`);
+    console.log("[WRITER AGENT] Applying 90% Rule, UK Vernacular, Evidence Density...");
 
     const prompt = PromptTemplate.fromTemplate(writerTemplate);
     const chain = prompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
@@ -60,10 +85,21 @@ export async function runWriter(strategyName: string, originalSummary: string, p
             clientName,
             researchSummary
         });
-        return result;
+
+        // Post-processing: Enforce UK Vernacular
+        let processed = result
+            .replace(/\bprogram\b/gi, 'programme')
+            .replace(/\bmobilization\b/gi, 'mobilisation')
+            .replace(/\borganization\b/gi, 'organisation')
+            .replace(/\bcolor\b/gi, 'colour')
+            .replace(/\bcenter\b/gi, 'centre')
+            .replace(/\banalyze\b/gi, 'analyse')
+            .replace(/\boptimize\b/gi, 'optimise');
+
+        return processed;
     } catch (error) {
-        console.error("Writer Agent Failed:", error);
-        // Fallback if writing fails
-        return `# Executive Summary\n${originalSummary} \n\n## Generation Error\nFull proposal generation timed out.Please retry.`;
+        console.error("[WRITER AGENT] Failed:", error);
+        return `# Executive Summary\n${originalSummary}\n\n## Generation Error\nProposal generation timed out. Please retry.`;
     }
 }
+
