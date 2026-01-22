@@ -41,38 +41,49 @@ export default function RegisterPage() {
             if (authError) throw authError
 
             if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-                toast.error("Account exists", { description: "Please login instead." })
+                toast.error("Account exists", { description: "Please login with this email." })
                 setLoading(false)
                 return
             }
 
-            // 2. Create Profile Entry
-            if (authData.user) {
+            // CRITICAL CHECK: Did we get a session? (i.e. is Auto-Confirm enabled?)
+            // If NOT, we must stop and tell the user to verify email.
+            if (authData.user && !authData.session) {
+                toast.info("Verification Link Sent", {
+                    description: "Check your email to verify account before logging in.",
+                    duration: 6000,
+                    icon: <Mail className="text-secondary" />
+                })
+                setLoading(false)
+                return
+            }
+
+            // 2. Create Profile Entry (Only if we have a session)
+            if (authData.session) {
                 const { error: profileError } = await supabase
                     .from('profiles')
                     .insert({
                         id: authData.user.id,
-                        company_name: "My Company", // Default or extract from URL? leaving generic for now or user can edit later
+                        company_name: "My Company",
                         website: companyUrl,
                         business_description: aboutCompany,
                         updated_at: new Date().toISOString()
                     })
 
                 if (profileError) {
-                    console.error("Profile creation failed, but auth succeeded", profileError)
-                    // Non-blocking but good to know
+                    console.error("Profile creation failed", profileError)
                 }
+
+                toast.success("Account Created", {
+                    description: "Welcome to the network.",
+                })
+
+                // Redirect
+                router.refresh()
+                setTimeout(() => {
+                    window.location.href = '/tenders'
+                }, 800)
             }
-
-            toast.success("Account Created", {
-                description: "Welcome to the network.",
-            })
-
-            // Redirect
-            router.refresh()
-            setTimeout(() => {
-                window.location.href = '/tenders' // Go back to marketplace
-            }, 800)
 
         } catch (err: any) {
             console.error("Registration error:", err)
