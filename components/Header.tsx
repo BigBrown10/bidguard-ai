@@ -15,14 +15,16 @@ export function Header() {
     useEffect(() => {
         if (!supabase) return
 
+        const client = supabase // Capture in local const for type narrowing
+
         const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
+            const { data: { user } } = await client.auth.getUser()
             setUser(user)
         }
         checkUser()
 
         // Subscribe to auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null)
         })
 
