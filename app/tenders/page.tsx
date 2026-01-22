@@ -37,7 +37,16 @@ export default function TenderPage() {
         newTenders.pop() // Remove the last item (top of stack)
         setTenders(newTenders)
 
-        if (direction === "right" && userId) {
+        if (direction === "right") {
+            if (!userId) {
+                // Not logged in? Redirect to Register
+                // Ideally we save the swipe in localStorage to process after login, 
+                // but for now just redirecting as requested.
+                // console.log("User not logged in, redirecting to register")
+                window.location.href = '/register'
+                return
+            }
+
             console.log(`Saving tender: ${swipedTender.title}`)
             try {
                 await saveTenderAction(swipedTender, userId)

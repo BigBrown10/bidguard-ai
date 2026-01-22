@@ -140,7 +140,7 @@ export function Header() {
                             <Link href="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors">
                                 Login
                             </Link>
-                            <Link href="/login" className="cyber-button px-4 py-2 text-sm">
+                            <Link href="/register" className="cyber-button px-4 py-2 text-sm">
                                 Register
                             </Link>
                         </div>

@@ -22,6 +22,7 @@ Strategy Core Concept: {originalSummary}
 AUTHOR CONTEXT (YOUR COMPANY):
 Company Name: {companyName}
 Business Bio / About: {businessDescription}
+Strategic Deep Dive: {deepDiveStrategy}
 (Use this context to write the "Proposed Solution" and "Delivery" sections as if you are this specific company. Match their expertise.)
 
 EXPERT KNOWLEDGE (STRATEGIES TO WIN):
@@ -120,28 +121,65 @@ export const generateProposalFunction = inngest.createFunction(
             // A. Fetch User Profile Context
             let authorContext = {
                 companyName: "Our Agency",
-                businessDescription: "A leading provider of professional services."
+                businessDescription: "A leading provider of professional services.",
+                website: ""
             };
 
             if (supabase) {
-                // Get job to find user_id
                 const { data: job } = await supabase.from('jobs').select('user_id').eq('id', jobId).single();
 
                 if (job?.user_id) {
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('company_name, business_description')
+                        .select('company_name, business_description, website')
                         .eq('id', job.user_id)
                         .single();
 
                     if (profile) {
                         authorContext = {
                             companyName: profile.company_name || "Our Agency",
-                            businessDescription: profile.business_description || "A leading provider of professional services."
+                            businessDescription: profile.business_description || "A leading provider of professional services.",
+                            website: profile.website || ""
                         };
                     }
                 }
             }
+
+            // B. DEEP DIVE RESEARCH AGENT
+            // Analyze the company's specific fit for this project
+            const deepDiveResearch = await step.run("deep-dive-research", async () => {
+                const researchPrompt = PromptTemplate.fromTemplate(`
+                    You are a Strategic Bid Researcher.
+                    Research this specific company and find their unique angle for this client.
+
+                    AUTHOR COMPANY: {companyName}
+                    WEBSITE: {website}
+                    BIO: {businessDescription}
+
+                    CLIENT: {clientName}
+                    PROJECT: {projectName}
+
+                    TASK:
+                    1. If a website is provided, assume you have browsed it (simulate knowledge of their likely case studies/awards based on sector).
+                    2. Identify 3 specific "Killer Arguments" why THIS company is the perfect fit for THIS project.
+                    3. Find a potential "Ghost in the Machine" - a hidden client pain point we can solve.
+
+                    Output a concise briefing note (bullet points).
+                `);
+
+                const chain = researchPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+                try {
+                    return await chain.invoke({
+                        companyName: authorContext.companyName,
+                        website: authorContext.website,
+                        businessDescription: authorContext.businessDescription,
+                        clientName,
+                        projectName
+                    });
+                } catch (e) {
+                    return "Research unavailable. Proceeding with standard profile.";
+                }
+            });
 
             const prompt = PromptTemplate.fromTemplate(writerTemplate);
             // Switch to Standard Pro model for creative writing tasks (less refusal prone)
@@ -156,6 +194,7 @@ export const generateProposalFunction = inngest.createFunction(
                     researchSummary,
                     companyName: authorContext.companyName,
                     businessDescription: authorContext.businessDescription,
+                    deepDiveStrategy: deepDiveResearch,
                     masteryGuide: TENDER_MASTERY_GUIDE
                 });
             } catch (error) {
