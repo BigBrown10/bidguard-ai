@@ -229,7 +229,7 @@ li {
     border: 1px solid #ddd !important;
   }
 
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
 }
