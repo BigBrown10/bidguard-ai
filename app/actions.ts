@@ -58,13 +58,13 @@ import { inngest } from "@/lib/inngest/client";
 export async function triggerProposalGeneration(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string) {
     const jobId = crypto.randomUUID(); // Generate ID here
 
-    // 0. Get current user
-    const { data: { user } } = await supabase.auth.getUser();
-
     // 1. Create the job record in Supabase
     if (!supabase) {
         throw new Error("Supabase client not initialized");
     }
+
+    // 0. Get current user (Safe to call now)
+    const { data: { user } } = await supabase.auth.getUser();
 
     const { error } = await supabase.from('jobs').insert({
         id: jobId,
