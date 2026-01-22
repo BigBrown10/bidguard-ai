@@ -97,3 +97,45 @@ export async function triggerProposalGeneration(strategyName: string, executiveS
 
 import { supabase } from "@/lib/supabase";
 
+
+// SYNCHRONOUS FALLBACK: Run the proposal generation directly if Inngest is offline.
+// This risks timeout on Vercel Hobby (10s), so we use the FAST model and simplified chain.
+export async function generateRapidProposal(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string) {
+    const writerTemplate = `
+    You are a Senior Human Bid Writer.
+    Write a COMPACT BUT IMPACTFUL DRAFT PROPOSAL (approx 800 words).
+    
+    DETAILS:
+    Project: {projectName}
+    Client: {clientName}
+    Strategy: {strategyName}
+    Strategy Summary: {originalSummary}
+    
+    STRUCTURE:
+    1. Executive Summary (150 words)
+    2. Proposed Solution (300 words)
+    3. Delivery & Implementation (200 words)
+    4. Commercials & Conclusion (150 words)
+    
+    TONE: Professional, Convincing, Specific.
+    NO MARKDOWN FORMATTING IN HEADERS.
+    `;
+
+    const prompt = PromptTemplate.fromTemplate(writerTemplate);
+    // Use Pro model for speed (< 5s latency usually)
+    const chain = prompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+
+    try {
+        const text = await chain.invoke({
+            strategyName,
+            originalSummary: executiveSummary,
+            projectName,
+            clientName,
+            researchSummary
+        });
+        return text;
+    } catch (error) {
+        console.error("Rapid Gen Failed:", error);
+        throw new Error("Rapid Generation Failed");
+    }
+}
