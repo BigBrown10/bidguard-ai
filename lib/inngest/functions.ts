@@ -4,6 +4,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 import { perplexitySonarReasoning } from "@/lib/perplexity";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { perplexitySonarPro } from "@/lib/perplexity";
+import { TENDER_MASTERY_GUIDE } from "@/lib/knowledge/tender-mastery";
 
 // Re-using the prompt from writer.ts
 // Re-using the prompt from writer.ts
@@ -22,6 +23,10 @@ AUTHOR CONTEXT (YOUR COMPANY):
 Company Name: {companyName}
 Business Bio / About: {businessDescription}
 (Use this context to write the "Proposed Solution" and "Delivery" sections as if you are this specific company. Match their expertise.)
+
+EXPERT KNOWLEDGE (STRATEGIES TO WIN):
+{masteryGuide}
+(Apply these principles to the writing style and content structure. Ensure Social Value is specific and Risk is addressed.)
 
 STRICT OUTPUT RULES:
 1. NO MARKDOWN FORMATTING. Do not use hashtags (#), asterisks (*), or bold text.
@@ -111,7 +116,8 @@ export const generateProposalFunction = inngest.createFunction(
                     clientName,
                     researchSummary,
                     companyName: authorContext.companyName,
-                    businessDescription: authorContext.businessDescription
+                    businessDescription: authorContext.businessDescription,
+                    masteryGuide: TENDER_MASTERY_GUIDE
                 });
             } catch (error) {
                 throw new Error(`AI Generation Failed: ${error}`);
