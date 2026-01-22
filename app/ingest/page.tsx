@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/Header"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
@@ -11,9 +11,11 @@ import { IngestionSchema, type IngestionFormData } from "@/lib/schemas"
 
 export default function IngestPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+
     const [formData, setFormData] = React.useState<IngestionFormData>({
-        projectName: "",
-        clientName: "",
+        projectName: searchParams.get("title") || "",
+        clientName: searchParams.get("client") || "",
         rfpFile: null,
         knowledgeFile: null,
         knowledgeUrl: "",
