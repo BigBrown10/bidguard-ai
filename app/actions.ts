@@ -103,15 +103,16 @@ import { supabase } from "@/lib/supabase";
 
 // SYNCHRONOUS FALLBACK: Run the proposal generation directly if Inngest is offline.
 // This risks timeout on Vercel Hobby (10s), so we use the FAST model and simplified chain.
-export async function generateRapidProposal(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string) {
+export async function generateRapidProposal(strategyName: string, executiveSummary: string, projectName: string, clientName: string, researchSummary: string, keyFocus?: string) {
     const writerTemplate = `
     ROLE: You are an expert Senior Bid Writer for a top-tier consultancy (e.g. McKinsey/Deloitte).
-    TASK: Write a COMPACT BUT IMPACTFUL DRAFT PROPOSAL (approx 800 words).
+    TASK: Write a COMPACT BUT IMPACTFUL DRAFT PROPOSAL (approx 1500-2000 words).
     
     CRITICAL INSTRUCTIONS:
     - YOU MUST ADOPT THE PERSONA OF THE WRITER.
     - DO NOT START WITH "I appreciate", "Here is a proposal", or "I cannot".
     - DO NOT MENTION THAT YOU ARE AN AI.
+    - DO NOT INCLUDE A "Word Count" LINE AT THE END.
     - START DIRECTLY WITH THE TITLE/CONTENT.
     - USE UK ENGLISH SPELLING.
     
@@ -120,12 +121,13 @@ export async function generateRapidProposal(strategyName: string, executiveSumma
     Client: {clientName}
     Strategy: {strategyName}
     Strategy Summary: {originalSummary}
+    User's Key Focus Areas: {keyFocus}
     
     STRUCTURE:
-    1. Executive Summary (150 words)
-    2. Proposed Solution (300 words)
-    3. Delivery & Implementation (200 words)
-    4. Commercials & Conclusion (150 words)
+    1. Executive Summary (250 words)
+    2. Proposed Solution (600 words)
+    3. Delivery & Implementation (400 words)
+    4. Commercials & Conclusion (250 words)
     
     TONE: Professional, Convincing, Specific.
     NO MARKDOWN FORMATTING IN HEADERS.
@@ -141,7 +143,8 @@ export async function generateRapidProposal(strategyName: string, executiveSumma
             originalSummary: executiveSummary,
             projectName,
             clientName,
-            researchSummary
+            researchSummary,
+            keyFocus: keyFocus || "None provided"
         });
         return text;
     } catch (error) {
