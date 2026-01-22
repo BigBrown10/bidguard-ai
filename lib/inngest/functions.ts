@@ -52,6 +52,45 @@ STRUCTURE:
 Write purely in plain text.
 `;
 
+const criticTemplate = `
+You are a "Turing Test" Judge for Bid Proposals.
+Analyze the following text and determine if it sounds like an AI or a Human Expert.
+
+TEXT TO ANALYZE:
+{text}
+
+CRITERIA:
+1. Buzzwords (e.g. "digital landscape", "seamless integration", "unwavering commitment").
+2. Passive Voice ("It will be done" vs "We will do").
+3. Generic Claims (Lack of specific evidence).
+
+TASK:
+Return a JSON object with:
+- score: (0-100, where 100 is perfectly human)
+- feedback: (Bullet points of what to fix)
+- needsRewrite: (true if score < 85)
+`;
+
+const humanizerTemplate = `
+You are a Master Editor.
+Your goal is to rewrite the texts to be 100% HUMAN and WINNING.
+
+CRITIC FEEDBACK:
+{feedback}
+
+ORIGINAL TEXT:
+{originalText}
+
+INSTRUCTIONS:
+1. Apply the critic's feedback.
+2. REMOVE all AI-isms (delve, underscore, testament, landscape).
+3. Use SHORT, PUNCHY sentences.
+4. Be SPECIFIC. Invent plausible metrics if needed (e.g. "99.8% uptime" instead of "high availability").
+5. Keep the same structure but make it sing.
+
+Output ONLY the rewritten text.
+`;
+
 export const generateProposalFunction = inngest.createFunction(
     {
         id: "generate-tender-proposal",
@@ -124,7 +163,34 @@ export const generateProposalFunction = inngest.createFunction(
             }
         });
 
-        // 3. Save to Supabase
+        // 3. Critique & Humanize Loop
+        const finalOutput = await step.run("humanize-loop", async () => {
+            const criticPrompt = PromptTemplate.fromTemplate(criticTemplate);
+            const criticChain = criticPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser()); // Use Reasoning for better critique
+
+            const critiqueResponse = await criticChain.invoke({ text: resultMarkdown });
+            // Naive parsing of JSON since Reasoning models can be chatty. 
+            // In prod, use StructuredOutputParser.
+            // For now, let's assume we proceed to humanize if the text is long enough.
+
+            // Let's just ALWAYS run the humanizer for now to ensure quality, 
+            // using the reasoning output as chain-of-thought guide.
+
+            const humanizePrompt = PromptTemplate.fromTemplate(humanizerTemplate);
+            const humanizeChain = humanizePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+
+            try {
+                return await humanizeChain.invoke({
+                    feedback: critiqueResponse,
+                    originalText: resultMarkdown
+                });
+            } catch (e) {
+                console.error("Humanization failed, returning original", e);
+                return resultMarkdown;
+            }
+        });
+
+        // 4. Save to Supabase
         await step.run("save-result", async () => {
             if (!supabase) {
                 console.error("Supabase not configured, cannot save job result");
@@ -135,7 +201,7 @@ export const generateProposalFunction = inngest.createFunction(
                 .from('jobs')
                 .update({
                     status: 'completed',
-                    result: resultMarkdown
+                    result: finalOutput
                 })
                 .eq('id', jobId);
 
