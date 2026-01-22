@@ -38,8 +38,11 @@ export default function LoginPage() {
                 })
 
                 // Force router refresh and push
+                // Using hard location set to ensure middleware re-runs with fresh cookies
                 router.refresh()
-                router.push('/ingest')
+                setTimeout(() => {
+                    window.location.href = '/ingest'
+                }, 800)
 
             } else {
                 const redirectUrl = typeof window !== 'undefined'
