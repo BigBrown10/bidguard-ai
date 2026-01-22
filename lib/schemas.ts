@@ -8,6 +8,7 @@ export const IngestionSchema = z.object({
     knowledgeFile: z.any().optional(),
     knowledgeUrl: z.union([z.string().url(), z.literal("")]).optional(),
     companyContext: z.string().optional(),
+    userStrategy: z.string().optional(),
 }).refine(data => data.rfpFile?.size || (data.rfpText && data.rfpText.length > 10), {
     message: "Either upload an RFP document or paste the requirements text",
     path: ["rfpFile"],

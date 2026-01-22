@@ -22,7 +22,6 @@ function IngestContent() {
         rfpFile: null,
         knowledgeFile: null,
         knowledgeUrl: "",
-        knowledgeUrl: "",
         companyContext: "",
         userStrategy: "", // New optional field
     })
@@ -92,7 +91,6 @@ function IngestContent() {
         localStorage.setItem("bidguard_config", JSON.stringify({
             projectName: formData.projectName,
             clientName: formData.clientName || "Unknown Client",
-            companyUrl: formData.knowledgeUrl,
             companyUrl: formData.knowledgeUrl,
             companyContext: formData.companyContext, // Pass context
             userStrategy: formData.userStrategy, // Pass user ideas
