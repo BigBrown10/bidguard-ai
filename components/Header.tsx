@@ -6,8 +6,11 @@ export function Header() {
         <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-xl supports-[backdrop-filter]:bg-black/60">
             <div className="container mx-auto flex h-16 items-center justify-between px-6">
                 <Link href="/" className="flex items-center gap-2 group">
-                    <div className="h-6 w-6 rounded-md bg-primary shadow-[0_0_10px_rgba(0,122,255,0.5)] group-hover:scale-110 transition-transform" />
-                    <span className="text-lg font-bold tracking-tight text-white group-hover:text-primary transition-colors">BidGuard AI</span>
+                    <img
+                        src="/logo-b.png"
+                        alt="BidGuard AI"
+                        className="h-10 w-auto mix-blend-screen group-hover:scale-110 transition-transform"
+                    />
                 </Link>
                 <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-white/60">
                     <Link href="/dashboard" className="transition-colors hover:text-white hover:text-glow">
