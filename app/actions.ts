@@ -152,3 +152,46 @@ export async function generateRapidProposal(strategyName: string, executiveSumma
         throw new Error("Rapid Generation Failed");
     }
 }
+
+// RAPID STRATEGY GENERATION (Fallback for Drafting Phase)
+export async function generateRapidStrategy(projectName: string, clientName: string, researchSummary: string) {
+    const strategyTemplate = `
+    ROLE: You are a Strategic Bid Director.
+    TASK: Create a HIGH-LEVEL STRATEGY SUMMARY for a tender proposal.
+    
+    PROJECT: {projectName}
+    CLIENT: {clientName}
+    CONTEXT: {researchSummary}
+    
+    OUTPUT FORMAT: JSON ONLY.
+    {
+        "strategyName": "A catchy, professional title (e.g. 'Data-First Transformation')",
+        "executiveSummary": "A 150-word summary of the approach.",
+        "score": 92
+    }
+    
+    DO NOT WRAP IN MARKDOWN BLOCKS. JUST RAW JSON.
+    `;
+
+    const prompt = PromptTemplate.fromTemplate(strategyTemplate);
+    const chain = prompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+
+    try {
+        const jsonText = await chain.invoke({
+            projectName,
+            clientName,
+            researchSummary
+        });
+        // Clean potential markdown
+        const cleanJson = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (error) {
+        console.error("Rapid Strategy Failed:", error);
+        // Absolute worst case fallback if even Rapid fails
+        return {
+            strategyName: "Rapid Recovery Strategy",
+            executiveSummary: "We propose a robust, agile-aligned solution focusing on immediate value delivery and risk mitigation.",
+            score: 85
+        };
+    }
+}

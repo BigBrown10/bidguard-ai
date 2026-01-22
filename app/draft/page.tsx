@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
-import { performDrafting, performSingleDraft, performHumanization, triggerProposalGeneration, generateRapidProposal } from "@/app/actions"
+import { performDrafting, performSingleDraft, performHumanization, triggerProposalGeneration, generateRapidProposal, generateRapidStrategy } from "@/app/actions"
 import { ThinkingTerminal } from "@/components/ThinkingTerminal"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/Button"
@@ -98,8 +98,26 @@ export default function DraftPage() {
                 ]);
 
             } catch (err) {
-                console.warn("Drafting too slow or failed, using simulation:", err);
-                layout = getFallback("Innovative");
+                console.warn("Drafting too slow or failed, engaging Rapid Strategy Fallback...", err);
+
+                // Fallback 2: Rapid AI (Synchronous)
+                try {
+                    const rapidStrategy = await generateRapidStrategy(
+                        config.projectName || "Project",
+                        config.clientName || "Client",
+                        researchSum
+                    );
+                    layout = {
+                        ...rapidStrategy,
+                        // Ensure fields match expectation
+                        keyTheme: "Resilience",
+                        strengths: ["Fast Deployment", "AI-Optimized"],
+                        weaknesses: ["Requires client validation"]
+                    };
+                } catch (fallbackErr) {
+                    console.error("Even Rapid Strategy failed. Using static data.", fallbackErr);
+                    layout = getFallback("Innovative");
+                }
             }
 
             // 3. Critique (The Reviewer)
