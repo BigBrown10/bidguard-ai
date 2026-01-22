@@ -5,7 +5,7 @@ import { MOCK_TENDERS, Tender } from "@/lib/mock-tenders"
 import { TenderCard } from "@/components/TenderCard"
 import { AnimatePresence, motion } from "framer-motion"
 import { Header } from "@/components/Header"
-import { saveTenderAction } from "./actions"
+import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
 import { Loader2, RefreshCw } from "lucide-react"
 import { Toaster, toast } from "sonner"
@@ -72,7 +72,12 @@ export default function TenderPage() {
             })
 
         } else {
-            console.log(`Discarded tender: ${swipedTender.title}`)
+            // REJECTION LOGIC
+            // We do this silently usually, or with a small toast
+            if (userId) {
+                // Fire and forget (don't block UI)
+                rejectTenderAction(swipedTender, userId).catch(err => console.error("Reject failed", err))
+            }
         }
     }
 
