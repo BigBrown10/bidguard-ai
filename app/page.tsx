@@ -20,13 +20,29 @@ export default function Home() {
       <main className="flex flex-col relative z-10">
 
         {/* HERO SECTION */}
-        <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-12">
+        <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-4 md:pt-0">
+
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="mb-6 relative"
+          >
+            <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full" />
+            <Image
+              src="/logo-b.png"
+              alt="BidGuard Cyber Logo"
+              width={200}
+              height={200}
+              className="drop-shadow-[0_0_25px_rgba(0,240,255,0.5)] relative z-10"
+            />
+          </motion.div>
 
           <motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase"
+            className="text-6xl md:text-9xl font-black tracking-tighter text-white mb-6 uppercase"
           >
             Dominate <span className="text-secondary text-glow-red">The Bid</span>
           </motion.h1>
@@ -48,14 +64,16 @@ export default function Home() {
             transition={{ delay: 0.7 }}
             className="flex flex-col sm:flex-row gap-6"
           >
+            <Link href="/tenders">
+              <button className="cyber-button h-16 px-10 text-lg md:text-xl tracking-widest clip-path-slant bg-secondary/80 hover:bg-secondary text-white border-none shadow-[0_0_30px_rgba(239,68,68,0.4)]">
+                Explore Live Tenders
+              </button>
+            </Link>
             <Link href="/ingest">
-              <button className="cyber-button h-16 px-10 text-lg md:text-xl tracking-widest clip-path-slant">
+              <button className="h-16 px-10 text-lg md:text-xl text-white border border-white/20 hover:border-primary hover:text-primary transition-all bg-black/40 backdrop-blur-md uppercase tracking-widest clip-path-slant min-w-[240px]">
                 Initialize System
               </button>
             </Link>
-            <button className="h-16 px-10 text-lg md:text-xl text-white/60 hover:text-white border border-white/10 hover:border-white/40 transition-all bg-black/40 backdrop-blur-md uppercase tracking-widest">
-              View Protocol
-            </button>
           </motion.div>
         </section>
 
