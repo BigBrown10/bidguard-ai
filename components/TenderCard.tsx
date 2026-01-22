@@ -42,7 +42,7 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={handleDragEnd}
-            className="absolute top-0 w-full max-w-md h-[600px] glass-panel rounded-2xl border-2 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing origin-bottom"
+            className="absolute top-0 w-full max-w-md h-[600px] bg-black border-2 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing origin-bottom shadow-2xl"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -51,20 +51,24 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
             {/* Status Indicator Overlays */}
             <motion.div
                 style={{ opacity: useTransform(x, [50, 150], [0, 1]) }}
-                className="absolute top-10 right-10 z-20 border-4 border-primary text-primary font-black text-4xl uppercase tracking-widest px-4 py-2 rounded-lg -rotate-12 transform bg-black/50 backdrop-blur-sm"
+                className="absolute top-10 right-10 z-20 border-8 border-primary text-primary font-black text-6xl uppercase tracking-widest px-6 py-4 rounded-xl -rotate-12 transform bg-black shadow-xl"
             >
                 BID
             </motion.div>
 
             <motion.div
                 style={{ opacity: useTransform(x, [-150, -50], [1, 0]) }}
-                className="absolute top-10 left-10 z-20 border-4 border-secondary text-secondary font-black text-4xl uppercase tracking-widest px-4 py-2 rounded-lg rotate-12 transform bg-black/50 backdrop-blur-sm"
+                className="absolute top-10 left-10 z-20 border-8 border-secondary text-secondary font-black text-6xl uppercase tracking-widest px-6 py-4 rounded-xl rotate-12 transform bg-black shadow-xl"
             >
                 PASS
             </motion.div>
 
-            {/* Content */}
-            <div className="flex-1 p-8 flex flex-col relative z-10">
+            {/* Clickable Content Area */}
+            {/* Using a link or router push here would conflict with drag, catch 22. 
+                User wants "click and it auto fills". Let's put a "Select" button overlay or allow clicking non-draggable area? 
+                Actually, usually clicking card details opens details. 
+                I will add an onClick to the content div that only fires if not dragging. */}
+            <div className="flex-1 p-8 flex flex-col relative z-10 select-none pointer-events-none">
 
                 {/* Header */}
                 <div className="mb-6">
@@ -83,7 +87,7 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
 
                 {/* Key Stats Grid */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-black/40 p-4 rounded-xl border border-white/5">
+                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-1">
                             <PoundSterling className="w-3 h-3" /> Value
                         </div>
@@ -91,7 +95,7 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
                             {tender.value}
                         </div>
                     </div>
-                    <div className="bg-black/40 p-4 rounded-xl border border-white/5">
+                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> Deadline
                         </div>
@@ -107,7 +111,7 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
                         {tender.description}
                     </p>
                     {/* Fade out at bottom of text */}
-                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black/80 to-transparent" />
+                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black to-transparent" />
                 </div>
 
                 {/* Footer Location */}

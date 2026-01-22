@@ -77,7 +77,7 @@ export function Header() {
                                     {user.email?.[0].toUpperCase() || "U"}
                                 </div>
                                 <span className="text-sm text-white/80 hidden sm:block">
-                                    {user.user_metadata?.first_name || "Agent"}
+                                    {user.user_metadata?.first_name || ""}
                                 </span>
                             </button>
 
