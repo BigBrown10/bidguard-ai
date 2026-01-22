@@ -7,10 +7,11 @@ import { Briefcase, Calendar, MapPin, PoundSterling, ShieldCheck } from "lucide-
 interface TenderCardProps {
     tender: Tender;
     onSwipe: (direction: "left" | "right") => void;
+    onInfo: () => void;
     index: number;
 }
 
-export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
+export const TenderCard = ({ tender, onSwipe, onInfo, index }: TenderCardProps) => {
     const x = useMotionValue(0)
     const rotate = useTransform(x, [-200, 200], [-15, 15])
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
@@ -76,9 +77,24 @@ export const TenderCard = ({ tender, onSwipe, index }: TenderCardProps) => {
                         <ShieldCheck className="w-4 h-4" />
                         {tender.sector}
                     </div>
-                    <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-md">
+                    <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-md line-clamp-2">
                         {tender.title}
                     </h2>
+
+                    <button
+                        // Using pointerEvents to ensure click works despite parent drag?
+                        // Actually parent has drag, but child elements with onPointerDown stop propagation can work.
+                        // However, simpler is just `onPointerDown={(e) => e.stopPropagation()}` on the button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            onInfo()
+                        }}
+                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-30 group"
+                    >
+                        <span className="sr-only">More Info</span>
+                        <div className="w-6 h-6 flex items-center justify-center border-2 border-white/50 rounded-full text-white/80 font-serif italic text-sm font-bold group-hover:bg-white group-hover:text-black transition-all">i</div>
+                    </button>
                     <p className="text-white/60 font-medium flex items-center gap-2 text-base">
                         <Briefcase className="w-5 h-5" />
                         {tender.buyer}

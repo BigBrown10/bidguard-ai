@@ -10,8 +10,11 @@ import { supabase } from "@/lib/supabase"
 import { Loader2, RefreshCw } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
+import { TenderDetailsModal } from "@/components/TenderDetailsModal"
+
 export default function TenderPage() {
     const [tenders, setTenders] = useState<Tender[]>([])
+    const [selectedTender, setSelectedTender] = useState<Tender | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
 
@@ -110,6 +113,7 @@ export default function TenderPage() {
                                     tender={tender}
                                     index={tenders.length - 1 - index} // Reverses Z-index so last item is top
                                     onSwipe={(dir) => handleSwipe(dir, index)}
+                                    onInfo={() => setSelectedTender(tender)}
                                 />
                             ))
                         ) : (
@@ -150,6 +154,11 @@ export default function TenderPage() {
                 </div>
 
             </main>
+
+            <TenderDetailsModal
+                tender={selectedTender}
+                onClose={() => setSelectedTender(null)}
+            />
         </div>
     )
 }
