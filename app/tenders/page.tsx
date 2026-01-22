@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { MOCK_TENDERS, Tender } from "@/lib/mock-tenders"
 import { TenderCard } from "@/components/TenderCard"
 import { AnimatePresence, motion } from "framer-motion"
@@ -12,16 +12,6 @@ import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
 
-const INDUSTRY_FILTERS = [
-    { id: "all", label: "All Sectors" },
-    { id: "Healthcare", label: "Healthcare / NHS" },
-    { id: "Technology", label: "Technology / Digital" },
-    { id: "Defence", label: "Defence / Security" },
-    { id: "Construction", label: "Construction" },
-    { id: "Education", label: "Education" },
-    { id: "Transport", label: "Transport / Infrastructure" },
-]
-
 export default function TenderPage() {
     const [allTenders, setAllTenders] = useState<Tender[]>([])
     const [tenders, setTenders] = useState<Tender[]>([])
@@ -30,6 +20,16 @@ export default function TenderPage() {
     const [loading, setLoading] = useState(true)
     const [activeFilter, setActiveFilter] = useState("all")
     const [filterOpen, setFilterOpen] = useState(false)
+
+    // Dynamically extract unique sectors from the loaded tenders
+    const sectorFilters = useMemo(() => {
+        const sectors = new Set(allTenders.map(t => t.sector).filter(Boolean))
+        const filters = [{ id: "all", label: "All Sectors" }]
+        sectors.forEach(sector => {
+            filters.push({ id: sector, label: sector })
+        })
+        return filters
+    }, [allTenders])
 
     // Load User ID & Tenders on mount
     useEffect(() => {
@@ -125,7 +125,7 @@ export default function TenderPage() {
                             className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white/70 hover:bg-white/10 transition-colors"
                         >
                             <Filter className="w-4 h-4" />
-                            {INDUSTRY_FILTERS.find(f => f.id === activeFilter)?.label || "All Sectors"}
+                            {sectorFilters.find(f => f.id === activeFilter)?.label || "All Sectors"}
                             <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
                         </button>
 
@@ -135,7 +135,7 @@ export default function TenderPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] z-50"
                             >
-                                {INDUSTRY_FILTERS.map(filter => (
+                                {sectorFilters.map(filter => (
                                     <button
                                         key={filter.id}
                                         onClick={() => {
@@ -143,8 +143,8 @@ export default function TenderPage() {
                                             setFilterOpen(false)
                                         }}
                                         className={`w-full text-left px-4 py-3 text-sm transition-colors ${activeFilter === filter.id
-                                                ? 'bg-primary/20 text-primary'
-                                                : 'text-white/70 hover:bg-white/5'
+                                            ? 'bg-primary/20 text-primary'
+                                            : 'text-white/70 hover:bg-white/5'
                                             }`}
                                     >
                                         {filter.label}

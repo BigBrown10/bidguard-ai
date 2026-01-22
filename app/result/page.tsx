@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Download, RefreshCw, Loader2 } from "lucide-react"
+import { Download, RefreshCw, Loader2, FileText } from "lucide-react"
 import ReactMarkdown from 'react-markdown'
 import { WinMeter } from "@/components/WinMeter"
 import { ComplianceSidebar, ComplianceItem } from "@/components/ComplianceSidebar"
@@ -25,13 +25,12 @@ export default function ResultPage() {
     const cleanText = (text: string) => {
         if (!text) return ""
         let cleaned = text
-            .replace(/\[\d+\]/g, '') // Remove citations
+            .replace(/\[\d+\]/g, '')
             .replace(/\[.*?\]/g, '')
             .replace(/\(Word count:.*?\)/gi, '')
             .replace(/—/g, ', ')
             .replace(/\*\*/g, '')
 
-        // Remove banned words (case insensitive)
         BANNED_WORDS.forEach(word => {
             const regex = new RegExp(`\\b${word}\\b`, 'gi')
             cleaned = cleaned.replace(regex, '')
@@ -40,13 +39,12 @@ export default function ResultPage() {
         return cleaned.replace(/\s+/g, ' ').trim()
     }
 
-    // Strict PDF Export using html-to-image + jsPDF approach
+    // PDF Export
     const handleExportPDF = async () => {
         if (!contentRef.current) return
         setExporting(true)
 
         try {
-            // Dynamic import for client-side only
             const html2canvas = (await import('html2canvas')).default
             const { jsPDF } = await import('jspdf')
 
@@ -59,14 +57,10 @@ export default function ResultPage() {
             })
 
             const imgData = canvas.toDataURL('image/png')
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            })
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-            const imgWidth = 210 // A4 width in mm
-            const pageHeight = 297 // A4 height in mm
+            const imgWidth = 210
+            const pageHeight = 297
             const imgHeight = (canvas.height * imgWidth) / canvas.width
             let heightLeft = imgHeight
             let position = 0
@@ -74,7 +68,6 @@ export default function ResultPage() {
             pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
             heightLeft -= pageHeight
 
-            // Handle multi-page
             while (heightLeft > 0) {
                 position = heightLeft - imgHeight
                 pdf.addPage()
@@ -85,7 +78,6 @@ export default function ResultPage() {
             pdf.save(`BidGuard_Proposal_${Date.now()}.pdf`)
         } catch (error) {
             console.error("PDF Export failed:", error)
-            // Fallback to print
             window.print()
         } finally {
             setExporting(false)
@@ -94,123 +86,106 @@ export default function ResultPage() {
 
     if (!result) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="min-h-screen bg-black text-white flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         )
     }
 
     const wordCount = result.finalText ? result.finalText.split(/\s+/).length : 0
-    const winPercentage = Math.min(Math.round((wordCount / 2000) * 100), 100)
+    const winPercentage = Math.min(Math.round((result.critique?.score || 7) * 10), 100)
 
-    // Derive compliance from text analysis
     const complianceItems: ComplianceItem[] = [
-        { id: "social_value", label: "Social Value", checked: /social value/i.test(result.finalText) },
-        { id: "carbon", label: "Carbon Reduction", checked: /carbon|net zero|sustainability/i.test(result.finalText) },
-        { id: "iso", label: "ISO Standards", checked: /iso \d+|iso9001|iso27001/i.test(result.finalText) },
-        { id: "slavery", label: "Modern Slavery", checked: /modern slavery/i.test(result.finalText) }
+        { id: "social_value", label: "Social Value", checked: /social value/i.test(result.finalText || '') },
+        { id: "carbon", label: "Carbon Reduction", checked: /carbon|net zero|sustainability/i.test(result.finalText || '') },
+        { id: "iso", label: "ISO Standards", checked: /iso \d+|iso9001|iso27001/i.test(result.finalText || '') },
+        { id: "slavery", label: "Modern Slavery", checked: /modern slavery/i.test(result.finalText || '') }
     ]
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* Mobile Header */}
-            <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between print:hidden">
-                <h1 className="text-lg font-bold">Final Proposal</h1>
-                <div className="flex gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.location.href = '/draft'}
-                    >
-                        <RefreshCw className="w-4 h-4" />
-                    </Button>
-                    <Button
-                        size="sm"
-                        onClick={handleExportPDF}
-                        disabled={exporting}
-                    >
-                        {exporting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <>
-                                <Download className="w-4 h-4 mr-2" />
-                                PDF
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-black text-white selection:bg-primary/30 print:bg-white print:text-black">
+            <main className="container mx-auto max-w-5xl px-6 py-12 space-y-8 print:p-0">
 
-            <main className="container mx-auto max-w-6xl px-4 py-6 md:py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-3">
-                        {/* PDF Content Container */}
-                        <div
-                            ref={contentRef}
-                            className="bg-white text-black p-8 md:p-12 rounded-2xl shadow-lg"
-                            style={{ fontFamily: 'Georgia, serif' }}
-                        >
-                            <ReactMarkdown
-                                components={{
-                                    h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6 uppercase" {...props} />,
-                                    h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mb-3 mt-6 uppercase" {...props} />,
-                                    h3: ({ node, ...props }) => <h3 className="text-lg font-medium mb-2 mt-4" {...props} />,
-                                    p: ({ node, ...props }) => <p className="mb-4 leading-7 text-justify" {...props} />,
-                                    ul: ({ node, ...props }) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
-                                    ol: ({ node, ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
-                                    li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-                                    strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-                                }}
-                            >
-                                {cleanText(result.finalText)}
-                            </ReactMarkdown>
-                        </div>
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight text-white">Final Proposal</h1>
+                        <p className="text-white/60">The Swarm has selected and humanized the optimum strategy.</p>
                     </div>
+                    <div className="flex gap-4">
+                        <Button className='bg-white/10 hover:bg-white/20' onClick={() => window.location.href = '/draft'}>
+                            <RefreshCw className="mr-2 h-4 w-4" /> Retry
+                        </Button>
+                        <Button onClick={handleExportPDF} disabled={exporting}>
+                            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="mr-2 h-4 w-4" /> Export PDF</>}
+                        </Button>
+                    </div>
+                </div>
 
-                    {/* Sidebar (Hidden on mobile, visible on desktop) */}
-                    <div className="hidden lg:block space-y-6 print:hidden">
-                        {/* Win Meter */}
-                        <Card className="text-center">
-                            <CardHeader>
-                                <CardTitle className="text-sm">Win Probability</CardTitle>
-                            </CardHeader>
-                            <CardContent className="flex justify-center">
-                                <WinMeter percentage={winPercentage} size={100} />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block">
+
+                    {/* Main Content - BLACK BACKGROUND */}
+                    <Card className="lg:col-span-2 border-0 shadow-lg print:shadow-none print:border-none">
+                        <CardHeader>
+                            <CardTitle className="flex justify-between print:hidden">
+                                Proposal Document
+                                <span className="text-xs font-normal text-white/60 bg-white/10 px-2 py-1 rounded">
+                                    Strategy: {result.originalDraft?.strategyName?.toUpperCase() || "OPTIMIZED"}
+                                </span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {/* Hidden div for PDF (white background) */}
+                            <div ref={contentRef} className="hidden">
+                                <div className="bg-white text-black p-8" style={{ fontFamily: 'Georgia, serif' }}>
+                                    <ReactMarkdown>{cleanText(result.finalText)}</ReactMarkdown>
+                                </div>
+                            </div>
+
+                            {/* Visible content - DARK THEME */}
+                            <div className="prose prose-invert prose-sm max-w-none text-white/90 whitespace-pre-wrap font-serif leading-relaxed print:text-black print:prose p-8 bg-black/40 rounded-xl border border-white/5 print:bg-white print:border-0">
+                                <ReactMarkdown
+                                    components={{
+                                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 mt-6 text-primary uppercase" {...props} />,
+                                        h2: ({ node, ...props }) => <h2 className="text-xl font-semibold mb-3 mt-6 text-white uppercase" {...props} />,
+                                        h3: ({ node, ...props }) => <h3 className="text-lg font-medium mb-2 mt-4 text-white/80" {...props} />,
+                                        p: ({ node, ...props }) => <p className="mb-4 leading-7 text-white/80" {...props} />,
+                                        ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-4 space-y-2" {...props} />,
+                                        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-4 space-y-2" {...props} />,
+                                        li: ({ node, ...props }) => <li className="pl-1" {...props} />,
+                                        strong: ({ node, ...props }) => <strong className="font-bold text-white" {...props} />,
+                                    }}
+                                >
+                                    {cleanText(result.finalText)}
+                                </ReactMarkdown>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Sidebar - ORIGINAL STYLE */}
+                    <div className="space-y-6 print:hidden">
+                        <Card className="border-0 shadow-sm">
+                            <CardHeader><CardTitle className="text-lg">Bid Guard Analysis</CardTitle></CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex justify-center">
+                                    <WinMeter percentage={winPercentage} size={100} />
+                                </div>
+                                <div className="pt-4 border-t border-white/10">
+                                    <span className="text-xs uppercase text-white/50 font-bold">Word Count</span>
+                                    <div className="flex items-end gap-2 text-white">
+                                        <span className="text-xl font-bold">{wordCount}</span>
+                                        <span className="text-xs pb-1 text-white/50">words</span>
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
 
-                        {/* Compliance */}
                         <ComplianceSidebar items={complianceItems} />
-
-                        {/* Word Count */}
-                        <Card>
-                            <CardContent className="pt-6 text-center">
-                                <p className="text-3xl font-bold text-white">{wordCount}</p>
-                                <p className="text-xs text-white/50 uppercase tracking-widest">Words</p>
-                            </CardContent>
-                        </Card>
                     </div>
-                </div>
-
-                {/* Mobile Stats Row */}
-                <div className="lg:hidden mt-6 grid grid-cols-3 gap-4 print:hidden">
-                    <Card className="text-center p-4">
-                        <WinMeter percentage={winPercentage} size={60} strokeWidth={4} />
-                    </Card>
-                    <Card className="text-center p-4">
-                        <p className="text-2xl font-bold">{wordCount}</p>
-                        <p className="text-[10px] text-white/50 uppercase">Words</p>
-                    </Card>
-                    <Card className="text-center p-4">
-                        <p className="text-2xl font-bold text-green-400">
-                            {complianceItems.filter(i => i.checked).length}/{complianceItems.length}
-                        </p>
-                        <p className="text-[10px] text-white/50 uppercase">Compliant</p>
-                    </Card>
                 </div>
             </main>
         </div>
     )
 }
+
 
