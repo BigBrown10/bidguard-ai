@@ -8,6 +8,7 @@ import { Header } from "@/components/Header"
 import { saveTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
 import { Loader2, RefreshCw } from "lucide-react"
+import { Toaster, toast } from "sonner"
 
 export default function TenderPage() {
     const [tenders, setTenders] = useState<Tender[]>(MOCK_TENDERS)
@@ -40,19 +41,17 @@ export default function TenderPage() {
         if (direction === "right") {
             if (!userId) {
                 // Not logged in? Redirect to Register
-                // Ideally we save the swipe in localStorage to process after login, 
-                // but for now just redirecting as requested.
-                // console.log("User not logged in, redirecting to register")
                 window.location.href = '/register'
                 return
             }
 
-            console.log(`Saving tender: ${swipedTender.title}`)
-            try {
-                await saveTenderAction(swipedTender, userId)
-            } catch (err) {
-                console.error("Failed to save", err)
-            }
+            // Optimistic feedback
+            toast.promise(saveTenderAction(swipedTender, userId), {
+                loading: 'Securing Opportunity...',
+                success: (_data) => `Added "${swipedTender.title}" to Favourites`,
+                error: (err: Error) => `Failed to save: ${err.message}`
+            })
+
         } else {
             console.log(`Discarded tender: ${swipedTender.title}`)
         }
@@ -66,6 +65,7 @@ export default function TenderPage() {
 
     return (
         <div className="min-h-screen bg-background overflow-hidden relative">
+            <Toaster position="top-right" theme="dark" richColors />
             <Header />
 
             {/* Background Ambience */}
