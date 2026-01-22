@@ -20,27 +20,12 @@ export default function Home() {
       <main className="flex flex-col relative z-10">
 
         {/* HERO SECTION */}
-        <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-20">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="mb-8 relative"
-          >
-            <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full" />
-            <Image
-              src="/logo-b.png"
-              alt="BidGuard Cyber Logo"
-              width={160}
-              height={160}
-              className="drop-shadow-[0_0_25px_rgba(0,240,255,0.5)] relative z-10"
-            />
-          </motion.div>
+        <section className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-12">
 
           <motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.1 }}
             className="text-5xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase"
           >
             Dominate <span className="text-secondary text-glow-red">The Bid</span>

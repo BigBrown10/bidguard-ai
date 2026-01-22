@@ -7,36 +7,54 @@ import { motion } from 'framer-motion'
 import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { motion } from 'framer-motion'
+import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
+import { Toaster, toast } from 'sonner' // Requires sonner usually in layout, but we can add here locally or ensure global
+
 export default function LoginPage() {
     const router = useRouter()
     const [isLogin, setIsLogin] = useState(true)
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
 
+    // Form inputs
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
-        setError(null)
 
         try {
             if (!supabase) throw new Error("Supabase client not initialized")
 
             if (isLogin) {
-                const { error } = await supabase.auth.signInWithPassword({
+                const { error, data } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 })
                 if (error) throw error
+
+                // Successful login
+                toast.success("Identity Verified", {
+                    description: "Accessing secure environment...",
+                    icon: <CheckCircle2 className="text-secondary" />
+                })
+
+                // Force router refresh and push
+                router.refresh()
                 router.push('/ingest')
+
             } else {
                 const redirectUrl = typeof window !== 'undefined'
                     ? `${window.origin}/auth/callback`
                     : undefined
 
-                const { error } = await supabase.auth.signUp({
+                const { error, data } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {
@@ -44,16 +62,24 @@ export default function LoginPage() {
                     }
                 })
                 if (error) throw error
-                // For now, assume auto-confirm is off or user needs to check email
-                // But if auto-confirm is ON (dev mode), it might log them in.
-                // Let's just try to login immediately after signup just in case, 
-                // or show a "Check your email" message.
-                router.push('/ingest')
+
+                if (data.user && data.user.identities && data.user.identities.length === 0) {
+                    toast.error("Account exists", { description: "Please login with this email instead." })
+                    setIsLogin(true)
+                } else {
+                    toast.success("Protocol Initiated", {
+                        description: "Check your email to verify neural-link connection.",
+                        icon: <Mail className="text-primary" />
+                    })
+                }
             }
 
-            router.refresh() // Refresh middleware
         } catch (err: any) {
-            setError(err.message)
+            console.error("Auth error:", err)
+            toast.error("Access Denied", {
+                description: err.message || "Invalid credentials provided.",
+                icon: <AlertTriangle className="text-red-500" />
+            })
         } finally {
             setLoading(false)
         }
@@ -61,6 +87,9 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Toaster for Notifications */}
+            <Toaster position="top-center" theme="dark" closeButton richColors />
+
             {/* Animated Background Blobs */}
             <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] animate-pulse" />
             <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[100px] animate-pulse delay-1000" />
@@ -105,26 +134,22 @@ export default function LoginPage() {
                         <div className="relative group">
                             <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 required
-                                className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-4 text-white placeholder-white/20 focus:border-secondary focus:ring-1 focus:ring-secondary transition-all outline-none"
+                                className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-12 text-white placeholder-white/20 focus:border-secondary focus:ring-1 focus:ring-secondary transition-all outline-none"
                                 placeholder="••••••••••••"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-3.5 text-white/30 hover:text-white transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
                         </div>
                     </div>
-
-                    {error && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="bg-red-500/10 border border-red-500/50 text-red-200 p-3 text-sm flex items-center gap-2"
-                        >
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            {error}
-                        </motion.div>
-                    )}
 
                     <button
                         disabled={loading}
