@@ -23,6 +23,7 @@ export default function TenderPage() {
     const [activeFilter, setActiveFilter] = useState("all")
     const [priceFilter, setPriceFilter] = useState("all")
     const [filterOpen, setFilterOpen] = useState<boolean | string>(false)
+    const [expandedFilters, setExpandedFilters] = useState(false)
 
     // V3: Modal states
     const [ideaModalOpen, setIdeaModalOpen] = useState(false)
@@ -235,48 +236,74 @@ export default function TenderPage() {
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
 
-                    {/* Filters - Horizontal Scroll (Apple Style) */}
-                    <div className="w-full max-w-md mb-6 overflow-x-auto no-scrollbar py-2 relative z-50">
-                        <div className="flex gap-2 px-1">
-                            {/* Industry Pill Group */}
-                            <div className="flex items-center bg-white/5 rounded-full p-1 border border-white/10 backdrop-blur-md">
-                                <span className="px-3 text-[10px] text-white/40 uppercase font-bold tracking-wider">Sector</span>
-                                {sectorFilters.map(filter => (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => setActiveFilter(filter.id)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeFilter === filter.id
-                                                ? 'bg-primary text-black shadow-[0_0_10px_rgba(255,0,60,0.5)]'
-                                                : 'text-white/60 hover:text-white hover:bg-white/10'
-                                            }`}
-                                    >
-                                        {filter.label.replace('All Sectors', 'All')}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Value Pill Group */}
-                            <div className="flex items-center bg-white/5 rounded-full p-1 border border-white/10 backdrop-blur-md">
-                                <span className="px-3 text-[10px] text-white/40 uppercase font-bold tracking-wider">Value</span>
-                                {[
-                                    { id: 'all', label: 'Any' },
-                                    { id: 'low', label: '<100k' },
-                                    { id: 'mid', label: '100k-1m' },
-                                    { id: 'high', label: '>1m' },
-                                ].map(filter => (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => setPriceFilter(filter.id)}
-                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${priceFilter === filter.id
-                                                ? 'bg-secondary text-black shadow-[0_0_10px_rgba(0,240,255,0.5)]'
-                                                : 'text-white/60 hover:text-white hover:bg-white/10'
-                                            }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                ))}
-                            </div>
+                    {/* Filters - Collapsible Grid */}
+                    <div className="w-full max-w-md mb-6 relative z-50">
+                        {/* Header / Toggle */}
+                        <div className="flex justify-between items-center mb-2 px-1">
+                            <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">
+                                Filtering by {activeFilter === 'all' ? 'All Sectors' : activeFilter}
+                            </span>
+                            <button
+                                onClick={() => setExpandedFilters(!expandedFilters)}
+                                className="text-[10px] text-primary hover:text-white uppercase font-bold tracking-wider flex items-center gap-1 transition-colors"
+                            >
+                                {expandedFilters ? 'Collapse' : 'View All'}
+                                <ChevronDown className={`w-3 h-3 transition-transform ${expandedFilters ? 'rotate-180' : ''}`} />
+                            </button>
                         </div>
+
+                        <motion.div
+                            layout
+                            className={`w-full bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-3 transition-all ${expandedFilters ? 'overflow-visible' : 'overflow-hidden'
+                                }`}
+                        >
+                            <div className={`flex gap-2 ${expandedFilters ? 'flex-wrap justify-center' : 'overflow-x-auto no-scrollbar'}`}>
+
+                                {/* Sector Group */}
+                                <div className={`flex ${expandedFilters ? 'flex-wrap justify-center gap-2' : 'flex-nowrap gap-2'} items-center`}>
+                                    {/* Label only visible in collapsed scroll to save space in grid */}
+                                    {!expandedFilters && <span className="px-2 text-[10px] text-white/30 uppercase font-bold whitespace-nowrap">Sector</span>}
+
+                                    {sectorFilters.map(filter => (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => setActiveFilter(filter.id)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap border ${activeFilter === filter.id
+                                                ? 'bg-primary border-primary text-black shadow-[0_0_10px_rgba(255,0,60,0.5)]'
+                                                : 'bg-white/5 border-white/5 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20'
+                                                }`}
+                                        >
+                                            {filter.label.replace('All Sectors', 'All')}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Divider */}
+                                <div className="w-px bg-white/10 mx-1 h-6 shrink-0" />
+
+                                {/* Value Group */}
+                                <div className={`flex ${expandedFilters ? 'flex-wrap justify-center gap-2' : 'flex-nowrap gap-2'} items-center`}>
+                                    {!expandedFilters && <span className="px-2 text-[10px] text-white/30 uppercase font-bold whitespace-nowrap">Value</span>}
+                                    {[
+                                        { id: 'all', label: 'Any' },
+                                        { id: 'low', label: '<100k' },
+                                        { id: 'mid', label: '100k-1m' },
+                                        { id: 'high', label: '>1m' },
+                                    ].map(filter => (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => setPriceFilter(filter.id)}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap border ${priceFilter === filter.id
+                                                ? 'bg-secondary border-secondary text-black shadow-[0_0_10px_rgba(0,240,255,0.5)]'
+                                                : 'bg-white/5 border-white/5 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20'
+                                                }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
 
                     <p className="text-white/40 text-sm tracking-widest uppercase mt-3">

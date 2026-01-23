@@ -110,7 +110,7 @@ export async function getCachedTenders(sector?: string): Promise<Tender[]> {
         .from('tenders')
         .select('*')
         .order('fetched_at', { ascending: false })
-        .limit(200);
+        .limit(500);
 
     if (sector && sector !== 'all') {
         query = query.ilike('sector', `%${sector}%`);
