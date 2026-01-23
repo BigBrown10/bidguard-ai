@@ -6,6 +6,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { perplexitySonarPro } from "@/lib/perplexity";
 import { TENDER_MASTERY_GUIDE } from "@/lib/knowledge/tender-mastery";
 import { syncTendersToSupabase } from "@/lib/gov-api";
+import { sendProposalCompleteEmail, sendProposalFailedEmail } from "@/lib/email";
 
 // =========================================
 // CRON: Hourly Tender Sync
@@ -280,12 +281,25 @@ export const generateAutonomousProposal = inngest.createFunction(
         id: "generate-autonomous-proposal",
         concurrency: 3,
         onFailure: async ({ event, error }) => {
-            const { proposalId } = event.data.event.data;
+            const { proposalId, userId, tenderTitle } = event.data.event.data;
             if (proposalId && supabase) {
                 await supabase.from('proposals').update({
                     status: 'failed',
                     error_message: error.message
                 }).eq('id', proposalId);
+
+                // Send failure notification email
+                if (userId) {
+                    const { data: user } = await supabase.auth.admin.getUserById(userId).catch(() => ({ data: null }));
+                    if (user?.user?.email) {
+                        await sendProposalFailedEmail({
+                            to: user.user.email,
+                            userName: user.user.user_metadata?.first_name || 'there',
+                            proposalTitle: tenderTitle || 'Untitled Proposal',
+                            errorMessage: error.message
+                        });
+                    }
+                }
             }
         }
     },
@@ -515,6 +529,21 @@ export const generateAutonomousProposal = inngest.createFunction(
                 score: critiqueOutput.score,
                 updated_at: new Date().toISOString()
             }).eq('id', proposalId);
+        });
+
+        // 13. Send completion email
+        await step.run("send-email", async () => {
+            if (!supabase) return;
+            const { data: user } = await supabase.auth.admin.getUserById(userId).catch(() => ({ data: null }));
+            if (user?.user?.email) {
+                await sendProposalCompleteEmail({
+                    to: user.user.email,
+                    userName: user.user.user_metadata?.first_name || 'there',
+                    proposalTitle: tenderTitle,
+                    proposalId,
+                    score: critiqueOutput.score || 7
+                });
+            }
         });
 
         console.log(`[AUTONOMOUS] Complete: ${tenderTitle} - Score: ${critiqueOutput.score}`);
