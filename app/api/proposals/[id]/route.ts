@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET(
-    request: Request,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
+
     try {
         const cookieStore = await cookies();
         const supabase = createServerClient(
@@ -35,7 +37,7 @@ export async function GET(
         const { data: proposal, error } = await supabase
             .from('proposals')
             .select('*')
-            .eq('id', params.id)
+            .eq('id', id)
             .eq('user_id', user.id)
             .single();
 
@@ -51,9 +53,11 @@ export async function GET(
 }
 
 export async function PATCH(
-    request: Request,
-    { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
+
     try {
         const cookieStore = await cookies();
         const supabase = createServerClient(
@@ -88,7 +92,7 @@ export async function PATCH(
                 final_content: body.final_content,
                 updated_at: new Date().toISOString()
             })
-            .eq('id', params.id)
+            .eq('id', id)
             .eq('user_id', user.id);
 
         if (error) {
