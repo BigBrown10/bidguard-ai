@@ -119,24 +119,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* COMING SOON SECTION (TINDER) */}
-        <section className="py-32 text-center relative">
-          <div className="max-w-4xl mx-auto px-6">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-8 uppercase tracking-tighter">
-              The <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Marketplace</span>
-            </h2>
-            <p className="text-xl text-white/50 mb-12 max-w-2xl mx-auto">
-              Coming Phase 2. Swipe right on government contracts.
-              The first "Tinder-for-Tenders" interface.
-              <span className="block mt-4 text-primary">Live API Integration In Progress.</span>
-            </p>
-            <div className="inline-block p-[2px] bg-gradient-to-r from-primary to-secondary">
-              <div className="bg-black px-8 py-3 uppercase tracking-widest text-sm font-bold text-white">
-                Access Restricted // Beta Only
-              </div>
-            </div>
-          </div>
-        </section>
+
 
       </main>
     </div>

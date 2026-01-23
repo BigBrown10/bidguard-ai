@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Header } from "@/components/Header"
 import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
-import { Loader2, RefreshCw, Filter, ChevronDown } from "lucide-react"
+import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
@@ -125,7 +125,7 @@ export default function TenderPage() {
         setTenders(filtered)
     }, [activeFilter, priceFilter, allTenders])
 
-    const handleSwipe = async (direction: "left" | "right", index: number) => {
+    const handleSwipe = async (direction: "left" | "right" | "watchlist", index: number) => {
         const swipedTender = tenders[index]
         const newTenders = [...tenders]
         newTenders.pop()
@@ -141,6 +141,18 @@ export default function TenderPage() {
             // V3: Show Idea Injection Modal instead of direct save
             setPendingTender(swipedTender)
             setIdeaModalOpen(true)
+
+        } else if (direction === "watchlist") {
+            if (!userId) {
+                window.location.href = '/register'
+                return
+            }
+            // Save to watchlist
+            saveTenderAction(swipedTender, userId).then(() => {
+                toast.success("Added to Watchlist", {
+                    description: "View in My Tenders"
+                })
+            }).catch(err => console.error("Save failed", err))
 
         } else {
             if (userId) {
@@ -175,7 +187,7 @@ export default function TenderPage() {
             return response.json()
         }, {
             loading: 'Queuing autonomous proposal...',
-            success: 'Proposal generation started! Check your dashboard.',
+            success: 'Superagent is preparing your Bid proposal. Check My Tenders.',
             error: 'Failed to start proposal'
         })
 
@@ -223,8 +235,8 @@ export default function TenderPage() {
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
 
-                    {/* Filters */}
-                    <div className="flex flex-wrap justify-center gap-2 mt-4 relative z-20">
+                    {/* Filters - Z-Index 50 to float above cards (Z-Index 1-10) */}
+                    <div className="flex flex-wrap justify-center gap-2 mt-4 relative z-50">
                         {/* Industry Filter */}
                         <div className="relative inline-block">
                             <button
@@ -350,25 +362,38 @@ export default function TenderPage() {
                     </AnimatePresence>
                 </div>
 
+
+
                 {/* Controls Hint */}
-                <div className="mt-8 flex gap-12 text-white/30 text-xs font-bold uppercase tracking-widest">
+                <div className="mt-8 flex gap-8 items-center text-white/30 text-xs font-bold uppercase tracking-widest relative z-50">
                     <button
                         onClick={() => tenders.length > 0 && handleSwipe("left", tenders.length - 1)}
                         className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors"
                     >
-                        <div className="w-16 h-16 rounded-full border-2 border-secondary/30 group-hover:border-secondary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-secondary text-2xl">✕</div>
+                        <div className="w-14 h-14 rounded-full border-2 border-white/10 group-hover:border-red-500/50 group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/20 group-hover:text-red-500 text-xl backdrop-blur-sm bg-black/40">✕</div>
                         Pass
                     </button>
+
+                    <button
+                        onClick={() => tenders.length > 0 && handleSwipe("watchlist", tenders.length - 1)}
+                        className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors translate-y-2"
+                    >
+                        <div className="w-12 h-12 rounded-full border-2 border-white/10 group-hover:border-secondary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/20 group-hover:text-secondary text-lg backdrop-blur-sm bg-black/40">
+                            <Bookmark className="w-5 h-5" />
+                        </div>
+                        Watch
+                    </button>
+
                     <button
                         onClick={() => tenders.length > 0 && handleSwipe("right", tenders.length - 1)}
                         className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors"
                     >
-                        <div className="w-16 h-16 rounded-full border-2 border-primary/30 group-hover:border-primary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-primary text-2xl">♥</div>
+                        <div className="w-16 h-16 rounded-full border-2 border-primary/30 group-hover:border-primary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-primary text-2xl backdrop-blur-sm bg-black/40 shadow-lg shadow-primary/20">♥</div>
                         BID
                     </button>
                 </div>
 
-            </main>
+            </main >
 
             {/* V3: Modals */}
             <IdeaInjectionModal
