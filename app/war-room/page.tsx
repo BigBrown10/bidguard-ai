@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useCallback } from "react"
+import { Suspense, useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    FileText, Edit3, Wand2, Download, Copy, Check, RefreshCw,
-    AlertCircle, Sparkles, Target, BookOpen, Zap, Save, Eye,
-    ChevronLeft, ChevronRight, MessageSquare, Loader2
+    FileText, Edit3, Wand2, Copy, Check,
+    Sparkles, Target, BookOpen, Zap, Save, Eye,
+    ChevronLeft, Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
@@ -23,7 +23,8 @@ interface QuickFix {
     reason: string
 }
 
-export default function WarRoomPage() {
+// Inner component that uses useSearchParams
+function WarRoomContent() {
     const searchParams = useSearchParams()
     const proposalId = searchParams.get('id')
 
@@ -181,7 +182,6 @@ export default function WarRoomPage() {
 
     // Word count
     const wordCount = editedText.split(/\s+/).filter(Boolean).length
-    const changeCount = originalText !== editedText ? 1 : 0
 
     if (loading) {
         return (
@@ -361,7 +361,7 @@ export default function WarRoomPage() {
                                 {quickFixes.length === 0 ? (
                                     <div className="text-center py-6 text-white/40 text-sm">
                                         <Zap className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                                        Click "Analyze" to find improvements
+                                        Click &quot;Analyze&quot; to find improvements
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
@@ -374,15 +374,15 @@ export default function WarRoomPage() {
                                             >
                                                 <div className="flex items-start justify-between gap-2 mb-2">
                                                     <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${fix.type === 'passive_voice' ? 'bg-amber-500/20 text-amber-400' :
-                                                            fix.type === 'ai_phrase' ? 'bg-red-500/20 text-red-400' :
-                                                                'bg-blue-500/20 text-blue-400'
+                                                        fix.type === 'ai_phrase' ? 'bg-red-500/20 text-red-400' :
+                                                            'bg-blue-500/20 text-blue-400'
                                                         }`}>
                                                         {fix.type.replace('_', ' ')}
                                                     </span>
                                                 </div>
                                                 <div className="text-xs space-y-1">
-                                                    <div className="text-red-400/80 line-through">"{fix.original}"</div>
-                                                    <div className="text-green-400">→ "{fix.suggestion}"</div>
+                                                    <div className="text-red-400/80 line-through">&quot;{fix.original}&quot;</div>
+                                                    <div className="text-green-400">→ &quot;{fix.suggestion}&quot;</div>
                                                 </div>
                                                 <p className="text-[10px] text-white/40 mt-2">{fix.reason}</p>
                                                 <Button
@@ -429,5 +429,18 @@ export default function WarRoomPage() {
                 </div>
             </main>
         </div>
+    )
+}
+
+// Default export wraps in Suspense for useSearchParams
+export default function WarRoomPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <WarRoomContent />
+        </Suspense>
     )
 }
