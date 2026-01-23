@@ -47,14 +47,15 @@ export default function TenderPage() {
                 if (user) {
                     setUserId(user.id)
 
-                    // Check if onboarding is complete
+                    // Check if company details are filled
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('onboarding_complete, company_name')
+                        .select('company_name, business_description')
                         .eq('id', user.id)
                         .single()
 
-                    if (!profile?.onboarding_complete || !profile?.company_name) {
+                    // Only show onboarding if company_name is missing or empty
+                    if (!profile?.company_name || profile.company_name.trim() === '') {
                         setShowOnboarding(true)
                     }
                 }
