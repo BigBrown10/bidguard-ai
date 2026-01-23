@@ -21,7 +21,8 @@ export default function TenderPage() {
     const [userId, setUserId] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeFilter, setActiveFilter] = useState("all")
-    const [filterOpen, setFilterOpen] = useState(false)
+    const [priceFilter, setPriceFilter] = useState("all")
+    const [filterOpen, setFilterOpen] = useState<boolean | string>(false)
 
     // V3: Modal states
     const [ideaModalOpen, setIdeaModalOpen] = useState(false)
@@ -37,6 +38,28 @@ export default function TenderPage() {
         })
         return filters
     }, [allTenders])
+
+    // Helper to parse value string to number (max value if range)
+    const parseValue = (valStr: string): number => {
+        if (!valStr) return 0
+        // Remove currency symbols, commas, and handle ranges like "£1m - £5m"
+        // If range, take the higher number
+        const clean = valStr.replace(/[£,]/g, '').toLowerCase()
+
+        // Handle "5m" or "500k"
+        const parseNum = (s: string) => {
+            if (s.includes('m')) return parseFloat(s) * 1000000
+            if (s.includes('k')) return parseFloat(s) * 1000
+            return parseFloat(s)
+        }
+
+        if (clean.includes('-')) {
+            const parts = clean.split('-').map(p => parseNum(p.trim()))
+            return Math.max(...parts.filter(n => !isNaN(n)))
+        }
+
+        return parseNum(clean) || 0
+    }
 
     // Load User ID & Tenders on mount
     useEffect(() => {
@@ -77,16 +100,30 @@ export default function TenderPage() {
         init()
     }, [])
 
-    // Filter tenders by industry
+    // Filter tenders by industry AND price
     useEffect(() => {
-        if (activeFilter === "all") {
-            setTenders(allTenders)
-        } else {
-            setTenders(allTenders.filter(t =>
+        let filtered = allTenders
+
+        // 1. Industry Filter
+        if (activeFilter !== "all") {
+            filtered = filtered.filter(t =>
                 t.sector.toLowerCase().includes(activeFilter.toLowerCase())
-            ))
+            )
         }
-    }, [activeFilter, allTenders])
+
+        // 2. Price Filter
+        if (priceFilter !== "all") {
+            filtered = filtered.filter(t => {
+                const val = parseValue(t.value)
+                if (priceFilter === "low") return val > 0 && val <= 100000 // 0 - 100k
+                if (priceFilter === "mid") return val > 100000 && val <= 1000000 // 100k - 1m
+                if (priceFilter === "high") return val > 1000000 // > 1m
+                return true
+            })
+        }
+
+        setTenders(filtered)
+    }, [activeFilter, priceFilter, allTenders])
 
     const handleSwipe = async (direction: "left" | "right", index: number) => {
         const swipedTender = tenders[index]
@@ -186,40 +223,93 @@ export default function TenderPage() {
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
 
-                    {/* Industry Filter */}
-                    <div className="relative inline-block mt-4">
-                        <button
-                            onClick={() => setFilterOpen(!filterOpen)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white/70 hover:bg-white/10 transition-colors"
-                        >
-                            <Filter className="w-4 h-4" />
-                            {sectorFilters.find(f => f.id === activeFilter)?.label || "All Sectors"}
-                            <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {filterOpen && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] z-50"
+                    {/* Filters */}
+                    <div className="flex flex-wrap justify-center gap-2 mt-4 relative z-20">
+                        {/* Industry Filter */}
+                        <div className="relative inline-block">
+                            <button
+                                onClick={() => setFilterOpen(filterOpen === 'industry' ? false : 'industry')}
+                                className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm transition-colors ${activeFilter !== 'all'
+                                    ? 'bg-primary/20 border-primary text-primary'
+                                    : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                                    }`}
                             >
-                                {sectorFilters.map(filter => (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => {
-                                            setActiveFilter(filter.id)
-                                            setFilterOpen(false)
-                                        }}
-                                        className={`w-full text-left px-4 py-3 text-sm transition-colors ${activeFilter === filter.id
-                                            ? 'bg-primary/20 text-primary'
-                                            : 'text-white/70 hover:bg-white/5'
-                                            }`}
-                                    >
-                                        {filter.label}
-                                    </button>
-                                ))}
-                            </motion.div>
-                        )}
+                                <Filter className="w-4 h-4" />
+                                {sectorFilters.find(f => f.id === activeFilter)?.label || "All Sectors"}
+                                <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen === 'industry' ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {filterOpen === 'industry' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] z-50 max-h-[300px] overflow-y-auto"
+                                >
+                                    {sectorFilters.map(filter => (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => {
+                                                setActiveFilter(filter.id)
+                                                setFilterOpen(false)
+                                            }}
+                                            className={`w-full text-left px-4 py-3 text-sm transition-colors ${activeFilter === filter.id
+                                                ? 'bg-primary/20 text-primary'
+                                                : 'text-white/70 hover:bg-white/5'
+                                                }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Price Filter */}
+                        <div className="relative inline-block">
+                            <button
+                                onClick={() => setFilterOpen(filterOpen === 'price' ? false : 'price')}
+                                className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm transition-colors ${priceFilter !== 'all'
+                                    ? 'bg-secondary/20 border-secondary text-secondary'
+                                    : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                                    }`}
+                            >
+                                <div className="font-mono">£</div>
+                                {priceFilter === 'all' && "Any Value"}
+                                {priceFilter === 'low' && "< £100k"}
+                                {priceFilter === 'mid' && "£100k - £1m"}
+                                {priceFilter === 'high' && "> £1m"}
+                                <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen === 'price' ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {filterOpen === 'price' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[180px] z-50"
+                                >
+                                    {[
+                                        { id: 'all', label: 'Any Value' },
+                                        { id: 'low', label: '< £100k' },
+                                        { id: 'mid', label: '£100k - £1m' },
+                                        { id: 'high', label: '> £1m' },
+                                    ].map(filter => (
+                                        <button
+                                            key={filter.id}
+                                            onClick={() => {
+                                                setPriceFilter(filter.id)
+                                                setFilterOpen(false)
+                                            }}
+                                            className={`w-full text-left px-4 py-3 text-sm transition-colors ${priceFilter === filter.id
+                                                ? 'bg-secondary/20 text-secondary'
+                                                : 'text-white/70 hover:bg-white/5'
+                                                }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </div>
                     </div>
 
                     <p className="text-white/40 text-sm tracking-widest uppercase mt-3">

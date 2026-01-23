@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import { Suspense, useState, useEffect, useCallback } from "react"
+import { useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     FileText, Edit3, Wand2, Copy, Check,
-    Sparkles, Target, BookOpen, Zap, Save, Eye,
-    ChevronLeft, Loader2
+    Sparkles, Target, BookOpen, Zap, Cloud, Loader2,
+    ChevronLeft, Eye
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
@@ -32,10 +33,14 @@ function WarRoomContent() {
     const [editedText, setEditedText] = useState<string>("")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [lastSaved, setLastSaved] = useState<Date | null>(null)
     const [copied, setCopied] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
     const [quickFixes, setQuickFixes] = useState<QuickFix[]>([])
     const [analyzing, setAnalyzing] = useState(false)
+
+    // Auto-save ref to avoid interval closure issues (not strictly needed with useEffect dep, but cleaner for debounce)
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     // Load proposal from localStorage or API
     useEffect(() => {
@@ -152,33 +157,44 @@ function WarRoomContent() {
         setTimeout(() => setCopied(false), 2000)
     }
 
-    // Save changes
-    const saveChanges = async () => {
+    // Auto-save effect
+    useEffect(() => {
+        // Don't save on initial load or if empty
+        if (loading || !editedText || editedText === originalText) return
+
         setSaving(true)
 
-        // Save to localStorage
-        const storedFinal = localStorage.getItem("bidguard_final")
-        if (storedFinal) {
-            const data = JSON.parse(storedFinal)
-            data.finalText = editedText
-            localStorage.setItem("bidguard_final", JSON.stringify(data))
-        }
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
 
-        // If we have a proposal ID, save to API
-        if (proposalId && proposalId !== 'temp') {
-            try {
-                await fetch(`/api/proposals/${proposalId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ final_content: editedText })
-                })
-            } catch (e) {
-                console.error("Failed to save:", e)
+        saveTimeoutRef.current = setTimeout(async () => {
+            // Save logic
+            const storedFinal = localStorage.getItem("bidguard_final")
+            if (storedFinal) {
+                const data = JSON.parse(storedFinal)
+                data.finalText = editedText
+                localStorage.setItem("bidguard_final", JSON.stringify(data))
             }
-        }
 
-        setTimeout(() => setSaving(false), 500)
-    }
+            if (proposalId && proposalId !== 'temp') {
+                try {
+                    await fetch(`/api/proposals/${proposalId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ final_content: editedText })
+                    })
+                } catch (e) {
+                    console.error("Failed to save:", e)
+                }
+            }
+
+            setSaving(false)
+            setLastSaved(new Date())
+        }, 1000) // 1 second debounce
+
+        return () => {
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+        }
+    }, [editedText, proposalId, loading, originalText])
 
     // Word count
     const wordCount = editedText.split(/\s+/).filter(Boolean).length
@@ -221,11 +237,11 @@ function WarRoomContent() {
                         </a>
                         <div>
                             <h1 className="text-xl font-bold flex items-center gap-2">
-                                <Target className="w-5 h-5 text-primary" />
-                                War Room
+                                <Edit3 className="w-5 h-5 text-primary" />
+                                Proposal Editor
                             </h1>
                             <p className="text-xs text-white/40 uppercase tracking-widest">
-                                Proposal Editor
+                                {saving ? "Saving..." : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : "Auto-save enabled"}
                             </p>
                         </div>
                     </div>
@@ -251,15 +267,18 @@ function WarRoomContent() {
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         </Button>
-                        <Button onClick={saveChanges} disabled={saving}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="bg-white/5 border-white/10 text-white/40 cursor-default"
+                        >
                             {saving ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             ) : (
-                                <>
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Save
-                                </>
+                                <Cloud className="w-4 h-4 mr-2" />
                             )}
+                            {saving ? 'Saving' : 'Saved'}
                         </Button>
                     </div>
                 </div>

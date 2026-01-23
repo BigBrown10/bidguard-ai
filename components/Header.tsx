@@ -57,14 +57,12 @@ export function Header() {
                     {user && (
                         <>
                             <Link href="/favourites" className="transition-colors hover:text-white hover:text-glow">
-                                Favourites
+                                My Tenders
                             </Link>
                             <Link href="/dashboard" className="transition-colors hover:text-white hover:text-glow">
                                 Dashboard
                             </Link>
-                            <Link href="/war-room" className="transition-colors hover:text-secondary hover:text-glow">
-                                War Room
-                            </Link>
+
                             <Link href="/rate-proposal" className="transition-colors hover:text-yellow-400 hover:text-glow">
                                 Rate Proposal
                             </Link>
@@ -115,7 +113,7 @@ export function Header() {
                                             className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                                             onClick={() => setMenuOpen(false)}
                                         >
-                                            <span className="text-lg leading-none">♥</span> Favourites
+                                            <span className="text-lg leading-none">♥</span> My Tenders
                                         </Link>
                                         <Link
                                             href="/dashboard"
