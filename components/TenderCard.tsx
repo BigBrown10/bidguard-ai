@@ -123,15 +123,27 @@ export const TenderCard = ({ tender, onSwipe, onInfo, index }: TenderCardProps) 
 
                 {/* Description */}
                 <div className="flex-1 overflow-hidden relative">
-                    <p className="text-white/80 leading-relaxed text-sm">
+                    <p className="text-white/80 leading-relaxed text-sm line-clamp-5">
                         {tender.description}
                     </p>
                     {/* Fade out at bottom of text */}
                     <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black to-transparent" />
                 </div>
 
+                {/* Read More Button */}
+                <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onInfo()
+                    }}
+                    className="text-primary text-sm font-medium hover:underline pointer-events-auto mt-2"
+                >
+                    Read more →
+                </button>
+
                 {/* Footer Location */}
-                <div className="mt-6 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm">
+                <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm">
                     <MapPin className="w-5 h-5" />
                     {tender.location}
                 </div>
