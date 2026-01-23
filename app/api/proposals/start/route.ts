@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         await inngest.send({
             name: "app/generate-autonomous-proposal",
             data: {
-                proposalId: proposal.id,
+                proposalId,
                 userId: user.id,
                 tenderId,
                 tenderTitle,
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            proposalId: proposal.id,
+            proposalId,
             message: "Proposal generation started"
         })
 
