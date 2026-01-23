@@ -24,8 +24,17 @@ interface QuickFix {
     reason: string
 }
 
+// Helper to strip markdown for cleaner display
+const stripMarkdown = (text: string) => {
+    return text
+        .replace(/^[#*]+\s/gm, '') // Remove headers/bullets
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+        .replace(/\*(.*?)\*/g, '$1') // Remove italics
+        .replace(/\[(.*?)\]/g, '') // Remove brackets
+}
+
 // Inner component that uses useSearchParams
-function WarRoomContent() {
+function EditorContent() {
     const searchParams = useSearchParams()
     const proposalId = searchParams.get('id')
 
@@ -337,28 +346,38 @@ function WarRoomContent() {
                                                     <Edit3 className="w-4 h-4" />
                                                     Edit Proposal
                                                 </span>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={analyzeText}
-                                                    disabled={analyzing}
-                                                    className="text-xs"
-                                                >
-                                                    {analyzing ? (
-                                                        <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                                                    ) : (
-                                                        <Wand2 className="w-3 h-3 mr-1" />
-                                                    )}
-                                                    Analyze
-                                                </Button>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-xs text-white/40 hover:text-white"
+                                                        onClick={() => setEditedText(prev => prev)} // Force re-render if needed
+                                                    >
+                                                        Clean View
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={analyzeText}
+                                                        disabled={analyzing}
+                                                        className="text-xs"
+                                                    >
+                                                        {analyzing ? (
+                                                            <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                                                        ) : (
+                                                            <Wand2 className="w-3 h-3 mr-1" />
+                                                        )}
+                                                        Analyze
+                                                    </Button>
+                                                </div>
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className="p-0">
+                                        <CardContent className="p-0 relative">
                                             <textarea
                                                 value={editedText}
                                                 onChange={(e) => setEditedText(e.target.value)}
-                                                className="w-full min-h-[600px] bg-transparent text-white/90 p-6 resize-none focus:outline-none font-serif text-base leading-relaxed"
-                                                placeholder="Your proposal text..."
+                                                className="w-full min-h-[800px] bg-transparent text-white/90 p-8 resize-none focus:outline-none font-serif text-lg leading-relaxed placeholder-white/20"
+                                                placeholder="Start writing..."
                                             />
                                         </CardContent>
                                     </Card>
@@ -459,7 +478,7 @@ export default function WarRoomPage() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         }>
-            <WarRoomContent />
+            <EditorContent />
         </Suspense>
     )
 }

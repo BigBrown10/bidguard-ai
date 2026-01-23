@@ -235,92 +235,47 @@ export default function TenderPage() {
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
 
-                    {/* Filters - Z-Index 50 to float above cards (Z-Index 1-10) */}
-                    <div className="flex flex-wrap justify-center gap-2 mt-4 relative z-50">
-                        {/* Industry Filter */}
-                        <div className="relative inline-block">
-                            <button
-                                onClick={() => setFilterOpen(filterOpen === 'industry' ? false : 'industry')}
-                                className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm transition-colors ${activeFilter !== 'all'
-                                    ? 'bg-primary/20 border-primary text-primary'
-                                    : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
-                                    }`}
-                            >
-                                <Filter className="w-4 h-4" />
-                                {sectorFilters.find(f => f.id === activeFilter)?.label || "All Sectors"}
-                                <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen === 'industry' ? 'rotate-180' : ''}`} />
-                            </button>
+                    {/* Filters - Horizontal Scroll (Apple Style) */}
+                    <div className="w-full max-w-md mb-6 overflow-x-auto no-scrollbar py-2 relative z-50">
+                        <div className="flex gap-2 px-1">
+                            {/* Industry Pill Group */}
+                            <div className="flex items-center bg-white/5 rounded-full p-1 border border-white/10 backdrop-blur-md">
+                                <span className="px-3 text-[10px] text-white/40 uppercase font-bold tracking-wider">Sector</span>
+                                {sectorFilters.map(filter => (
+                                    <button
+                                        key={filter.id}
+                                        onClick={() => setActiveFilter(filter.id)}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeFilter === filter.id
+                                                ? 'bg-primary text-black shadow-[0_0_10px_rgba(255,0,60,0.5)]'
+                                                : 'text-white/60 hover:text-white hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {filter.label.replace('All Sectors', 'All')}
+                                    </button>
+                                ))}
+                            </div>
 
-                            {filterOpen === 'industry' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[200px] z-50 max-h-[300px] overflow-y-auto"
-                                >
-                                    {sectorFilters.map(filter => (
-                                        <button
-                                            key={filter.id}
-                                            onClick={() => {
-                                                setActiveFilter(filter.id)
-                                                setFilterOpen(false)
-                                            }}
-                                            className={`w-full text-left px-4 py-3 text-sm transition-colors ${activeFilter === filter.id
-                                                ? 'bg-primary/20 text-primary'
-                                                : 'text-white/70 hover:bg-white/5'
-                                                }`}
-                                        >
-                                            {filter.label}
-                                        </button>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </div>
-
-                        {/* Price Filter */}
-                        <div className="relative inline-block">
-                            <button
-                                onClick={() => setFilterOpen(filterOpen === 'price' ? false : 'price')}
-                                className={`flex items-center gap-2 px-4 py-2 border rounded-full text-sm transition-colors ${priceFilter !== 'all'
-                                    ? 'bg-secondary/20 border-secondary text-secondary'
-                                    : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="font-mono">£</div>
-                                {priceFilter === 'all' && "Any Value"}
-                                {priceFilter === 'low' && "< £100k"}
-                                {priceFilter === 'mid' && "£100k - £1m"}
-                                {priceFilter === 'high' && "> £1m"}
-                                <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen === 'price' ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {filterOpen === 'price' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="absolute top-full left-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden min-w-[180px] z-50"
-                                >
-                                    {[
-                                        { id: 'all', label: 'Any Value' },
-                                        { id: 'low', label: '< £100k' },
-                                        { id: 'mid', label: '£100k - £1m' },
-                                        { id: 'high', label: '> £1m' },
-                                    ].map(filter => (
-                                        <button
-                                            key={filter.id}
-                                            onClick={() => {
-                                                setPriceFilter(filter.id)
-                                                setFilterOpen(false)
-                                            }}
-                                            className={`w-full text-left px-4 py-3 text-sm transition-colors ${priceFilter === filter.id
-                                                ? 'bg-secondary/20 text-secondary'
-                                                : 'text-white/70 hover:bg-white/5'
-                                                }`}
-                                        >
-                                            {filter.label}
-                                        </button>
-                                    ))}
-                                </motion.div>
-                            )}
+                            {/* Value Pill Group */}
+                            <div className="flex items-center bg-white/5 rounded-full p-1 border border-white/10 backdrop-blur-md">
+                                <span className="px-3 text-[10px] text-white/40 uppercase font-bold tracking-wider">Value</span>
+                                {[
+                                    { id: 'all', label: 'Any' },
+                                    { id: 'low', label: '<100k' },
+                                    { id: 'mid', label: '100k-1m' },
+                                    { id: 'high', label: '>1m' },
+                                ].map(filter => (
+                                    <button
+                                        key={filter.id}
+                                        onClick={() => setPriceFilter(filter.id)}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${priceFilter === filter.id
+                                                ? 'bg-secondary text-black shadow-[0_0_10px_rgba(0,240,255,0.5)]'
+                                                : 'text-white/60 hover:text-white hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
 

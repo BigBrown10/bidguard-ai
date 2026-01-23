@@ -47,7 +47,7 @@ export const TenderCard = ({ tender, onSwipe, onInfo, index }: TenderCardProps) 
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            transition={{ type: "tween", ease: "backOut", duration: 0.3 }}
         >
             {/* Status Indicator Overlays */}
             <motion.div

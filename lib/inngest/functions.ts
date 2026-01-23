@@ -414,10 +414,10 @@ export const generateAutonomousProposal = inngest.createFunction(
                 You are an elite UK Government Bid Writer with a 92% win rate.
 
                 ## STRICT RULES:
-                - 90% Rule: Target 900-950 words
-                - UK Vernacular: Programme, Mobilisation, Organisation
-                - Evidence Density: Every claim needs a number, date, or specific example
-                - No banned words: Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies
+                - **LENGTH:** YOU M U S T WRITE AT LEAST 1500 WORDS. Do not stop until you reach this count. Expand every section.
+                - **UK Vernacular:** Programme, Mobilisation, Organisation
+                - **Evidence Density:** Every claim needs a number, date, or specific example
+                - **No banned words:** Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies
 
                 ## CONTEXT:
                 Tender: {tenderTitle}
@@ -426,14 +426,14 @@ export const generateAutonomousProposal = inngest.createFunction(
                 Strategy: {strategy}
                 Research: {research}
 
-                ## STRUCTURE:
-                # EXECUTIVE SUMMARY (150-200 words)
-                # PROPOSED SOLUTION (300-350 words)
-                # DELIVERY & IMPLEMENTATION (200-250 words)
-                # SOCIAL VALUE (150-200 words)
-                # COMMERCIALS (100-150 words)
+                ## MANDATORY STRUCTURE (Expand each section to 300+ words):
+                1. EXECUTIVE SUMMARY (300 words) - Hook the reader.
+                2. PROPOSED SOLUTION (600 words) - Technical deep dive. Methods. Tools.
+                3. DELIVERY & IMPLEMENTATION (400 words) - Timeline, Mobilisation, Risk.
+                4. SOCIAL VALUE & COMPLIANCE (300 words) - Carbon, Modern Slavery, ISO alignment.
+                5. COMMERCIALS (200 words) - VFM, Cost saving.
 
-                Write a WINNING proposal.
+                Write a SUBSTANTIAL, WINNING proposal.
             `);
 
             const chain = writePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
@@ -468,10 +468,15 @@ export const generateAutonomousProposal = inngest.createFunction(
                 You are the BRUTAL RED TEAM CRITIC.
                 Score this proposal (0-10) and provide harsh feedback.
 
+                ## MANDATORY CHECKS:
+                1. Does it mention **Modern Slavery Act** compliance? If not, REJECT or demand it.
+                2. Does it mention **ISO Standards** (9001, 27001, 14001)? If not, demand it.
+                3. Is it under 1000 words? If yes, demand expansion.
+
                 PROPOSAL:
                 {draft}
 
-                Respond in JSON: {{ "score": number, "status": "ACCEPT/REJECT", "feedback": ["..."] }}
+                Respond in JSON: {{ "score": number, "status": "ACCEPT/REJECT", "feedback": ["...missing ISO...", "...missing Modern Slavery..."] }}
             `);
 
             const chain = critiquePrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
@@ -498,17 +503,16 @@ export const generateAutonomousProposal = inngest.createFunction(
         // 11. Humanize
         const finalContent = await step.run("humanize", async () => {
             const humanizePrompt = PromptTemplate.fromTemplate(`
-                You are a Master Editor.
-                Rewrite this proposal to be 100% HUMAN and WINNING.
+                You are a Master Editor. Use this feedback to rewrite the proposal.
 
                 CRITIQUE FEEDBACK: {feedback}
                 ORIGINAL: {draft}
 
                 INSTRUCTIONS:
-                1. Apply the critique feedback
-                2. Remove AI-isms (delve, underscore, testament)
-                3. Use SHORT, PUNCHY sentences (burstiness)
-                4. Be SPECIFIC with evidence
+                1. **Integrate Compliance**: Ensure Modern Slavery and ISO standards are explicitly mentioned if requested.
+                2. **Expand**: Do NOT shorten the text. Keep it long and detailed (1500+ words).
+                3. **Humanize**: Remove AI-isms (delve, underscore, testament).
+                4. **Style**: Short, punchy sentences. High evidence density.
 
                 Output ONLY the rewritten text.
             `);

@@ -169,7 +169,7 @@ export default function MyTendersPage() {
                                                 <div className="mt-auto pt-4 border-t border-white/5 flex gap-2">
                                                     {proposal.status === 'complete' ? (
                                                         <>
-                                                            <Link href={`/war-room?id=${proposal.id}`} className="flex-1">
+                                                            <Link href={`/edit?id=${proposal.id}`} className="flex-1">
                                                                 <button className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 py-2 rounded-lg text-sm font-bold transition-colors">
                                                                     <Edit3 className="w-4 h-4" /> Editor
                                                                 </button>
