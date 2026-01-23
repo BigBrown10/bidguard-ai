@@ -11,6 +11,8 @@ import { Loader2, RefreshCw, Filter, ChevronDown } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
+import { IdeaInjectionModal } from "@/components/IdeaInjectionModal"
+import { CompanyDetailsGate } from "@/components/CompanyDetailsGate"
 
 export default function TenderPage() {
     const [allTenders, setAllTenders] = useState<Tender[]>([])
@@ -20,6 +22,11 @@ export default function TenderPage() {
     const [loading, setLoading] = useState(true)
     const [activeFilter, setActiveFilter] = useState("all")
     const [filterOpen, setFilterOpen] = useState(false)
+
+    // V3: Modal states
+    const [ideaModalOpen, setIdeaModalOpen] = useState(false)
+    const [pendingTender, setPendingTender] = useState<Tender | null>(null)
+    const [showOnboarding, setShowOnboarding] = useState(false)
 
     // Dynamically extract unique sectors from the loaded tenders
     const sectorFilters = useMemo(() => {
@@ -37,7 +44,20 @@ export default function TenderPage() {
             // 1. Auth check
             if (supabase) {
                 const { data: { user } } = await supabase.auth.getUser()
-                if (user) setUserId(user.id)
+                if (user) {
+                    setUserId(user.id)
+
+                    // Check if onboarding is complete
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('onboarding_complete, company_name')
+                        .eq('id', user.id)
+                        .single()
+
+                    if (!profile?.onboarding_complete || !profile?.company_name) {
+                        setShowOnboarding(true)
+                    }
+                }
             }
 
             // 2. Data Fetch (Live or Mock fallback)
@@ -72,7 +92,6 @@ export default function TenderPage() {
         const newTenders = [...tenders]
         newTenders.pop()
         setTenders(newTenders)
-        // Also remove from allTenders to prevent reappearing on filter change
         setAllTenders(prev => prev.filter(t => t.id !== swipedTender.id))
 
         if (direction === "right") {
@@ -80,20 +99,53 @@ export default function TenderPage() {
                 window.location.href = '/register'
                 return
             }
-            toast.promise(async () => {
-                const result = await saveTenderAction(swipedTender, userId)
-                if (!result.success) throw new Error(result.error)
-                return result
-            }, {
-                loading: 'Securing Opportunity...',
-                success: `Added "${swipedTender.title}" to Favourites`,
-                error: (err: any) => `Failed: ${err.message}`
-            })
+
+            // V3: Show Idea Injection Modal instead of direct save
+            setPendingTender(swipedTender)
+            setIdeaModalOpen(true)
+
         } else {
             if (userId) {
                 rejectTenderAction(swipedTender, userId).catch(err => console.error("Reject failed", err))
             }
         }
+    }
+
+    // V3: Handle autonomous proposal generation
+    const handleStartProposal = async (ideas: string) => {
+        if (!pendingTender || !userId) return
+
+        setIdeaModalOpen(false)
+
+        // Save tender to favourites
+        await saveTenderAction(pendingTender, userId)
+
+        // Start autonomous proposal generation via Inngest
+        toast.promise(async () => {
+            const response = await fetch('/api/proposals/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tenderId: pendingTender.id,
+                    tenderTitle: pendingTender.title,
+                    tenderBuyer: pendingTender.buyer,
+                    ideaInjection: ideas
+                })
+            })
+
+            if (!response.ok) throw new Error('Failed to start proposal')
+            return response.json()
+        }, {
+            loading: 'Queuing autonomous proposal...',
+            success: 'Proposal generation started! Check your dashboard.',
+            error: 'Failed to start proposal'
+        })
+
+        setPendingTender(null)
+    }
+
+    const handleSkipIdeas = () => {
+        handleStartProposal("")
     }
 
     if (loading) return (
@@ -212,6 +264,23 @@ export default function TenderPage() {
 
             </main>
 
+            {/* V3: Modals */}
+            <IdeaInjectionModal
+                isOpen={ideaModalOpen}
+                tenderTitle={pendingTender?.title || ""}
+                onSubmit={handleStartProposal}
+                onSkip={handleSkipIdeas}
+                onClose={() => {
+                    setIdeaModalOpen(false)
+                    setPendingTender(null)
+                }}
+            />
+
+            <CompanyDetailsGate
+                isOpen={showOnboarding}
+                onComplete={() => setShowOnboarding(false)}
+            />
+
             <TenderDetailsModal
                 tender={selectedTender}
                 onClose={() => setSelectedTender(null)}
@@ -219,3 +288,4 @@ export default function TenderPage() {
         </div>
     )
 }
+

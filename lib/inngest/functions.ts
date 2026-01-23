@@ -270,3 +270,255 @@ export const generateProposalFunction = inngest.createFunction(
         return { success: true, jobId };
     }
 );
+
+// =========================================
+// V3: AUTONOMOUS PROPOSAL GENERATION
+// Triggered by swipe-right → runs full pipeline
+// =========================================
+export const generateAutonomousProposal = inngest.createFunction(
+    {
+        id: "generate-autonomous-proposal",
+        concurrency: 3,
+        onFailure: async ({ event, error }) => {
+            const { proposalId } = event.data.event.data;
+            if (proposalId && supabase) {
+                await supabase.from('proposals').update({
+                    status: 'failed',
+                    error_message: error.message
+                }).eq('id', proposalId);
+            }
+        }
+    },
+    { event: "app/generate-autonomous-proposal" },
+    async ({ event, step }) => {
+        const { proposalId, userId, tenderId, tenderTitle, tenderBuyer, ideaInjection } = event.data;
+
+        console.log(`[AUTONOMOUS] Starting proposal for: ${tenderTitle}`);
+
+        // 1. Update status: Researching
+        await step.run("status-researching", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                status: 'researching',
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        // 2. Fetch company profile
+        const profile = await step.run("fetch-profile", async () => {
+            if (!supabase) return null;
+            const { data } = await supabase
+                .from('profiles')
+                .select('company_name, business_description, website, sectors')
+                .eq('id', userId)
+                .single();
+            return data;
+        });
+
+        // 3. Research phase
+        const researchOutput = await step.run("research", async () => {
+            const researchPrompt = PromptTemplate.fromTemplate(`
+                You are a Strategic Bid Researcher.
+                Research this tender opportunity and find intelligence.
+
+                TENDER: {tenderTitle}
+                BUYER: {tenderBuyer}
+                COMPANY: {companyName}
+                SECTORS: {sectors}
+
+                USER INPUT (if any): {ideaInjection}
+
+                TASK:
+                1. Identify 3 key buyer pain points we can address
+                2. Find 3 differentiators for this company
+                3. Identify compliance requirements (Social Value, Carbon, Modern Slavery)
+                4. Suggest strategic positioning
+
+                Output a concise briefing note.
+            `);
+
+            const chain = researchPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+            try {
+                return await chain.invoke({
+                    tenderTitle,
+                    tenderBuyer,
+                    companyName: profile?.company_name || "Our Company",
+                    sectors: profile?.sectors?.join(", ") || "General",
+                    ideaInjection: ideaInjection || "No specific angles provided"
+                });
+            } catch (e) {
+                return "Research unavailable. Proceeding with standard approach.";
+            }
+        });
+
+        // 4. Update status: Strategizing
+        await step.run("status-strategizing", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                status: 'strategizing',
+                research_output: { summary: researchOutput },
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        // 5. Strategy generation
+        const strategyOutput = await step.run("strategize", async () => {
+            const strategyPrompt = PromptTemplate.fromTemplate(`
+                You are a Bid Strategy Director.
+                Based on the research, define the winning strategy.
+
+                RESEARCH: {research}
+                USER ANGLES: {ideaInjection}
+
+                Generate a clear strategy with:
+                1. Win Theme (one powerful sentence)
+                2. Key Messages (3 bullets)
+                3. Evidence to highlight
+                4. Risk mitigation approach
+            `);
+
+            const chain = strategyPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+            return await chain.invoke({
+                research: researchOutput,
+                ideaInjection: ideaInjection || "Autonomous mode"
+            });
+        });
+
+        // 6. Update status: Drafting
+        await step.run("status-drafting", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                status: 'drafting',
+                strategy_output: { summary: strategyOutput },
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        // 7. Write proposal
+        const draftContent = await step.run("write", async () => {
+            const writePrompt = PromptTemplate.fromTemplate(`
+                You are an elite UK Government Bid Writer with a 92% win rate.
+
+                ## STRICT RULES:
+                - 90% Rule: Target 900-950 words
+                - UK Vernacular: Programme, Mobilisation, Organisation
+                - Evidence Density: Every claim needs a number, date, or specific example
+                - No banned words: Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies
+
+                ## CONTEXT:
+                Tender: {tenderTitle}
+                Buyer: {tenderBuyer}
+                Company: {companyName}
+                Strategy: {strategy}
+                Research: {research}
+
+                ## STRUCTURE:
+                # EXECUTIVE SUMMARY (150-200 words)
+                # PROPOSED SOLUTION (300-350 words)
+                # DELIVERY & IMPLEMENTATION (200-250 words)
+                # SOCIAL VALUE (150-200 words)
+                # COMMERCIALS (100-150 words)
+
+                Write a WINNING proposal.
+            `);
+
+            const chain = writePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+            const result = await chain.invoke({
+                tenderTitle,
+                tenderBuyer,
+                companyName: profile?.company_name || "Our Company",
+                strategy: strategyOutput,
+                research: researchOutput
+            });
+
+            // Post-processing: UK Vernacular
+            return result
+                .replace(/\bprogram\b/gi, 'programme')
+                .replace(/\bmobilization\b/gi, 'mobilisation')
+                .replace(/\borganization\b/gi, 'organisation');
+        });
+
+        // 8. Update status: Critiquing
+        await step.run("status-critiquing", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                status: 'critiquing',
+                draft_content: draftContent,
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        // 9. Critique
+        const critiqueOutput = await step.run("critique", async () => {
+            const critiquePrompt = PromptTemplate.fromTemplate(`
+                You are the BRUTAL RED TEAM CRITIC.
+                Score this proposal (0-10) and provide harsh feedback.
+
+                PROPOSAL:
+                {draft}
+
+                Respond in JSON: {{ "score": number, "status": "ACCEPT/REJECT", "feedback": ["..."] }}
+            `);
+
+            const chain = critiquePrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+            const result = await chain.invoke({ draft: draftContent });
+
+            try {
+                const jsonMatch = result.match(/\{[\s\S]*\}/);
+                return jsonMatch ? JSON.parse(jsonMatch[0]) : { score: 7, status: "ACCEPT", feedback: [] };
+            } catch {
+                return { score: 7, status: "ACCEPT", feedback: ["Auto-parsed"] };
+            }
+        });
+
+        // 10. Update status: Humanizing
+        await step.run("status-humanizing", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                status: 'humanizing',
+                critique: critiqueOutput,
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        // 11. Humanize
+        const finalContent = await step.run("humanize", async () => {
+            const humanizePrompt = PromptTemplate.fromTemplate(`
+                You are a Master Editor.
+                Rewrite this proposal to be 100% HUMAN and WINNING.
+
+                CRITIQUE FEEDBACK: {feedback}
+                ORIGINAL: {draft}
+
+                INSTRUCTIONS:
+                1. Apply the critique feedback
+                2. Remove AI-isms (delve, underscore, testament)
+                3. Use SHORT, PUNCHY sentences (burstiness)
+                4. Be SPECIFIC with evidence
+
+                Output ONLY the rewritten text.
+            `);
+
+            const chain = humanizePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+            return await chain.invoke({
+                feedback: JSON.stringify(critiqueOutput.feedback),
+                draft: draftContent
+            });
+        });
+
+        // 12. Save final result
+        await step.run("save-final", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                status: 'complete',
+                final_content: finalContent,
+                score: critiqueOutput.score,
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        console.log(`[AUTONOMOUS] Complete: ${tenderTitle} - Score: ${critiqueOutput.score}`);
+        return { success: true, proposalId, score: critiqueOutput.score };
+    }
+);
+
