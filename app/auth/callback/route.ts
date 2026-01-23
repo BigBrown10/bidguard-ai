@@ -30,7 +30,30 @@ export async function GET(request: Request) {
         )
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`)
+            // Check if user has a profile, create one if not (for social logins)
+            const { data: { user } } = await supabase.auth.getUser()
+
+            if (user) {
+                const { data: existingProfile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', user.id)
+                    .single()
+
+                // If no profile exists, create one with OAuth data
+                if (!existingProfile) {
+                    await supabase.from('profiles').insert({
+                        id: user.id,
+                        company_name: user.user_metadata?.full_name || user.user_metadata?.name || 'My Company',
+                        website: '',
+                        business_description: '',
+                        updated_at: new Date().toISOString()
+                    })
+                }
+            }
+
+            // Redirect to tenders for new social logins
+            return NextResponse.redirect(`${origin}/tenders`)
         }
     }
 

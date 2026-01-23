@@ -88,21 +88,21 @@ export function IdeaInjectionModal({
                             {/* Body */}
                             <div className="p-6 space-y-4">
                                 <label className="block">
-                                    <span className="text-sm font-medium text-white/70">
-                                        Any specific angles or USPs for this bid?
+                                    <span className="text-base font-bold text-primary">
+                                        Your Strategy / Key Points
                                     </span>
-                                    <span className="text-xs text-white/40 ml-2">(Optional)</span>
+                                    <span className="text-sm text-white/50 ml-2">(Optional)</span>
                                 </label>
+                                <p className="text-sm text-white/60 -mt-2">
+                                    Tell the AI what to focus on. If you leave this blank, the AI will invent a strategy.
+                                </p>
                                 <textarea
                                     ref={textareaRef}
                                     value={ideas}
                                     onChange={(e) => setIdeas(e.target.value)}
-                                    placeholder="e.g., Highlight our NHS Digital experience, mention the 2024 award, focus on Net Zero..."
-                                    className="w-full h-28 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/30 resize-none focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                                    placeholder="e.g. 'Focus on our local presence in Derby', 'Highlight our apprenticeship scheme', 'We want to undercut on price'"
+                                    className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder:text-white/40 resize-none focus:outline-none focus:border-primary/50 transition-colors text-sm"
                                 />
-                                <p className="text-xs text-white/40">
-                                    Leave blank for fully autonomous strategy generation based on your company profile.
-                                </p>
                             </div>
 
                             {/* Footer */}

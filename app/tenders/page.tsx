@@ -149,6 +149,21 @@ export default function TenderPage() {
         handleStartProposal("")
     }
 
+    // Listen for BID button clicks from TenderDetailsModal
+    useEffect(() => {
+        const handleBidEvent = (e: CustomEvent<Tender>) => {
+            if (!userId) {
+                window.location.href = '/register'
+                return
+            }
+            setPendingTender(e.detail)
+            setIdeaModalOpen(true)
+        }
+
+        window.addEventListener('bidTender', handleBidEvent as EventListener)
+        return () => window.removeEventListener('bidTender', handleBidEvent as EventListener)
+    }, [userId])
+
     if (loading) return (
         <div className="min-h-screen bg-background flex items-center justify-center">
             <Loader2 className="w-10 h-10 animate-spin text-primary" />

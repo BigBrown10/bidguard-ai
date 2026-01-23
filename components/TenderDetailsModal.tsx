@@ -97,14 +97,15 @@ export function TenderDetailsModal({ tender, onClose }: TenderDetailsModalProps)
                                     Close
                                 </Button>
                                 <Button
-                                    className="flex-[2] h-12 text-black bg-white hover:bg-white/90 font-bold uppercase tracking-widest"
+                                    className="flex-[2] h-12 text-black bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest"
                                     onClick={() => {
-                                        // Save to local storage to pass complex/long data to Ingest page
-                                        localStorage.setItem("pending_tender_import", JSON.stringify(tender))
-                                        window.location.href = "/ingest"
+                                        // Trigger the swipe-right flow (IdeaInjection modal)
+                                        onClose()
+                                        // Use custom event to trigger bid flow
+                                        window.dispatchEvent(new CustomEvent('bidTender', { detail: tender }))
                                     }}
                                 >
-                                    Draft Proposal
+                                    BID
                                 </Button>
                             </div>
 

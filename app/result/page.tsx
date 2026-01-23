@@ -115,6 +115,9 @@ export default function ResultPage() {
                         <Button className='bg-white/10 hover:bg-white/20' onClick={() => window.location.href = '/draft'}>
                             <RefreshCw className="mr-2 h-4 w-4" /> Retry
                         </Button>
+                        <Button className='bg-secondary/20 hover:bg-secondary/30 text-secondary' onClick={() => window.location.href = '/war-room'}>
+                            <FileText className="mr-2 h-4 w-4" /> Edit in War Room
+                        </Button>
                         <Button onClick={handleExportPDF} disabled={exporting}>
                             {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="mr-2 h-4 w-4" /> Export PDF</>}
                         </Button>
