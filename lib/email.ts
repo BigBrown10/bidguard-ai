@@ -1,6 +1,17 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-load Resend client to avoid build-time API key requirement
+let resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+    if (!process.env.RESEND_API_KEY) {
+        return null;
+    }
+    if (!resend) {
+        resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resend;
+}
 
 interface ProposalCompleteEmailProps {
     to: string;
@@ -17,13 +28,14 @@ export async function sendProposalCompleteEmail({
     proposalId,
     score
 }: ProposalCompleteEmailProps) {
-    if (!process.env.RESEND_API_KEY) {
+    const client = getResendClient();
+    if (!client) {
         console.log('[Email] RESEND_API_KEY not set, skipping email');
         return null;
     }
 
     try {
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await client.emails.send({
             from: 'BidGuard <noreply@bidguard.ai>',
             to: [to],
             subject: `✅ Your proposal for "${proposalTitle}" is ready!`,
@@ -96,13 +108,14 @@ export async function sendProposalFailedEmail({
     proposalTitle,
     errorMessage
 }: ProposalFailedEmailProps) {
-    if (!process.env.RESEND_API_KEY) {
+    const client = getResendClient();
+    if (!client) {
         console.log('[Email] RESEND_API_KEY not set, skipping email');
         return null;
     }
 
     try {
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await client.emails.send({
             from: 'BidGuard <noreply@bidguard.ai>',
             to: [to],
             subject: `⚠️ Proposal generation issue - "${proposalTitle}"`,
