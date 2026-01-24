@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Header } from "@/components/Header"
 import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
-import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark } from "lucide-react"
+import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark, Sparkles } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
@@ -232,9 +232,14 @@ export default function TenderPage() {
             <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
 
                 <div className="text-center mb-6">
-                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">
+                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-1">
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
+                    {userId && (
+                        <p className="text-xs text-primary/70 uppercase tracking-widest flex items-center justify-center gap-1">
+                            <Sparkles className="w-3 h-3" /> Personalized for You
+                        </p>
+                    )}
 
                     {/* Filters - Collapsible Grid */}
                     <div className="w-full max-w-md mb-6 relative z-50">

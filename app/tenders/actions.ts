@@ -123,8 +123,7 @@ export async function fetchTendersAction(): Promise<Tender[]> {
         tenders = MOCK_TENDERS
     }
 
-    // 2. Filter out "Handled" tenders (Saved or Discarded)
-    // We need the user session to know what to filter
+    // 2. Filter out "Handled" tenders (Saved or Discarded) AND Personalize
     try {
         const cookieStore = await cookies()
         const supabase = createServerClient(
@@ -141,9 +140,6 @@ export async function fetchTendersAction(): Promise<Tender[]> {
 
         if (user) {
             // Get IDs of tenders this user has touched
-            // Note: We are storing the whole tender object in 'tender_data', so we check against ID inside JSON
-            // Or simpler: The schema doesn't have a 'tender_id' column, it has 'tender_data' JSONB.
-            // We can query: select tender_data->>'id' from saved_tenders where user_id = ...
             const { data: handledTenders } = await supabase
                 .from('saved_tenders')
                 .select('tender_data')
@@ -151,12 +147,57 @@ export async function fetchTendersAction(): Promise<Tender[]> {
 
             if (handledTenders && handledTenders.length > 0) {
                 const handledIds = new Set(handledTenders.map((row: any) => row.tender_data.id))
-                // Filter the list
                 tenders = tenders.filter(t => !handledIds.has(t.id))
+            }
+
+            // --- PERSONALIZATION SCORING ---
+            // Fetch user profile for personalization
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('sectors, business_description')
+                .eq('id', user.id)
+                .single()
+
+            if (profile) {
+                const userSectors = (profile.sectors || []).map((s: string) => s.toLowerCase())
+                const descriptionKeywords = (profile.business_description || '')
+                    .toLowerCase()
+                    .split(/\s+/)
+                    .filter((w: string) => w.length > 4) // Filter short words
+
+                // Score each tender
+                const scoredTenders = tenders.map(tender => {
+                    let score = 0
+                    const tenderSector = tender.sector?.toLowerCase() || ''
+                    const tenderDesc = tender.description?.toLowerCase() || ''
+                    const tenderTitle = tender.title?.toLowerCase() || ''
+
+                    // Sector match = +50
+                    if (userSectors.some((s: string) => tenderSector.includes(s) || s.includes(tenderSector))) {
+                        score += 50
+                    }
+
+                    // Keyword matches in description/title = +5 each
+                    descriptionKeywords.forEach((kw: string) => {
+                        if (tenderDesc.includes(kw) || tenderTitle.includes(kw)) {
+                            score += 5
+                        }
+                    })
+
+                    return { ...tender, _score: score }
+                })
+
+                // Sort by score descending
+                scoredTenders.sort((a, b) => (b._score || 0) - (a._score || 0))
+
+                // Remove the internal score field before returning
+                tenders = scoredTenders.map(({ _score, ...rest }) => rest as Tender)
+
+                console.log(`[TENDERS ACTION] Personalized ${tenders.length} tenders for user`)
             }
         }
     } catch (err) {
-        console.warn("Could not filter tenders (Auth/DB error):", err)
+        console.warn("Could not filter/personalize tenders (Auth/DB error):", err)
     }
 
     return tenders
