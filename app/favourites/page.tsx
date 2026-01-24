@@ -149,48 +149,56 @@ export default function MyTendersPage() {
                                 >
                                     {proposals.length > 0 ? proposals.map((proposal, i) => {
                                         const status = STATUS_CONFIG[proposal.status as ProposalStatus] || STATUS_CONFIG.queued
+                                        const isClickable = proposal.status === 'complete'
                                         return (
-                                            <div key={proposal.id} className="glass-panel p-6 border border-white/10 hover:border-white/20 transition-all flex flex-col h-full group">
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <div className={`px-2 py-1 rounded text-xs font-bold uppercase flex items-center gap-1.5 ${status.color} ${status.bgColor}`}>
-                                                        {status.icon}
-                                                        {status.label}
-                                                    </div>
-                                                    {proposal.score && (
-                                                        <div className="text-xs font-mono font-bold text-white/50 border border-white/10 px-2 py-1 rounded">
-                                                            Score: {proposal.score}/10
+                                            <Link
+                                                key={proposal.id}
+                                                href={isClickable ? `/edit?id=${proposal.id}` : '#'}
+                                                className={isClickable ? 'cursor-pointer' : 'cursor-default'}
+                                            >
+                                                <div className={`glass-panel p-6 border border-white/10 hover:border-white/20 transition-all flex flex-col h-full group ${isClickable ? 'hover:scale-[1.02]' : ''}`}>
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className={`px-2 py-1 rounded text-xs font-bold uppercase flex items-center gap-1.5 ${status.color} ${status.bgColor}`}>
+                                                            {status.icon}
+                                                            {status.label}
                                                         </div>
-                                                    )}
-                                                </div>
+                                                        {proposal.score && (
+                                                            <div className="text-xs font-mono font-bold text-white/50 border border-white/10 px-2 py-1 rounded">
+                                                                Score: {proposal.score}/10
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                                <h3 className="text-xl font-bold text-white mb-2 line-clamp-2">{proposal.tender_title || "Untitled Proposal"}</h3>
-                                                <p className="text-white/40 text-sm mb-4 line-clamp-1">{proposal.tender_client || "Unknown Client"}</p>
+                                                    <h3 className="text-xl font-bold text-white mb-2 line-clamp-2 group-hover:text-primary transition-colors">{proposal.tender_title || "Untitled Proposal"}</h3>
+                                                    <p className="text-white/40 text-sm mb-4 line-clamp-1">{proposal.tender_buyer || "Unknown Client"}</p>
 
-                                                <div className="mt-auto pt-4 border-t border-white/5 flex gap-2">
-                                                    {proposal.status === 'complete' ? (
-                                                        <>
-                                                            <Link href={`/edit?id=${proposal.id}`} className="flex-1">
-                                                                <button className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 py-2 rounded-lg text-sm font-bold transition-colors">
-                                                                    <Edit3 className="w-4 h-4" /> Editor
-                                                                </button>
-                                                            </Link>
-                                                            <Link href={`/result?id=${proposal.id}`}>
-                                                                <button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 p-2 rounded-lg transition-colors">
+                                                    <div className="mt-auto pt-4 border-t border-white/5 flex gap-2">
+                                                        {proposal.status === 'complete' ? (
+                                                            <>
+                                                                <div className="flex-1">
+                                                                    <button className="w-full flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 py-2 rounded-lg text-sm font-bold transition-colors">
+                                                                        <Edit3 className="w-4 h-4" /> Editor
+                                                                    </button>
+                                                                </div>
+                                                                <button
+                                                                    onClick={(e) => { e.preventDefault(); window.location.href = `/result?id=${proposal.id}` }}
+                                                                    className="bg-white/5 hover:bg-white/10 text-white border border-white/10 p-2 rounded-lg transition-colors"
+                                                                >
                                                                     <Eye className="w-4 h-4" />
                                                                 </button>
-                                                            </Link>
-                                                        </>
-                                                    ) : proposal.status === 'failed' ? (
-                                                        <button className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-2 rounded-lg text-sm font-bold transition-colors">
-                                                            <RefreshCw className="w-4 h-4" /> Retry
-                                                        </button>
-                                                    ) : (
-                                                        <div className="w-full bg-white/5 border border-white/10 py-2 rounded-lg text-center text-sm text-white/40 flex items-center justify-center gap-2 cursor-wait">
-                                                            <Loader2 className="w-4 h-4 animate-spin" /> Processing...
-                                                        </div>
-                                                    )}
+                                                            </>
+                                                        ) : proposal.status === 'failed' ? (
+                                                            <button className="w-full flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-2 rounded-lg text-sm font-bold transition-colors">
+                                                                <RefreshCw className="w-4 h-4" /> Retry
+                                                            </button>
+                                                        ) : (
+                                                            <div className="w-full bg-white/5 border border-white/10 py-2 rounded-lg text-center text-sm text-white/40 flex items-center justify-center gap-2 cursor-wait">
+                                                                <Loader2 className="w-4 h-4 animate-spin" /> Processing...
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         )
                                     }) : (
                                         <div className="col-span-full text-center py-20 bg-white/5 rounded-2xl border border-white/10 border-dashed">

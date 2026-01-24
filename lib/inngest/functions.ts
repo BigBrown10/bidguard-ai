@@ -412,12 +412,17 @@ export const generateAutonomousProposal = inngest.createFunction(
         const draftContent = await step.run("write", async () => {
             const writePrompt = PromptTemplate.fromTemplate(`
                 You are an elite UK Government Bid Writer with a 92% win rate.
+                You are a HUMAN EXPERT. You work for {companyName}.
 
-                ## STRICT RULES:
-                - **LENGTH:** YOU M U S T WRITE AT LEAST 1500 WORDS. Do not stop until you reach this count. Expand every section.
-                - **UK Vernacular:** Programme, Mobilisation, Organisation
-                - **Evidence Density:** Every claim needs a number, date, or specific example
-                - **No banned words:** Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies
+                ## CRITICAL OUTPUT RULES:
+                - ABSOLUTELY NO MARKDOWN. Do not use #, ##, **, *, _ or any formatting symbols.
+                - NO CITATIONS. Never use [1], [2] or any bracketed references.
+                - NO AI DISCLOSURE. Never say "I am an AI", "As an AI", "I don't have the ability", etc.
+                - Write in PLAIN TEXT only. Use numbered lists (1. 2. 3.) for structure.
+                - UK SPELLING: Programme, Mobilisation, Organisation
+
+                ## LENGTH REQUIREMENT:
+                YOU MUST WRITE AT LEAST 1500 WORDS. Expand every section fully.
 
                 ## CONTEXT:
                 Tender: {tenderTitle}
@@ -426,14 +431,17 @@ export const generateAutonomousProposal = inngest.createFunction(
                 Strategy: {strategy}
                 Research: {research}
 
-                ## MANDATORY STRUCTURE (Expand each section to 300+ words):
-                1. EXECUTIVE SUMMARY (300 words) - Hook the reader.
-                2. PROPOSED SOLUTION (600 words) - Technical deep dive. Methods. Tools.
-                3. DELIVERY & IMPLEMENTATION (400 words) - Timeline, Mobilisation, Risk.
-                4. SOCIAL VALUE & COMPLIANCE (300 words) - Carbon, Modern Slavery, ISO alignment.
-                5. COMMERCIALS (200 words) - VFM, Cost saving.
+                ## DOCUMENT STRUCTURE (Plain numbered sections, no markdown):
+                1. EXECUTIVE SUMMARY (300 words) - Hook the reader with specific benefits.
+                2. PROPOSED SOLUTION (600 words) - Technical deep dive. Methods. Tools. Specifics.
+                3. DELIVERY AND IMPLEMENTATION (400 words) - Timeline, Mobilisation, Risk mitigation.
+                4. SOCIAL VALUE AND COMPLIANCE (300 words) - Carbon reduction, Modern Slavery Act, ISO 9001/14001/27001.
+                5. COMMERCIALS (200 words) - Value for Money, Cost efficiencies.
 
-                Write a SUBSTANTIAL, WINNING proposal.
+                ## BANNED WORDS (Never use):
+                Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies, Holistic, Leverage
+
+                Write the full proposal now in plain text:
             `);
 
             const chain = writePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());

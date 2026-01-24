@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Download, RefreshCw, Loader2, FileText } from "lucide-react"
@@ -9,24 +11,72 @@ import { WinMeter } from "@/components/WinMeter"
 import { ComplianceSidebar, ComplianceItem } from "@/components/ComplianceSidebar"
 import { BANNED_WORDS } from "@/lib/schemas"
 
-export default function ResultPage() {
+function ResultContent() {
+    const searchParams = useSearchParams()
+    const proposalId = searchParams.get('id')
+
     const [result, setResult] = React.useState<any>(null)
     const [exporting, setExporting] = React.useState(false)
     const contentRef = React.useRef<HTMLDivElement>(null)
 
     React.useEffect(() => {
-        const storedFinal = localStorage.getItem("bidguard_final")
-        if (storedFinal) {
-            setResult(JSON.parse(storedFinal))
-        }
-    }, [])
+        const loadResult = async () => {
+            // First try localStorage (for legacy flow)
+            const storedFinal = localStorage.getItem("bidguard_final")
+            if (storedFinal) {
+                setResult(JSON.parse(storedFinal))
+            }
 
-    // Clean text from AI artifacts - PRESERVE MARKDOWN STRUCTURE
+            // If we have an ID, fetch from API (overrides localStorage)
+            if (proposalId && proposalId !== 'temp') {
+                try {
+                    const res = await fetch(`/api/proposals/${proposalId}`)
+                    if (res.ok) {
+                        const data = await res.json()
+                        if (data.proposal) {
+                            setResult({
+                                finalText: data.proposal.final_content,
+                                critique: { score: data.proposal.score },
+                                tender: {
+                                    title: data.proposal.tender_title,
+                                    buyer: data.proposal.tender_buyer
+                                }
+                            })
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch proposal:", e)
+                }
+            }
+        }
+        loadResult()
+    }, [proposalId])
+
+    // Clean text from AI artifacts - STRIP ALL MARKDOWN for clean output
     const cleanText = (text: string) => {
         if (!text) return ""
         let cleaned = text
-            .replace(/\[\d+\]/g, '')  // Remove [1], [2] citations
-            .replace(/\(Word count:.*?\)/gi, '')  // Remove word count notes
+            // Remove citations [1], [2], etc
+            .replace(/\[\d+\]/g, '')
+            // Remove markdown headers (## or #)
+            .replace(/^#{1,6}\s*/gm, '')
+            // Remove bold (**text** or __text__)
+            .replace(/\*\*(.*?)\*\*/g, '$1')
+            .replace(/__(.*?)__/g, '$1')
+            // Remove italic (*text* or _text_)
+            .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '$1')
+            .replace(/(?<!_)_([^_]+)_(?!_)/g, '$1')
+            // Remove brackets content like [citation] but keep inner text
+            .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')  // Links [text](url) -> text
+            .replace(/\[([^\]]*)\]/g, '$1')  // Plain brackets [text] -> text
+            // Remove word count notes
+            .replace(/\(Word count:.*?\)/gi, '')
+            .replace(/\(approximately.*?words?\)/gi, '')
+            // Remove AI disclosure phrases
+            .replace(/As an AI.*?\./gi, '')
+            .replace(/I am an AI.*?\./gi, '')
+            .replace(/I don't have the ability.*?\./gi, '')
+            .replace(/I cannot.*?\./gi, '')
 
         // Remove banned words (case insensitive) but preserve sentence structure
         BANNED_WORDS.forEach(word => {
@@ -34,8 +84,11 @@ export default function ResultPage() {
             cleaned = cleaned.replace(regex, '')
         })
 
-        // Clean up double spaces but preserve line breaks for markdown
-        return cleaned.replace(/  +/g, ' ').trim()
+        // Clean up double spaces and normalize whitespace
+        return cleaned
+            .replace(/  +/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim()
     }
 
     // PDF Export
@@ -154,8 +207,8 @@ export default function ResultPage() {
                                         p: ({ node, ...props }) => <p className="mb-4 leading-7 text-white/80" {...props} />,
                                         ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-4 space-y-2" {...props} />,
                                         ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-4 space-y-2" {...props} />,
-                                        li: ({ node, ...props }) => <li className="pl-1" {...props} />,
-                                        strong: ({ node, ...props }) => <strong className="font-bold text-white" {...props} />,
+                                        li: ({ ...props }) => <li className="pl-1" {...props} />,
+                                        strong: ({ ...props }) => <strong className="font-bold text-white" {...props} />,
                                     }}
                                 >
                                     {cleanText(result.finalText)}
@@ -190,4 +243,15 @@ export default function ResultPage() {
     )
 }
 
-
+// Default export wraps in Suspense for useSearchParams
+export default function ResultPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <ResultContent />
+        </Suspense>
+    )
+}
