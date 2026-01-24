@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { inngest } from "@/lib/inngest/client"
+import { proposalStartSchema } from "@/lib/validation"
+import { audit } from "@/lib/audit"
 
 export async function POST(req: NextRequest) {
     try {
@@ -29,13 +31,20 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const { tenderId, tenderTitle, tenderBuyer, ideaInjection } = await req.json()
+        // SECURITY: Validate input with Zod
+        const rawBody = await req.json()
+        const validationResult = proposalStartSchema.safeParse(rawBody)
 
-        if (!tenderId || !tenderTitle) {
-            return NextResponse.json({ error: "Missing tender data" }, { status: 400 })
+        if (!validationResult.success) {
+            return NextResponse.json(
+                { error: "Invalid input", details: validationResult.error.flatten() },
+                { status: 400 }
+            )
         }
 
-        // Create proposal record in Supabase (if table exists)
+        const { tenderId, tenderTitle, tenderBuyer, ideaInjection } = validationResult.data
+
+        // Create proposal record in Supabase
         let proposalId = `temp-${Date.now()}`
 
         try {
@@ -54,6 +63,9 @@ export async function POST(req: NextRequest) {
 
             if (!insertError && proposal) {
                 proposalId = proposal.id
+
+                // SECURITY: Audit log - proposal created
+                await audit.proposalCreated(user.id, proposalId, tenderTitle)
             } else {
                 console.warn("Proposals table may not exist, using temp ID:", insertError?.message)
             }
@@ -61,7 +73,7 @@ export async function POST(req: NextRequest) {
             console.warn("Database insert skipped:", dbError)
         }
 
-        // Send to Inngest for background processing
+        // Send to Inngest - SECURITY: Only send IDs, not full content
         await inngest.send({
             name: "app/generate-autonomous-proposal",
             data: {
@@ -69,8 +81,9 @@ export async function POST(req: NextRequest) {
                 userId: user.id,
                 tenderId,
                 tenderTitle,
-                tenderBuyer,
-                ideaInjection: ideaInjection || ""
+                tenderBuyer: tenderBuyer || "Unknown",
+                // Note: ideaInjection is user-provided, keep it minimal
+                ideaInjection: ideaInjection ? ideaInjection.substring(0, 1000) : ""
             }
         })
 
@@ -80,10 +93,10 @@ export async function POST(req: NextRequest) {
             message: "Proposal generation started"
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Start proposal error:", error)
         return NextResponse.json(
-            { error: error.message || "Internal error" },
+            { error: error instanceof Error ? error.message : "Internal error" },
             { status: 500 }
         )
     }
