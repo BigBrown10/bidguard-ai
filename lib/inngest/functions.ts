@@ -1,5 +1,5 @@
 import { inngest } from "@/lib/inngest/client";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin as supabase } from "@/lib/supabase-admin";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { perplexitySonarReasoning } from "@/lib/perplexity";
 import { StringOutputParser } from "@langchain/core/output_parsers";
