@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { motion, useMotionValue, useTransform } from "framer-motion"
 import { Tender } from "@/lib/mock-tenders"
 import { Briefcase, Calendar, MapPin, PoundSterling, ShieldCheck } from "lucide-react"
@@ -11,7 +12,7 @@ interface TenderCardProps {
     index: number;
 }
 
-export const TenderCard = ({ tender, onSwipe, onInfo, index }: TenderCardProps) => {
+const TenderCardComponent = ({ tender, onSwipe, onInfo, index }: TenderCardProps) => {
     const x = useMotionValue(0)
     const rotate = useTransform(x, [-200, 200], [-15, 15])
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
@@ -154,3 +155,6 @@ export const TenderCard = ({ tender, onSwipe, onInfo, index }: TenderCardProps) 
         </motion.div>
     )
 }
+
+// Memo wrapper to prevent unnecessary re-renders on mobile
+export const TenderCard = React.memo(TenderCardComponent)

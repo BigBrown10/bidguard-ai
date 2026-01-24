@@ -30,14 +30,31 @@ export default function TenderPage() {
     const [pendingTender, setPendingTender] = useState<Tender | null>(null)
     const [showOnboarding, setShowOnboarding] = useState(false)
 
-    // Dynamically extract unique sectors from the loaded tenders
+    // Industry filters with predefined common sectors + dynamically extracted
     const sectorFilters = useMemo(() => {
-        const sectors = new Set(allTenders.map(t => t.sector).filter(Boolean))
-        const filters = [{ id: "all", label: "All Sectors" }]
-        sectors.forEach(sector => {
-            filters.push({ id: sector, label: sector })
+        // Predefined major industries
+        const majorIndustries = [
+            { id: "all", label: "All Sectors" },
+            { id: "healthcare", label: "Healthcare" },
+            { id: "construction", label: "Construction" },
+            { id: "it", label: "IT & Digital" },
+            { id: "education", label: "Education" },
+            { id: "transport", label: "Transport" },
+            { id: "defence", label: "Defence" },
+            { id: "energy", label: "Energy" },
+        ]
+
+        // Also add any unique sectors from loaded tenders not already in the list
+        const dynamicSectors = new Set(allTenders.map(t => t.sector?.toLowerCase()).filter(Boolean))
+        const existingIds = new Set(majorIndustries.map(f => f.id.toLowerCase()))
+
+        dynamicSectors.forEach(sector => {
+            if (!existingIds.has(sector)) {
+                majorIndustries.push({ id: sector, label: sector.charAt(0).toUpperCase() + sector.slice(1) })
+            }
         })
-        return filters
+
+        return majorIndustries
     }, [allTenders])
 
     // Helper to parse value string to number (max value if range)
@@ -232,14 +249,9 @@ export default function TenderPage() {
             <main className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-4">
 
                 <div className="text-center mb-6">
-                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-1">
+                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">
                         Marketplace <span className="text-primary text-glow">Feed</span>
                     </h1>
-                    {userId && (
-                        <p className="text-xs text-primary/70 uppercase tracking-widest flex items-center justify-center gap-1">
-                            <Sparkles className="w-3 h-3" /> Personalized for You
-                        </p>
-                    )}
 
                     {/* Filters - Collapsible Grid */}
                     <div className="w-full max-w-md mb-6 relative z-50">
@@ -351,32 +363,32 @@ export default function TenderPage() {
 
 
 
-                {/* Controls Hint */}
-                <div className="mt-8 flex gap-8 items-center text-white/30 text-xs font-bold uppercase tracking-widest relative z-50">
+                {/* Controls - BOLD */}
+                <div className="mt-8 flex gap-8 items-center text-white text-sm font-black uppercase tracking-widest relative z-50">
                     <button
                         onClick={() => tenders.length > 0 && handleSwipe("left", tenders.length - 1)}
-                        className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors"
+                        className="flex flex-col items-center gap-2 group cursor-pointer transition-colors"
                     >
-                        <div className="w-14 h-14 rounded-full border-2 border-white/10 group-hover:border-red-500/50 group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/20 group-hover:text-red-500 text-xl backdrop-blur-sm bg-black/40">✕</div>
-                        Pass
+                        <div className="w-14 h-14 rounded-full border-2 border-white/30 group-hover:border-red-500 group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/60 group-hover:text-red-500 text-xl backdrop-blur-sm bg-black/60">✕</div>
+                        <span className="text-white/60 group-hover:text-red-400">Pass</span>
                     </button>
 
                     <button
                         onClick={() => tenders.length > 0 && handleSwipe("watchlist", tenders.length - 1)}
-                        className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors translate-y-2"
+                        className="flex flex-col items-center gap-2 group cursor-pointer transition-colors translate-y-2"
                     >
-                        <div className="w-12 h-12 rounded-full border-2 border-white/10 group-hover:border-secondary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/20 group-hover:text-secondary text-lg backdrop-blur-sm bg-black/40">
+                        <div className="w-12 h-12 rounded-full border-2 border-white/30 group-hover:border-secondary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/60 group-hover:text-secondary text-lg backdrop-blur-sm bg-black/60">
                             <Bookmark className="w-5 h-5" />
                         </div>
-                        Watch
+                        <span className="text-white/60 group-hover:text-secondary">Watch</span>
                     </button>
 
                     <button
                         onClick={() => tenders.length > 0 && handleSwipe("right", tenders.length - 1)}
-                        className="flex flex-col items-center gap-2 group cursor-pointer hover:text-white transition-colors"
+                        className="flex flex-col items-center gap-2 group cursor-pointer transition-colors"
                     >
-                        <div className="w-16 h-16 rounded-full border-2 border-primary/30 group-hover:border-primary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-primary text-2xl backdrop-blur-sm bg-black/40 shadow-lg shadow-primary/20">♥</div>
-                        BID
+                        <div className="w-16 h-16 rounded-full border-2 border-primary group-hover:border-primary group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-primary text-2xl backdrop-blur-sm bg-black/60 shadow-lg shadow-primary/30">♥</div>
+                        <span className="text-primary">BID</span>
                     </button>
                 </div>
 

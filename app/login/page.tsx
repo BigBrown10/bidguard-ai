@@ -29,18 +29,14 @@ export default function LoginPage() {
             })
             if (error) throw error
 
-            // Successful login
+            // Successful login - go directly to home
             toast.success("Identity Verified", {
                 description: "Accessing secure environment...",
                 icon: <CheckCircle2 className="text-secondary" />
             })
 
-            // Force router refresh and push
-            // Using hard location set to ensure middleware re-runs with fresh cookies
-            router.refresh()
-            setTimeout(() => {
-                window.location.href = '/'
-            }, 800)
+            // Direct redirect without delay
+            window.location.href = '/'
 
         } catch (err: any) {
             console.error("Auth error:", err)
