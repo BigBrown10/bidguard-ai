@@ -172,34 +172,16 @@ function IngestContent() {
                                 <span className="w-full border-t border-white/10" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-black px-2 text-white/40">Company Intelligence</span>
+                                <span className="bg-black px-2 text-white/40">Strategy Input</span>
                             </div>
-                        </div>
-
-                        <FileUpload
-                            label="Upload Company Profile / Case Studies (PDF)"
-                            value={formData.knowledgeFile}
-                            onChange={(file) => setFormData({ ...formData, knowledgeFile: file })}
-                            accept=".pdf"
-                            error={errors.knowledgeFile}
-                        />
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-white/80">Company Overview & Capabilities</label>
-                            <textarea
-                                className="cyber-input w-full h-24 p-3 bg-black/40 resize-none text-sm"
-                                placeholder="Paste your capabilities: 'We are ISO 27001 certified, have 50 staff, and specialize in...'"
-                                value={formData.companyContext || ""}
-                                onChange={(e) => setFormData({ ...formData, companyContext: e.target.value })}
-                            />
                         </div>
 
                         <div className="space-y-2 pt-2">
                             <label className="text-sm font-medium text-primary">Your Strategy / Key Points (Optional)</label>
-                            <p className="text-xs text-white/50 mb-2">Tell the AI what to focus on. If you leave this blank, the AI will invent a strategy.</p>
+                            <p className="text-xs text-white/50 mb-2">Tell the AI what to focus on. If blank, AI will auto-strategize based on your company profile.</p>
                             <textarea
                                 className="cyber-input w-full h-24 p-3 bg-black/40 resize-none text-sm border-primary/30 focus:border-primary"
-                                placeholder="e.g. 'Focus on our local presence in Derby', 'Highlight our apprenticeship scheme', 'We want to undercut on price'"
+                                placeholder="e.g. 'Focus on our local presence in Derby', 'Highlight our apprenticeship scheme', 'Undercut on price'"
                                 value={formData.userStrategy || ""}
                                 onChange={(e) => setFormData({ ...formData, userStrategy: e.target.value })}
                             />
