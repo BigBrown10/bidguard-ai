@@ -5,11 +5,31 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
 import { Header } from "@/components/Header"
-
-// ... imports
+import { CompanyProfileForm } from '@/components/CompanyProfileForm'
+import { Toaster } from 'sonner'
 
 export default function OnboardingPage() {
-    // ... logic ...
+    const router = useRouter()
+    const [user, setUser] = useState<any>(null)
+    const [profile, setProfile] = useState<any>(null)
+
+    useEffect(() => {
+        const checkUser = async () => {
+            if (!supabase) return;
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                router.push('/login')
+            } else {
+                setUser(user)
+                // Load existing data if any
+                const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+                if (data) setProfile(data)
+            }
+        }
+        checkUser()
+    }, [])
+
+    if (!user) return null
 
     return (
         <div className="min-h-screen bg-black flex flex-col relative overflow-y-auto">
@@ -48,5 +68,6 @@ export default function OnboardingPage() {
                     </motion.div>
                 </div>
             </div>
-            )
+        </div>
+    )
 }
