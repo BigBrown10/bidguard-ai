@@ -14,6 +14,8 @@ import { Toaster, toast } from "sonner"
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
 import { IdeaInjectionModal } from "@/components/IdeaInjectionModal"
 import { CompanyDetailsGate } from "@/components/CompanyDetailsGate"
+import { QualificationModal } from "@/components/QualificationModal"
+import { qualifyTender, QualificationResult } from "@/app/tenders/qualify"
 
 export default function TendersPage() {
     const router = useRouter()
@@ -29,6 +31,9 @@ export default function TendersPage() {
 
     // V3: Modal states
     const [ideaModalOpen, setIdeaModalOpen] = useState(false)
+    const [qualificationModalOpen, setQualificationModalOpen] = useState(false)
+    const [qualificationResult, setQualificationResult] = useState<QualificationResult | null>(null)
+    const [isQualifying, setIsQualifying] = useState(false)
     const [pendingTender, setPendingTender] = useState<Tender | null>(null)
     const [showOnboarding, setShowOnboarding] = useState(false)
     const [profileComplete, setProfileComplete] = useState(false)
@@ -174,9 +179,32 @@ export default function TendersPage() {
                 return
             }
 
-            // V3: Show Idea Injection Modal instead of direct save
+            // V3: Run Advisory Agent checks first
             setPendingTender(swipedTender)
-            setIdeaModalOpen(true)
+
+            // Open Qualification Modal and start analysis
+            setQualificationModalOpen(true)
+            setIsQualifying(true)
+            setQualificationResult(null)
+
+            // Run server action
+            qualifyTender(swipedTender.id, userId).then(result => {
+                setQualificationResult(result)
+                setIsQualifying(false)
+            }).catch(err => {
+                console.error("Qualification failed", err)
+                setIsQualifying(false)
+                // Fallback result
+                setQualificationResult({
+                    recommendation: "PROCEED WITH CAUTION",
+                    confidence_score: 0,
+                    traffic_light: "AMBER",
+                    reasoning: ["System connectivity issue during analysis."],
+                    strategic_advice: "Proceed with caution."
+                })
+            })
+
+            // Originally setIdeaModalOpen(true) - now deferred to QualificationModal confirm
 
         } else if (direction === "watchlist") {
             if (!userId) {
@@ -429,6 +457,33 @@ export default function TendersPage() {
                 onSkip={handleSkipIdeas}
                 onClose={() => {
                     setIdeaModalOpen(false)
+                    // Keep pendingTender if we go back? No, clear it
+                    setPendingTender(null)
+                }}
+            />
+
+            <QualificationModal
+                isOpen={qualificationModalOpen}
+                isLoading={isQualifying}
+                result={qualificationResult}
+                onClose={() => {
+                    setQualificationModalOpen(false)
+                    setPendingTender(null)
+                    // Since we already "swiped" it visually, we don't need to put it back unless we want to undo
+                    // Ideally we should undo the swipe but for now "closing" is effectively "ignore/pass"
+                }}
+                onProceed={() => {
+                    setQualificationModalOpen(false)
+                    setIdeaModalOpen(true)
+                }}
+                onShred={() => {
+                    setQualificationModalOpen(false)
+                    // It was already removed from 'tenders' state visually in handleSwipe
+                    // So we just call reject action if we haven't already
+                    if (userId && pendingTender) {
+                        rejectTenderAction(pendingTender, userId).catch(console.error)
+                        toast.info("Tender shredded based on advisory.")
+                    }
                     setPendingTender(null)
                 }}
             />

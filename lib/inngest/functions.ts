@@ -396,6 +396,12 @@ export const generateAutonomousProposal = inngest.createFunction(
                 - SECTORS: {sectors}
                 - USER STRATEGY: {ideaInjection}
 
+                ## ANTI-HALLUCINATION PROTOCOL (STRICT ENFORCEMENT):
+                1. DO NOT INVENT FIGURES. If you do not know a turnover, employee count, or specific date, write "[MISSING DATA: X]".
+                2. DO NOT HALLUCINATE CASE STUDIES. Only use case studies explicitly present in {businessDescription} or {achievements}.
+                3. DOMAIN ACCURACY: Be extremely careful with company domains. Ensure you are referencing the correct entity (e.g. do not confuse gray.io with gray.com).
+                4. TRUTH OVER FLUFF: If the company does not have a specific capability required by the tender, STATE IT clearly in the risk section rather than lying.
+
                 Identify:
                 1. 3 key buyer pain points
                 2. 3 company differentiators
@@ -426,7 +432,12 @@ export const generateAutonomousProposal = inngest.createFunction(
                 - NO CITATIONS. Never use [1], [2] or bracketed references.
                 - NO AI DISCLOSURE. Never say "I am an AI", "As an AI".
                 - Write in PLAIN TEXT only. Use numbered lists (1. 2. 3.) for structure.
+                - ABSOLUTELY NO MARKDOWN. No #, ##, **, *, _ or formatting symbols.
+                - NO CITATIONS. Never use [1], [2] or bracketed references.
+                - NO AI DISCLOSURE. Never say "I am an AI", "As an AI".
+                - Write in PLAIN TEXT only. Use numbered lists (1. 2. 3.) for structure.
                 - UK SPELLING: Programme, Mobilisation, Organisation
+                - DATA INTEGRITY: Double-check all £ values and dates against provided context.
 
                 ## DOCUMENT STRUCTURE (Plain numbered sections):
                 1. EXECUTIVE SUMMARY (300 words) - Hook with specific benefits
