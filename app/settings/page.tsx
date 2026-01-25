@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Loader2, User, Mail, Building2, Trash2, LogOut, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { CompanyProfileForm } from "@/components/CompanyProfileForm"
 
 export default function SettingsPage() {
     const router = useRouter()
@@ -123,30 +124,35 @@ export default function SettingsPage() {
                                 <User className="w-5 h-5" /> Profile
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <CardContent className="space-y-6">
+                            <div className="bg-white/5 p-4 rounded-lg flex items-center justify-between">
                                 <div>
-                                    <label className="text-xs text-white/50 uppercase tracking-wider">Email</label>
-                                    <p className="text-white flex items-center gap-2 mt-1">
+                                    <label className="text-xs text-white/50 uppercase tracking-wider">Account Email</label>
+                                    <p className="text-white flex items-center gap-2 mt-1 font-mono">
                                         <Mail className="w-4 h-4 text-primary" />
                                         {user.email}
                                     </p>
                                 </div>
-                                <div>
-                                    <label className="text-xs text-white/50 uppercase tracking-wider">Company</label>
-                                    <p className="text-white flex items-center gap-2 mt-1">
-                                        <Building2 className="w-4 h-4 text-primary" />
-                                        {profile?.company_name || "Not set"}
-                                    </p>
+                                <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
+                                    Authenticated
                                 </div>
                             </div>
 
                             <div className="pt-4 border-t border-white/10">
-                                <Link href="/onboarding">
-                                    <Button variant="outline" className="w-full md:w-auto">
-                                        Edit Profile
-                                    </Button>
-                                </Link>
+                                <h3 className="text-sm font-bold text-white mb-4">Company Intelligence</h3>
+                                <CompanyProfileForm
+                                    userId={user.id}
+                                    initialData={profile}
+                                    onComplete={() => {
+                                        router.refresh()
+                                        // Optional: Reload local state
+                                        const loadUser = async () => {
+                                            const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+                                            if (data) setProfile(data)
+                                        }
+                                        loadUser()
+                                    }}
+                                />
                             </div>
                         </CardContent>
                     </Card>

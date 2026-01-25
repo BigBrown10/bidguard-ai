@@ -34,6 +34,20 @@ export function CompanyProfileForm({ userId, initialData, onComplete, isModal = 
         companies_house_number: initialData?.companies_house_number || '',
     })
 
+    // Sync with upstream data changes
+    React.useEffect(() => {
+        if (initialData) {
+            setFormData({
+                company_name: initialData.company_name || '',
+                website: initialData.website || '',
+                business_description: initialData.business_description || '',
+                iso_certs: initialData.iso_certs || [],
+                achievements: initialData.achievements || '',
+                companies_house_number: initialData.companies_house_number || '',
+            })
+        }
+    }, [initialData])
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
