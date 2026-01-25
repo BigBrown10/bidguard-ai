@@ -13,175 +13,115 @@ function getResendClient(): Resend | null {
     return resend;
 }
 
-interface ProposalCompleteEmailProps {
-    to: string;
-    userName: string;
-    proposalTitle: string;
-    proposalId: string;
-    score: number;
+const BRAND_COLOR = '#007AFF'; // Apple Blue from globals.css
+const BG_COLOR = '#000000';
+const CARD_COLOR = '#111111';
+const TEXT_COLOR = '#FFFFFF';
+const TEXT_MUTED = '#8E8E93';
+
+const BASE_STYLES = `
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: ${BG_COLOR}; color: ${TEXT_COLOR}; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background-color: ${CARD_COLOR}; border-radius: 20px; overflow: hidden; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .header { background: linear-gradient(180deg, rgba(0,122,255,0.1) 0%, rgba(0,0,0,0) 100%); padding: 40px; text-align: center; border-bottom: 1px solid #222; }
+    .logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; margin: 0; color: #fff; }
+    .logo span { color: ${BRAND_COLOR}; text-shadow: 0 0 10px rgba(0,122,255,0.5); }
+    .content { padding: 40px; line-height: 1.6; font-size: 16px; color: #ddd; }
+    .btn { display: inline-block; background-color: ${BRAND_COLOR}; color: #fff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-weight: 600; text-align: center; margin: 20px 0; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+    .footer { padding: 30px; text-align: center; font-size: 12px; color: ${TEXT_MUTED}; border-top: 1px solid #222; background: #050505; }
+    h1 { color: #fff; font-size: 24px; margin-bottom: 10px; letter-spacing: -0.5px; }
+    h2 { color: #fff; font-size: 20px; margin-top: 0; }
+    .stat-box { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: ${TEXT_MUTED}; margin-bottom: 5px; }
+    .value { font-size: 18px; font-weight: 700; color: #fff; }
+    .highlight { color: ${BRAND_COLOR}; }
+`;
+
+function wrapHtml(title: string, content: string, actionUrl?: string, actionText?: string) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>${BASE_STYLES}</style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">Bid<span>Swipe</span></div>
+            </div>
+            <div class="content">
+                <h1>${title}</h1>
+                ${content}
+                ${actionUrl ? `<div style="text-align: center;"><a href="${actionUrl}" class="btn">${actionText}</a></div>` : ''}
+            </div>
+            <div class="footer">
+                <p>&copy; ${new Date().getFullYear()} BidSwipe AI. All rights reserved.</p>
+                <p>London, UK</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
 }
 
-export async function sendProposalCompleteEmail({
-    to,
-    userName,
-    proposalTitle,
-    proposalId,
-    score
-}: ProposalCompleteEmailProps) {
+// 1. WELCOME EMAIL
+export async function sendWelcomeEmail(email: string, name: string) {
     const client = getResendClient();
-    if (!client) {
-        console.log('[Email] RESEND_API_KEY not set, skipping email');
-        return null;
-    }
+    if (!client) return;
 
     try {
-        const { data, error } = await client.emails.send({
-            from: 'BidGuard <noreply@bidguard.ai>',
-            to: [to],
-            subject: `✅ Your proposal for "${proposalTitle}" is ready!`,
-            html: `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #ffffff; margin: 0; padding: 40px 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #111; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
-        .header { background: linear-gradient(135deg, #00ffaa 0%, #00cc88 100%); padding: 32px; text-align: center; }
-        .header h1 { margin: 0; color: #000; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
-        .content { padding: 32px; }
-        .score-badge { display: inline-block; background: #00ffaa20; color: #00ffaa; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 18px; margin-bottom: 20px; }
-        .proposal-title { font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 8px; }
-        .cta-button { display: inline-block; background: #00ffaa; color: #000; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 24px; }
-        .footer { padding: 24px 32px; border-top: 1px solid #222; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 Proposal Complete</h1>
-        </div>
-        <div class="content">
-            <p>Hey ${userName || 'there'},</p>
-            <p>Great news! Your autonomous bid proposal has been generated and is ready for review.</p>
-            
-            <div class="score-badge">Score: ${score.toFixed(1)}/10</div>
-            
-            <div class="proposal-title">${proposalTitle}</div>
-            <p style="color: #888; font-size: 14px;">The AI has researched, strategized, drafted, critiqued, and humanized your proposal.</p>
-            
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://bidguard.ai'}/war-room?id=${proposalId}" class="cta-button">
-                Review & Edit Proposal
-            </a>
-        </div>
-        <div class="footer">
-            <p>This email was sent by BidGuard AI. You received this because you initiated a proposal generation.</p>
-        </div>
-    </div>
-</body>
-</html>
-            `
+        await client.emails.send({
+            from: 'BidSwipe <welcome@bidswipe.xyz>',
+            to: email,
+            subject: 'Welcome to the Future of Bidding ⚡',
+            html: wrapHtml(
+                `Ready to Win, ${name}?`,
+                `
+                <p>Welcome to <strong>BidSwipe</strong>. You've joined the elite circle of government contractors using AI to reverse-engineer victory.</p>
+                <p>Your War Room is ready. Here's what you can do:</p>
+                <ul>
+                    <li>🕵️ <strong>Spy</strong> on competitors (Winner's Analyst)</li>
+                    <li>⚡ <strong>Generate</strong> 1,500-word bids in minutes</li>
+                    <li>🛡️ <strong>Verify</strong> every claim with Truth Sentinel</li>
+                </ul>
+                <p>Let's secure your first contract.</p>
+                `,
+                `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+                "Enter War Room"
+            )
         });
-
-        if (error) {
-            console.error('[Email] Failed to send:', error);
-            return null;
-        }
-
-        console.log('[Email] Sent successfully:', data?.id);
-        return data;
-    } catch (error) {
-        console.error('[Email] Error:', error);
-        return null;
+    } catch (e) {
+        console.error('Welcome email failed:', e);
     }
 }
 
-interface ProposalFailedEmailProps {
-    to: string;
-    userName: string;
-    proposalTitle: string;
-    errorMessage?: string;
-}
-
-export async function sendProposalFailedEmail({
-    to,
-    userName,
-    proposalTitle,
-    errorMessage
-}: ProposalFailedEmailProps) {
+// 2. VERIFICATION EMAIL
+export async function sendVerificationEmail(email: string, link: string) {
     const client = getResendClient();
-    if (!client) {
-        console.log('[Email] RESEND_API_KEY not set, skipping email');
-        return null;
-    }
+    if (!client) return;
 
     try {
-        const { data, error } = await client.emails.send({
-            from: 'BidGuard <noreply@bidguard.ai>',
-            to: [to],
-            subject: `⚠️ Proposal generation issue - "${proposalTitle}"`,
-            html: `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0a; color: #ffffff; margin: 0; padding: 40px 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #111; border-radius: 16px; overflow: hidden; border: 1px solid #222; }
-        .header { background: linear-gradient(135deg, #ff4444 0%, #cc2222 100%); padding: 32px; text-align: center; }
-        .header h1 { margin: 0; color: #fff; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
-        .content { padding: 32px; }
-        .error-box { background: #ff444420; border: 1px solid #ff444440; padding: 16px; border-radius: 8px; color: #ff8888; font-size: 14px; margin: 16px 0; }
-        .cta-button { display: inline-block; background: #fff; color: #000; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-top: 24px; }
-        .footer { padding: 24px 32px; border-top: 1px solid #222; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>⚠️ Generation Issue</h1>
-        </div>
-        <div class="content">
-            <p>Hey ${userName || 'there'},</p>
-            <p>We encountered an issue while generating your proposal for:</p>
-            <p style="font-size: 18px; font-weight: 600; color: #fff;">${proposalTitle}</p>
-            
-            ${errorMessage ? `<div class="error-box">${errorMessage}</div>` : ''}
-            
-            <p>You can retry from your dashboard.</p>
-            
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://bidguard.ai'}/dashboard" class="cta-button">
-                Go to Dashboard
-            </a>
-        </div>
-        <div class="footer">
-            <p>This email was sent by BidGuard AI.</p>
-        </div>
-    </div>
-</body>
-</html>
-            `
+        await client.emails.send({
+            from: 'BidSwipe Security <security@bidswipe.xyz>',
+            to: email,
+            subject: 'Verify your Identity 🔐',
+            html: wrapHtml(
+                "Verify your Access",
+                `
+                <p>We received a signup request for BidSwipe AI.</p>
+                <p>To access the Intelligence Terminal, please verify your email address below.</p>
+                <p style="font-size: 14px; color: #888;">This link expires in 24 hours.</p>
+                `,
+                link,
+                "Verify Email"
+            )
         });
-
-        if (error) {
-            console.error('[Email] Failed to send:', error);
-            return null;
-        }
-
-        return data;
-    } catch (error) {
-        console.error('[Email] Error:', error);
-        return null;
+    } catch (e) {
+        console.error('Verification email failed:', e);
     }
 }
 
-interface NewTenderAlertProps {
-    to: string;
-    tenderTitle: string;
-    tenderValue: string;
-    tenderBuyer: string;
-    description: string;
-    matchScore: number;
-}
-
+// 3. TENDER ALERT
 export async function sendNewTenderAlertEmail({
     to,
     tenderTitle,
@@ -189,70 +129,137 @@ export async function sendNewTenderAlertEmail({
     tenderBuyer,
     description,
     matchScore
-}: NewTenderAlertProps) {
+}: {
+    to: string;
+    tenderTitle: string;
+    tenderValue: string;
+    tenderBuyer: string;
+    description: string;
+    matchScore: number;
+}) {
     const client = getResendClient();
     if (!client) return null;
 
     try {
-        const { data, error } = await client.emails.send({
-            from: 'BidGuard Intel <alerts@bidguard.ai>',
+        const { data } = await client.emails.send({
+            from: 'BidSwipe Intel <alerts@bidswipe.xyz>',
             to: [to],
-            subject: `🚨 ${matchScore}% Match Found: ${tenderTitle.substring(0, 40)}...`,
-            html: `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: -apple-system, sans-serif; background: #000; color: #fff; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: #111; border: 1px solid #333; border-radius: 12px; overflow: hidden; }
-        .header { background: #EAB308; color: #000; padding: 20px; font-weight: 800; text-align: center; font-size: 18px; text-transform: uppercase; }
-        .content { padding: 30px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: #222; padding: 15px; border-radius: 8px; text-align: center; }
-        .stat-label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
-        .stat-value { font-size: 16px; font-weight: bold; color: #fff; }
-        .description { color: #aaa; font-size: 14px; line-height: 1.5; margin-bottom: 30px; border-left: 2px solid #EAB308; padding-left: 15px; }
-        .cta { display: block; background: #EAB308; color: #000; padding: 15px; text-align: center; text-decoration: none; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            ⚡ Strategic Opportunity Detected
-        </div>
-        <div class="content">
-            <h2 style="margin-top: 0; font-size: 20px;">${tenderTitle}</h2>
-            <div style="color: #666; margin-bottom: 20px;">${tenderBuyer}</div>
-
-            <div class="stat-grid">
+            subject: `🚨 ${matchScore}% Match: ${tenderTitle.substring(0, 30)}...`,
+            html: wrapHtml(
+                "Strategic Opportunity Detected",
+                `
                 <div class="stat-box">
-                    <div class="stat-label">Value</div>
-                    <div class="stat-value">${tenderValue}</div>
+                    <div class="label">Opportunity</div>
+                    <div class="value">${tenderTitle}</div>
+                    <div style="color: #888; margin-top: 5px;">${tenderBuyer}</div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-label">AI Match Score</div>
-                    <div class="stat-value" style="color: #EAB308;">${matchScore}%</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="stat-box" style="margin-bottom: 0;">
+                        <div class="label">Value</div>
+                        <div class="value">${tenderValue}</div>
+                    </div>
+                    <div class="stat-box" style="margin-bottom: 0;">
+                        <div class="label">AI Score</div>
+                        <div class="value highlight">${matchScore}%</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="description">
-                ${description.substring(0, 150)}...
-            </div>
-
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://bidguard.ai'}/tenders" class="cta">
-                View Opportunity
-            </a>
-        </div>
-    </div>
-</body>
-</html>
-            `
+                <p style="margin-top: 20px;">${description}</p>
+                `,
+                `${process.env.NEXT_PUBLIC_APP_URL}/tenders`,
+                "Analyze Opportunity"
+            )
         });
-
-        if (error) console.error('[Email] Alert failed:', error);
         return data;
     } catch (e) {
-        console.error('[Email] Alert error:', e);
+        console.error('Alert email failed:', e);
+        return null;
+    }
+}
+
+// 4. PROPOSAL COMPLETE
+export async function sendProposalCompleteEmail({
+    to,
+    userName,
+    proposalTitle,
+    proposalId,
+    score
+}: {
+    to: string;
+    userName: string;
+    proposalTitle: string;
+    proposalId: string;
+    score: number;
+}) {
+    const client = getResendClient();
+    if (!client) return null;
+
+    try {
+        const { data } = await client.emails.send({
+            from: 'BidSwipe <noreply@bidswipe.xyz>',
+            to: [to],
+            subject: `✅ Proposal Ready: ${proposalTitle}`,
+            html: wrapHtml(
+                "Proposal Generated",
+                `
+                <p>The AI has completed its work on <strong>${proposalTitle}</strong>.</p>
+                
+                <div class="stat-box" style="text-align: center;">
+                    <div class="label">Quality Score</div>
+                    <div class="value highlight" style="font-size: 32px;">${score.toFixed(1)}/10</div>
+                </div>
+
+                <p>This proposal includes:</p>
+                <ul style="color: #ccc;">
+                    <li>Competitor Reverse-Engineering</li>
+                    <li>Truth Sentinel Verification</li>
+                    <li>Professional Formatting</li>
+                </ul>
+                `,
+                `${process.env.NEXT_PUBLIC_APP_URL}/war-room?id=${proposalId}`,
+                "Review & Edit"
+            )
+        });
+        return data;
+    } catch (e) {
+        return null;
+    }
+}
+
+// 5. PROPOSAL FAILED
+export async function sendProposalFailedEmail({
+    to,
+    userName,
+    proposalTitle,
+    errorMessage
+}: {
+    to: string;
+    userName: string;
+    proposalTitle: string;
+    errorMessage?: string;
+}) {
+    const client = getResendClient();
+    if (!client) return null;
+
+    try {
+        const { data } = await client.emails.send({
+            from: 'BidSwipe <noreply@bidswipe.xyz>',
+            to: [to],
+            subject: `⚠️ Generation Failed: ${proposalTitle}`,
+            html: wrapHtml(
+                "Mission Aborted",
+                `
+                <p>We encountered an error while generating <strong>${proposalTitle}</strong>.</p>
+                ${errorMessage ? `<div style="background: rgba(255, 59, 48, 0.1); border: 1px solid #ff3b30; color: #ff3b30; padding: 15px; border-radius: 8px;">${errorMessage}</div>` : ''}
+                <p>Please try again or contact support if the issue persists.</p>
+                `,
+                `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+                "Return to Dashboard"
+            )
+        });
+        return data;
+    } catch (e) {
         return null;
     }
 }

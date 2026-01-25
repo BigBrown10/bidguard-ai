@@ -22,7 +22,7 @@ function ResultContent() {
     React.useEffect(() => {
         const loadResult = async () => {
             // First try localStorage (for legacy flow)
-            const storedFinal = localStorage.getItem("bidguard_final")
+            const storedFinal = localStorage.getItem("bidswipe_final")
             if (storedFinal) {
                 setResult(JSON.parse(storedFinal))
             }
@@ -127,7 +127,7 @@ function ResultContent() {
                 heightLeft -= pageHeight
             }
 
-            pdf.save(`BidGuard_Proposal_${Date.now()}.pdf`)
+            pdf.save(`BidSwipe_Proposal_${Date.now()}.pdf`)
         } catch (error) {
             console.error("PDF Export failed:", error)
             window.print()

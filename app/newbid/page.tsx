@@ -88,7 +88,7 @@ function IngestContent() {
         setIsSubmitting(true)
 
         // Save config for next steps
-        localStorage.setItem("bidguard_config", JSON.stringify({
+        localStorage.setItem("bidswipe_config", JSON.stringify({
             projectName: formData.projectName,
             clientName: formData.clientName || "Unknown Client",
             companyUrl: formData.knowledgeUrl,

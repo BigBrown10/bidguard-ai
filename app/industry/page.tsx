@@ -61,7 +61,7 @@ export default function IndustryPage() {
         }
 
         // Store locally for marketplace filtering
-        localStorage.setItem("bidguard_industries", JSON.stringify(selectedIndustries))
+        localStorage.setItem("bidswipe_industries", JSON.stringify(selectedIndustries))
 
         // Navigate to marketplace with filter
         router.push("/tenders")

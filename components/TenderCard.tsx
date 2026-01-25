@@ -100,85 +100,97 @@ function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
 
                 {/* Header */}
                 <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs uppercase tracking-widest mb-3">
-                        <ShieldCheck className="w-4 h-4" />
-                        {tender.sector}
-                    </div>
-                    <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-md line-clamp-2">
-                        {tender.title}
-                    </h2>
-
-                    <button
-                        // Using pointerEvents to ensure click works despite parent drag?
-                        // Actually parent has drag, but child elements with onPointerDown stop propagation can work.
-                        // However, simpler is just `onPointerDown={(e) => e.stopPropagation()}` on the button
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            onInfo()
-                        }}
-                        className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-30 group pointer-events-auto"
-                    >
-                        <span className="sr-only">More Info</span>
-                        <div className="w-6 h-6 flex items-center justify-center border-2 border-white/50 rounded-full text-white/80 font-serif italic text-sm font-bold group-hover:bg-white group-hover:text-black transition-all">i</div>
-                    </button>
-                    <p className="text-white/60 font-medium flex items-center gap-2 text-base">
-                        <Briefcase className="w-5 h-5" />
-                        {tender.buyer}
-                    </p>
+                    <ShieldCheck className="w-4 h-4" />
+                    {tender.sector}
                 </div>
 
-                {/* Key Stats Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
-                            <PoundSterling className="w-4 h-4" /> Value
-                        </div>
-                        <div className="text-lg font-bold text-secondary text-glow-red truncate">
-                            {tender.value}
-                        </div>
-                    </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                        <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
-                            <Calendar className="w-4 h-4" /> Deadline
-                        </div>
-                        <div className="text-lg font-bold text-white">
-                            {tender.deadline}
-                        </div>
-                    </div>
-                </div>
+                {/* Source Badge (NHS/MOD) */}
+                {(tender.buyer.includes('NHS') || tender.buyer.includes('Trust')) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 font-bold ml-2 border border-blue-500/20">
+                        NHS
+                    </span>
+                )}
+                {(tender.buyer.includes('Defense') || tender.buyer.includes('MOD') || tender.buyer.includes('Ministry')) && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-500 font-bold ml-2 border border-red-500/20">
+                        MOD
+                    </span>
+                )}
 
-                {/* Description */}
-                <div className="flex-1 overflow-hidden relative">
-                    <p className="text-white/80 leading-relaxed text-sm line-clamp-5">
-                        {tender.description}
-                    </p>
-                    {/* Fade out at bottom of text */}
-                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black to-transparent" />
-                </div>
+                <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-md line-clamp-2">
+                    {tender.title}
+                </h2>
 
-                {/* Read More Button */}
                 <button
+                    // Using pointerEvents to ensure click works despite parent drag?
+                    // Actually parent has drag, but child elements with onPointerDown stop propagation can work.
+                    // However, simpler is just `onPointerDown={(e) => e.stopPropagation()}` on the button
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                         e.stopPropagation()
                         onInfo()
                     }}
-                    className="text-primary text-sm font-medium hover:underline pointer-events-auto mt-2"
+                    className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-30 group pointer-events-auto"
                 >
-                    Read more →
+                    <span className="sr-only">More Info</span>
+                    <div className="w-6 h-6 flex items-center justify-center border-2 border-white/50 rounded-full text-white/80 font-serif italic text-sm font-bold group-hover:bg-white group-hover:text-black transition-all">i</div>
                 </button>
+                <p className="text-white/60 font-medium flex items-center gap-2 text-base">
+                    <Briefcase className="w-5 h-5" />
+                    {tender.buyer}
+                </p>
+            </div>
 
-                {/* Footer Location */}
-                <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm">
-                    <MapPin className="w-5 h-5" />
-                    {tender.location}
+            {/* Key Stats Grid */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <PoundSterling className="w-4 h-4" /> Value
+                    </div>
+                    <div className="text-lg font-bold text-secondary text-glow-red truncate">
+                        {tender.value}
+                    </div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <Calendar className="w-4 h-4" /> Deadline
+                    </div>
+                    <div className="text-lg font-bold text-white">
+                        {tender.deadline}
+                    </div>
                 </div>
             </div>
 
+            {/* Description */}
+            <div className="flex-1 overflow-hidden relative">
+                <p className="text-white/80 leading-relaxed text-sm line-clamp-5">
+                    {tender.description}
+                </p>
+                {/* Fade out at bottom of text */}
+                <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-black to-transparent" />
+            </div>
+
+            {/* Read More Button */}
+            <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                    e.stopPropagation()
+                    onInfo()
+                }}
+                className="text-primary text-sm font-medium hover:underline pointer-events-auto mt-2"
+            >
+                Read more →
+            </button>
+
+            {/* Footer Location */}
+            <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm">
+                <MapPin className="w-5 h-5" />
+                {tender.location}
+            </div>
+
+
             {/* Background Texture/Gradient */}
             <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
-        </motion.div>
+        </motion.div >
     )
 }
 

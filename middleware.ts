@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
     const path = request.nextUrl.pathname
 
     // 1. Protected Routes: Redirect unauthenticated users to Login
-    if (!user && (path.startsWith('/draft') || path.startsWith('/ingest') || path.startsWith('/dashboard'))) {
+    if (!user && (path.startsWith('/draft') || path.startsWith('/newbid') || path.startsWith('/dashboard'))) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
     // 2. Auth Routes: Redirect authenticated users AWAY from Login
     if (user && path.startsWith('/login')) {
         const url = request.nextUrl.clone()
-        url.pathname = '/ingest' // Default dashboard
+        url.pathname = '/tenders' // Default to Live Tenders
         return NextResponse.redirect(url)
     }
 

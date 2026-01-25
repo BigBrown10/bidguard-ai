@@ -66,7 +66,7 @@ export function Header() {
                             <Link href="/rate-proposal" className="transition-colors hover:text-yellow-400 hover:text-glow">
                                 Rate Proposal
                             </Link>
-                            <Link href="/ingest" className="text-primary font-bold hover:text-glow transition-colors">
+                            <Link href="/newbid" className="text-primary font-bold hover:text-glow transition-colors">
                                 + New Bid
                             </Link>
                             <Link href="/pricing" className="transition-colors hover:text-white hover:text-glow">

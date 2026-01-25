@@ -319,7 +319,7 @@ export default function MyTendersPage() {
                                                 </div>
 
                                                 <div className="mt-auto pt-4 border-t border-white/5">
-                                                    <Link href={`/ingest?title=${encodeURIComponent(tender.title)}&client=${encodeURIComponent(tender.buyer)}&description=${encodeURIComponent(tender.description)}`}>
+                                                    <Link href={`/newbid?title=${encodeURIComponent(tender.title)}&client=${encodeURIComponent(tender.buyer)}&description=${encodeURIComponent(tender.description)}`}>
                                                         <button className="w-full flex items-center justify-center gap-2 bg-secondary/10 hover:bg-secondary/20 text-secondary border border-secondary/20 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors">
                                                             Initialize Proposal <ArrowRight className="w-3 h-3" />
                                                         </button>

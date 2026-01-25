@@ -1,13 +1,12 @@
 "use client"
 
-import { Header } from "@/components/Header"
 import { motion } from "framer-motion"
+import { Check } from "lucide-react"
 
 export default function PricingPage() {
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-primary/30 relative overflow-hidden font-sans">
-            <Header />
-
+        <div className="min-h-screen bg-black text-white relative overflow-hidden font-sans">
+            {/* Background Effects */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-[20%] left-[50%] -translate-x-1/2 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
             </div>
@@ -78,7 +77,7 @@ export default function PricingPage() {
                     />
                 </div>
             </main>
-        </div>
+        </div >
     )
 }
 
@@ -113,8 +112,8 @@ function PricingCard({ title, price, period, description, features, highlighted 
             </ul>
 
             <button className={`w-full py-4 rounded-xl font-bold uppercase tracking-wider transition-all ${highlighted
-                    ? 'bg-primary text-black hover:bg-primary/90 hover:scale-[1.02]'
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                ? 'bg-primary text-black hover:bg-primary/90 hover:scale-[1.02]'
+                : 'bg-white/10 text-white hover:bg-white/20'
                 }`}>
                 Get Started
             </button>

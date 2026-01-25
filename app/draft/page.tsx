@@ -59,9 +59,9 @@ export default function DraftPage() {
             // Instant load
             if (retry) await new Promise(r => setTimeout(r, 100))
 
-            const localConfig = localStorage.getItem("bidguard_config")
+            const localConfig = localStorage.getItem("bidswipe_config")
             let researchSum = "Client focuses on digital transformation."
-            const localResearch = localStorage.getItem("bidguard_research")
+            const localResearch = localStorage.getItem("bidswipe_research")
             if (localResearch) {
                 try {
                     const r = JSON.parse(localResearch)
@@ -249,7 +249,7 @@ export default function DraftPage() {
             finalText: fullProposalMarkdown
         }
 
-        localStorage.setItem("bidguard_final", JSON.stringify(finalResult))
+        localStorage.setItem("bidswipe_final", JSON.stringify(finalResult))
         setTimeout(() => router.push("/result"), 1000)
     }
 

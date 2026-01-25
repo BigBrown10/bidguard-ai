@@ -66,7 +66,7 @@ export default function LoginPage() {
                 <div className="text-center mb-8">
                     <Link href="/">
                         <h1 className="text-3xl font-black uppercase tracking-tighter cursor-pointer mb-2">
-                            BidGuard <span className="text-secondary text-glow-red">ID</span>
+                            BidSwipe <span className="text-secondary text-glow-red">ID</span>
                         </h1>
                     </Link>
                     <p className="text-white/50 text-sm tracking-widest uppercase">

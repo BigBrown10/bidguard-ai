@@ -61,6 +61,72 @@ export const syncTendersCron = inngest.createFunction(
     }
 );
 
+export const classifyTendersCron = inngest.createFunction(
+    { id: "classify-tenders-cron" },
+    { cron: "*/30 * * * *" }, // Run every 30 mins
+    async ({ step }) => {
+        // 1. Fetch unclassified tenders
+        const tenders = await step.run("fetch-pending", async () => {
+            if (!supabase) return [];
+            const { data } = await supabase
+                .from('tenders')
+                .select('id, title, description, value, buyer')
+                .is('ai_tags', null) // Filter where tags are null
+                .limit(5); // Process in small batches to save tokens
+            return data || [];
+        });
+
+        if (!tenders || tenders.length === 0) return { processed: 0 };
+
+        // 2. Classify each
+        for (const tender of tenders) {
+            await step.run(`classify-${tender.id}`, async () => {
+                const prompt = PromptTemplate.fromTemplate(`
+                    Analyze this tender and return 3-5 tags.
+                    Title: {title}
+                    Buyer: {buyer}
+                    Desc: {description}
+                    Value: {value}
+
+                    Tags to consider: 
+                    - "High Value" (if >£1m)
+                    - "SME Friendly" (if suitable for small biz)
+                    - "Digital" (if software/IT)
+                    - "Construction"
+                    - "Consultancy"
+                    - "Urgent" (if deadline < 2 weeks)
+                    
+                    Return ONLY a JSON array of strings: ["Tag1", "Tag2"]
+                `);
+
+                const chain = prompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+                let tags = ["Unclassified"];
+                try {
+                    const res = await chain.invoke({
+                        title: tender.title,
+                        buyer: tender.buyer,
+                        description: tender.description || "",
+                        value: tender.value
+                    });
+                    const match = res.match(/\[[\s\S]*\]/);
+                    if (match) tags = JSON.parse(match[0]);
+                } catch (e) {
+                    console.error("Classification failed", e);
+                }
+
+                if (supabase) {
+                    await supabase
+                        .from('tenders')
+                        .update({ ai_tags: tags })
+                        .eq('id', tender.id);
+                }
+            });
+        }
+
+        return { processed: tenders.length };
+    }
+);
+
 // =========================================
 // PROPOSAL GENERATION FUNCTION
 // =========================================
@@ -403,11 +469,46 @@ export const generateAutonomousProposal = inngest.createFunction(
             }
         });
 
-        // Save Research to Draft immediately so user sees it
-        await step.run("save-research", async () => {
+        // =====================================================
+        // CALL 0.8: WINNER'S ANALYST (Reverse Engineering)
+        // =====================================================
+        const competitorIntel = await step.run("analyze-competitors", async () => {
+            console.log(`[WINNER ANALYST] Hunting for previous winners...`);
+            const analystPrompt = PromptTemplate.fromTemplate(`
+                You are a Corporate Intelligence Officer.
+                Your task is to REVERSE ENGINEER the winning strategy for similar past contracts.
+
+                BUYER: {tenderBuyer}
+                SECTOR: {tenderTitle}
+
+                1. SEARCH for "Contract Award Notice {tenderBuyer} {tenderTitle}" or similar.
+                2. IDENTIFY who won this (or similar) contract in the last 3-5 years.
+                3. FIND publicly available info on WHY they won (Case Study, Press Release, "We are proud to have delivered...").
+                4. EXTRACT 3 "Winning Themes" (e.g. "They promised 24/7 support", "They used local staffing").
+
+                If no direct match found, search for the biggest supplier to {tenderBuyer} in this sector.
+
+                OUTPUT FORMAT (Plain Text Bullet Points):
+                - WINNER: [Company Name] (Year)
+                - THEME 1: [Strategy Insight]
+                - THEME 2: [Strategy Insight]
+                - THEME 3: [Strategy Insight]
+            `);
+
+            const chain = analystPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+            try {
+                return await chain.invoke({ tenderBuyer, tenderTitle });
+            } catch (e) {
+                console.error("Winner Analyst failed:", e);
+                return "- WINNER: Unknown\n- THEME 1: Best Value\n- THEME 2: Compliance";
+            }
+        });
+
+        // Update Draft with Competitor Intel
+        await step.run("save-competitor-intel", async () => {
             if (!supabase) return;
             await supabase.from('proposals').update({
-                draft_content: `## 🕵️ BUYER INTELLIGENCE DOSSIER\n${buyerResearch}\n\n## 📝 GENERATING PROPOSAL...`,
+                draft_content: `## 🕵️ COMPETITIVE INTELLIGENCE REVEALED\n${competitorIntel}\n\n## 📝 DRAFTING PROPOSAL...`,
                 updated_at: new Date().toISOString()
             }).eq('id', proposalId);
         });
@@ -427,6 +528,7 @@ export const generateAutonomousProposal = inngest.createFunction(
                 - TENDER: {tenderTitle}
                 - BUYER: {tenderBuyer}
                 - EXTERNAL INTELLIGENCE: {buyerResearch}
+                - COMPETITOR INSIGHTS (WINNING STRATEGIES): {competitorIntel}
                 - COMPANY: {companyName}
                 - SECTORS: {sectors}
                 - USER STRATEGY: {ideaInjection}
@@ -497,6 +599,7 @@ export const generateAutonomousProposal = inngest.createFunction(
                 tenderTitle,
                 tenderBuyer,
                 buyerResearch,
+                competitorIntel,
                 companyName: profile?.company_name || "Our Company",
                 sectors: profile?.sectors?.join(", ") || "General",
                 ideaInjection: ideaInjection || "Autonomous mode - focus on value and expertise",
@@ -526,17 +629,24 @@ export const generateAutonomousProposal = inngest.createFunction(
         // CALL 2: MEGA-PROMPT (Critique + Humanize Combined)
         // =====================================================
         const { finalContent, score, ui_pointers } = await step.run("mega-critique-humanize", async () => {
+            // Default to 1500 if not provided
+            const targetWordCount = 1500;
+
             const megaCritiquePrompt = PromptTemplate.fromTemplate(`
                 You will perform 2 tasks and output the FINAL IMPROVED PROPOSAL.
 
                 ===============================
-                PHASE 1: BRUTAL CRITIQUE (Internal Analysis)
+                PHASE 1: TRUTH & QUALITY CHECK (Internal Analysis)
                 ===============================
-                Score this proposal on 4 pillars (0-10 each):
+                Score this proposal on 5 pillars (0-10 each):
                 1. EVIDENCE DENSITY: Are there specific numbers, dates, £ values?
                 2. COMPLIANCE: Does it mention Modern Slavery Act, ISO 9001/27001, PPN 06/20?
                 3. SOCIAL VALUE: Are commitments measurable (X apprentices, £X investment)?
-                4. REAL ESTATE: Is it 1400-1600 words?
+                4. REAL ESTATE: Is it within 90-100% of the {wordLimit} word limit?
+                5. TRUTH SENTINEL: Do claims match the Company Profile? (If it invents 500 staff but profile says 50 -> FAIL).
+
+                COMPANY PROFILE FOR TRUTH CHECK:
+                {companyProfile}
 
                 PROPOSAL TO CRITIQUE:
                 {draft}
@@ -545,28 +655,36 @@ export const generateAutonomousProposal = inngest.createFunction(
                 PHASE 2: HUMANIZE AND FIX
                 ===============================
                 Now rewrite the proposal to:
-                1. ADD specific numbers, dates, £ amounts if lacking
-                2. ADD explicit Modern Slavery and ISO sections if missing
-                3. ADD measurable Social Value commitments if vague
-                4. EXPAND to 1500+ words if too short
-                5. Use Short-Long-Short sentence rhythm for natural flow
-                6. Inject "lived experience": "In our X years of operation..."
-                7. REMOVE any markdown symbols (#, *, **)
-                8. REMOVE AI-isms (delve, underscore, testament)
+                1. CORRECT any hallucinations found by the Truth Sentinel.
+                2. ADD specific numbers, dates, £ amounts if lacking (use placeholders [£X] if unknown, do NOT invent).
+                3. Ensure length is close to {wordLimit} words.
+                4. Use Short-Long-Short sentence rhythm for natural flow.
+                5. Inject "lived experience": "In our X years of operation..."
+                6. REMOVE any markdown symbols (#, *, **)
+                7. REMOVE AI-isms (delve, underscore, testament)
 
                 ## OUTPUT FORMAT:
                 Start your response with this JSON block, then the proposal:
                 ---SCORES---
-                {{"evidence": X, "compliance": X, "social_value": X, "real_estate": X, "total": X}}
+                {{"evidence": X, "compliance": X, "social_value": X, "real_estate": X, "truth": X, "total": X}}
                 ---PROPOSAL---
                 [Full improved proposal text here]
             `);
 
             const chain = megaCritiquePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
-            const result = await chain.invoke({ draft: draftContent });
+            const result = await chain.invoke({
+                draft: draftContent,
+                wordLimit: targetWordCount,
+                companyProfile: `
+                    Name: ${profile?.company_name}
+                    Bio: ${profile?.business_description}
+                    ISOs: ${profile?.iso_certs?.join(", ")}
+                    Achievements: ${profile?.achievements}
+                `
+            });
 
             // Parse scores and extract proposal
-            let scores = { evidence: 7, compliance: 7, social_value: 7, real_estate: 7, total: 7 };
+            let scores = { evidence: 7, compliance: 7, social_value: 7, real_estate: 7, truth: 7, total: 7 };
             let proposalText = result;
 
             try {
@@ -597,7 +715,8 @@ export const generateAutonomousProposal = inngest.createFunction(
                     evidence: scores.evidence || 7,
                     compliance: scores.compliance || 7,
                     social_value: scores.social_value || 7,
-                    real_estate: scores.real_estate || 7
+                    real_estate: scores.real_estate || 7,
+                    truth: scores.truth || 7
                 }
             };
         });

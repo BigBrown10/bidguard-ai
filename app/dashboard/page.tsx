@@ -112,7 +112,7 @@ export default function DashboardPage() {
             title: tender.title,
             client: tender.buyer
         })
-        window.location.href = `/ingest?${params.toString()}`
+        window.location.href = `/newbid?${params.toString()}`
     }
 
     const removeTender = async (id: string) => {

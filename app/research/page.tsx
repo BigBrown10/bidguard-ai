@@ -24,7 +24,7 @@ export default function ResearchPage() {
     React.useEffect(() => {
         const runLiveResearch = async () => {
             // Get data from previous step
-            const storedConfig = localStorage.getItem("bidguard_config");
+            const storedConfig = localStorage.getItem("bidswipe_config");
             const config = storedConfig ? JSON.parse(storedConfig) : { projectName: "UK Digital Transformation", clientName: "UK Gov" };
 
             addLog(`Initializing Intelligence Unit for: ${config.projectName}`, "info");
@@ -38,7 +38,7 @@ export default function ResearchPage() {
                 addLog(`ANALYSIS: Identified ${result.painPoints?.length || 0} critical pressure points`, "warning");
 
                 // Save Research for next step
-                localStorage.setItem("bidguard_research", JSON.stringify(result));
+                localStorage.setItem("bidswipe_research", JSON.stringify(result));
 
                 addLog("Research Complete. Handing off to Strategy Swarm.", "success");
                 setComplete(true);
@@ -51,7 +51,7 @@ export default function ResearchPage() {
                 addLog("Connection timeout. Engaging contingency protocols.", "error");
                 setComplete(true);
                 // Fallback mock
-                localStorage.setItem("bidguard_research", JSON.stringify({
+                localStorage.setItem("bidswipe_research", JSON.stringify({
                     clientNews: [],
                     painPoints: ["Legacy Systems"],
                     evidenceBullets: ["Proven track record"]

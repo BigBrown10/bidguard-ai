@@ -55,19 +55,25 @@ export default function SettingsPage() {
         setDeleting(true)
 
         try {
-            // Delete user data from tables
+            // Delete user data from tables (Optional if cascade is set up, but safe to keep)
             await supabase.from('saved_tenders').delete().eq('user_id', user.id)
             await supabase.from('profiles').delete().eq('id', user.id)
 
-            // Note: Deleting the auth user requires admin privileges or a server-side function
-            // For now, we'll sign out and show a message
+            // Server Action to delete Auth User
+            const { deleteUserAccount } = await import('@/app/auth/actions')
+            const result = await deleteUserAccount(user.id)
+
+            if (result && result.error) {
+                throw new Error(result.error)
+            }
+
             await supabase.auth.signOut()
 
-            alert("Your account data has been deleted. You have been signed out.")
+            alert("Your account has been permanently deleted.")
             router.push('/')
         } catch (error) {
             console.error("Delete account error:", error)
-            alert("Failed to delete account. Please contact support.")
+            alert("Failed to delete account completely. Please contact support.")
         } finally {
             setDeleting(false)
         }

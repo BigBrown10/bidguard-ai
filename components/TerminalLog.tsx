@@ -25,7 +25,7 @@ export function TerminalLog({ logs }: { logs: LogEntry[] }) {
                 <div className="h-3 w-3 rounded-full bg-red-500" />
                 <div className="h-3 w-3 rounded-full bg-yellow-500" />
                 <div className="h-3 w-3 rounded-full bg-green-500" />
-                <span className="ml-2 text-white/50">BidGuard Intelligence Terminal</span>
+                <span className="ml-2 text-white/50">BidSwipe Intelligence Terminal</span>
             </div>
             <div ref={scrollRef} className="h-[300px] overflow-y-auto p-4 space-y-2">
                 {logs.length === 0 && (

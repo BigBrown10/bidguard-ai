@@ -47,6 +47,8 @@ function EditorContent() {
     const [showPreview, setShowPreview] = useState(false)
     const [quickFixes, setQuickFixes] = useState<QuickFix[]>([])
     const [analyzing, setAnalyzing] = useState(false)
+    const [showRFP, setShowRFP] = useState(false)
+    const [rfpData, setRfpData] = useState<any>(null)
 
     // Auto-save ref to avoid interval closure issues (not strictly needed with useEffect dep, but cleaner for debounce)
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -55,7 +57,7 @@ function EditorContent() {
     useEffect(() => {
         const loadProposal = async () => {
             // First try localStorage (from draft flow)
-            const storedFinal = localStorage.getItem("bidguard_final")
+            const storedFinal = localStorage.getItem("bidswipe_final")
             if (storedFinal) {
                 const data = JSON.parse(storedFinal)
                 setOriginalText(data.finalText || "")
@@ -68,9 +70,33 @@ function EditorContent() {
                     const res = await fetch(`/api/proposals/${proposalId}`)
                     if (res.ok) {
                         const data = await res.json()
-                        if (data.proposal?.final_content) {
-                            setOriginalText(data.proposal.final_content)
-                            setEditedText(data.proposal.final_content)
+                        const proposal = data.proposal
+                        if (proposal?.final_content) {
+                            setOriginalText(proposal.final_content)
+                            setEditedText(proposal.final_content)
+                        }
+
+                        // Fetch RFP Data from saved_tenders
+                        const { createBrowserClient } = await import('@supabase/ssr')
+                        const supabase = createBrowserClient(
+                            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                        )
+
+                        const { data: savedTender } = await supabase
+                            .from('saved_tenders')
+                            .select('tender_data')
+                            .filter('tender_data->>id', 'eq', proposal.tender_id)
+                            .maybeSingle()
+
+                        if (savedTender && savedTender.tender_data) {
+                            setRfpData(savedTender.tender_data)
+                        } else {
+                            setRfpData({
+                                title: proposal.tender_title,
+                                buyer: proposal.tender_buyer,
+                                description: "Full requirements text not available. (Tender might have been removed from watchlist)"
+                            })
                         }
                     }
                 } catch (e) {
@@ -177,11 +203,11 @@ function EditorContent() {
 
         saveTimeoutRef.current = setTimeout(async () => {
             // Save logic
-            const storedFinal = localStorage.getItem("bidguard_final")
+            const storedFinal = localStorage.getItem("bidswipe_final")
             if (storedFinal) {
                 const data = JSON.parse(storedFinal)
                 data.finalText = editedText
-                localStorage.setItem("bidguard_final", JSON.stringify(data))
+                localStorage.setItem("bidswipe_final", JSON.stringify(data))
             }
 
             if (proposalId && proposalId !== 'temp') {
@@ -260,13 +286,29 @@ function EditorContent() {
                             {wordCount} words
                         </div>
                         <Button
-                            variant="outline"
+                            variant={showPreview ? "secondary" : "outline"}
                             size="sm"
-                            onClick={() => setShowPreview(!showPreview)}
-                            className="text-white/70"
+                            onClick={() => {
+                                setShowPreview(!showPreview)
+                                if (showRFP) setShowRFP(false)
+                            }}
+                            className={showPreview ? "bg-white text-black" : "text-white/70"}
                         >
                             <Eye className="w-4 h-4 mr-2" />
                             {showPreview ? 'Edit' : 'Preview'}
+                        </Button>
+                        <Button
+                            variant={showRFP ? "secondary" : "outline"}
+                            size="sm"
+                            className={showRFP ? "bg-white text-black" : "text-white/70"}
+                            onClick={() => {
+                                setShowRFP(!showRFP)
+                                if (showPreview) setShowPreview(false)
+                            }}
+                            title="View Requests for Proposal"
+                        >
+                            <Target className="w-4 h-4 mr-2" />
+                            View RFP
                         </Button>
                         <Button
                             variant="outline"
@@ -299,7 +341,63 @@ function EditorContent() {
                     {/* Main Editor */}
                     <div className="lg:col-span-3">
                         <AnimatePresence mode="wait">
-                            {showPreview ? (
+                            {showRFP ? (
+                                <motion.div
+                                    key="rfp"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                >
+                                    <Card className="border-white/10 h-[800px] overflow-hidden flex flex-col">
+                                        <CardHeader className="border-b border-white/5 bg-white/5">
+                                            <CardTitle className="flex items-center gap-2 text-sm uppercase tracking-wider">
+                                                <Target className="w-4 h-4 text-primary" />
+                                                Original Tender Requirements
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="p-8 overflow-y-auto custom-scrollbar flex-1">
+                                            {rfpData ? (
+                                                <div className="space-y-6">
+                                                    <div>
+                                                        <h2 className="text-2xl font-bold text-white mb-2">{rfpData.title}</h2>
+                                                        <div className="flex flex-wrap gap-4 text-sm text-white/50">
+                                                            <div className="flex items-center gap-1">
+                                                                <Cloud className="w-4 h-4" /> {rfpData.buyer}
+                                                            </div>
+                                                            {rfpData.value && (
+                                                                <div className="flex items-center gap-1 text-green-400">
+                                                                    <Wand2 className="w-4 h-4" /> {rfpData.value}
+                                                                </div>
+                                                            )}
+                                                            {rfpData.deadline && (
+                                                                <div className="flex items-center gap-1 text-red-400">
+                                                                    <Target className="w-4 h-4" /> {rfpData.deadline}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="h-px bg-white/10 w-full" />
+
+                                                    <div className="prose prose-invert prose-sm max-w-none text-white/80 leading-relaxed">
+                                                        <h3 className="text-white font-bold uppercase text-xs tracking-wider mb-2">Description / Requirements</h3>
+                                                        {rfpData.description ? (
+                                                            <div className="whitespace-pre-wrap">{rfpData.description}</div>
+                                                        ) : (
+                                                            <p className="italic text-white/30">No full description available.</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full text-white/40">
+                                                    <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                                                    <p>Loading Tender Data...</p>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ) : showPreview ? (
                                 <motion.div
                                     key="preview"
                                     initial={{ opacity: 0, x: 20 }}
