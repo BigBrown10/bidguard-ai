@@ -27,7 +27,7 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
+                    className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative"
                 >
                     {/* Header */}
                     <div className="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-950/50">
@@ -137,33 +137,31 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                                     >
                                         Pass
                                     </button>
-                                    <button
-                                        onClick={onProceed}
-                                        className={`
+                                    className={`
                                             px-8 py-3 rounded-lg text-sm font-bold text-black shadow-lg transition-all flex items-center gap-2
                                             ${result.traffic_light === 'GREEN'
-                                                ? 'bg-green-500 hover:bg-green-400 shadow-green-500/20'
-                                                : 'bg-white hover:bg-gray-200 text-black shadow-white/10'}
+                                            ? 'bg-green-500 hover:bg-green-400 shadow-green-500/20'
+                                            : 'bg-white hover:bg-gray-200 text-black shadow-white/10'}
                                         `}
                                     >
-                                        {result.traffic_light === 'GREEN' ? (
-                                            <>
-                                                <Check className="w-4 h-4" />
-                                                Auto-Pilot Mode 🚀
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FileText className="w-4 h-4" />
-                                                Proceed with Caution
-                                            </>
-                                        )}
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                                    {result.traffic_light === 'GREEN' ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Auto-Pilot Mode 🚀
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="w-4 h-4" />
+                                            Proceed Anyway
+                                        </>
+                                    )}
+                                </button>
+                        </>
                     )}
-                </motion.div>
             </div>
-        </AnimatePresence>
+                    )}
+        </motion.div>
+            </div >
+        </AnimatePresence >
     )
 }

@@ -259,3 +259,35 @@ export async function generateRapidStrategy(projectName: string, clientName: str
         };
     }
 }
+// COMPANY RESEARCH ACTION (Auto-Fill Profile)
+export async function performCompanyResearch(companyName: string, companyUrl?: string) {
+    const researchTemplate = `
+    TASK: Analyze this company and providing a "Profile Pack" for a bid writer.
+    
+    COMPANY: {companyName}
+    URL: {companyUrl}
+    
+    OUTPUT FORMAT: JSON ONLY.
+    {{
+        "business_description": "A professional 100-word description of what the company does, their sectors, and expertise.",
+        "achievements": "3 key bullet points of their likely major projects or capabilities based on their sector.",
+        "iso_certs": ["ISO 9001", "ISO 27001"] (Guess based on industry norms if not found),
+        "sectors": ["Sector 1", "Sector 2"]
+    }}
+    `;
+
+    const prompt = PromptTemplate.fromTemplate(researchTemplate);
+    const chain = prompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+
+    try {
+        const jsonText = await chain.invoke({
+            companyName,
+            companyUrl: companyUrl || ""
+        });
+        const cleanJson = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (error) {
+        console.error("Company Research Failed:", error);
+        throw new Error("Could not research company. Please enter details manually.");
+    }
+}

@@ -50,7 +50,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed font-light mb-10"
           >
-            Deploy autonomous <strong>Super Agents</strong> to monitor live tenders, analyze requirements with deep context, and auto-generate winning proposals in seconds.
+            Activate autonomous <strong>Bid Agents</strong> to monitor live tenders, analyze requirements with deep context, and auto-generate winning proposals in seconds.
           </motion.p>
 
           <motion.div
@@ -61,7 +61,7 @@ export default function LandingPage() {
           >
             <Link href="/register">
               <button className="h-12 px-8 bg-white text-black text-sm font-bold rounded-full hover:scale-105 transition-transform flex items-center gap-2 uppercase tracking-wide">
-                Deploy Agents <ArrowRight className="w-4 h-4" />
+                Start Free Trial <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
             <Link href="/tenders">

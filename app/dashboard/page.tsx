@@ -57,6 +57,11 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true)
     const [proposalsLoading, setProposalsLoading] = useState(true)
     const [user, setUser] = useState<any>(null)
+    const [filterSector, setFilterSector] = useState<string>('All')
+
+    // Derived state for filtering
+    const sectors = ['All', ...Array.from(new Set(savedTenders.map(t => t.tender_data?.sector || 'Other')))]
+    const filteredTenders = filterSector === 'All' ? savedTenders : savedTenders.filter(t => t.tender_data?.sector === filterSector)
 
     // Fetch saved tenders
     useEffect(() => {
@@ -325,15 +330,23 @@ export default function DashboardPage() {
                             <h3 className="text-lg font-bold text-white uppercase tracking-wider">
                                 Pipeline Priority
                             </h3>
-                            <a href="/favourites" className="text-xs text-primary hover:text-white transition-colors uppercase font-bold tracking-widest">
-                                View All
-                            </a>
+                            {/* Industry Filter */}
+                            <select
+                                value={filterSector}
+                                onChange={(e) => setFilterSector(e.target.value)}
+                                className="bg-black border border-white/20 text-xs text-white rounded px-2 py-1 focus:outline-none focus:border-primary uppercase font-bold"
+                            >
+                                <option value="All">All Sectors</option>
+                                {sectors.filter(s => s !== 'All').map(s => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="space-y-4">
                             {loading ? (
                                 <div className="text-center text-white/30 text-sm py-8">Syncing...</div>
-                            ) : savedTenders.slice(0, 3).map((item) => {
+                            ) : filteredTenders.slice(0, 3).map((item) => {
                                 const tender = item.tender_data as Tender
                                 return (
                                     <div key={item.id} className="glass-panel p-4 border border-white/5 hover:border-white/20 transition-colors">
@@ -357,10 +370,10 @@ export default function DashboardPage() {
                                 )
                             })}
 
-                            {savedTenders.length === 0 && !loading && (
+                            {filteredTenders.length === 0 && !loading && (
                                 <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
                                     <p className="text-white/30 text-xs mb-4">No active pipeline</p>
-                                    <a href="/tenders" className="text-xs cyber-button px-4 py-2">Find Tenders</a>
+                                    <Link href="/tenders" className="text-xs cyber-button px-4 py-2">Find Tenders</Link>
                                 </div>
                             )}
                         </div>

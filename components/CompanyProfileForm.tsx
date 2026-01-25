@@ -99,14 +99,44 @@ export function CompanyProfileForm({ userId, initialData, onComplete, isModal = 
                 </div>
                 <div className="space-y-2">
                     <label className="text-xs uppercase font-bold text-white/50 tracking-wider">Website</label>
-                    <div className="relative">
-                        <Globe className="absolute left-3 top-3 w-4 h-4 text-white/40" />
-                        <Input
-                            value={formData.website}
-                            onChange={e => setFormData({ ...formData, website: e.target.value })}
-                            className="pl-10 bg-black/50 border-white/10"
-                            placeholder="https://acme.com"
-                        />
+                    <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <Globe className="absolute left-3 top-3 w-4 h-4 text-white/40" />
+                            <Input
+                                value={formData.website}
+                                onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                className="pl-10 bg-black/50 border-white/10"
+                                placeholder="https://acme.com"
+                            />
+                        </div>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            disabled={loading || !formData.company_name}
+                            onClick={async () => {
+                                setLoading(true)
+                                toast.info("Researching...", { description: "Agents are scanning your digital footprint." })
+                                try {
+                                    const { performCompanyResearch } = await import('@/app/actions')
+                                    const data = await performCompanyResearch(formData.company_name, formData.website)
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        business_description: data.business_description || prev.business_description,
+                                        achievements: data.achievements ? (Array.isArray(data.achievements) ? data.achievements.join('\n') : data.achievements) : prev.achievements,
+                                        iso_certs: data.iso_certs || prev.iso_certs
+                                    }))
+                                    toast.success("Intelligence Acquired", { description: "Profile populated from web data." })
+                                } catch (e) {
+                                    toast.error("Research Failed", { description: "Could not find company data." })
+                                } finally {
+                                    setLoading(false)
+                                }
+                            }}
+                            className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/20"
+                        >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Auto-Fill
+                        </Button>
                     </div>
                 </div>
             </div>

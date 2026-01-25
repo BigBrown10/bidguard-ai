@@ -608,11 +608,14 @@ export const generateAutonomousProposal = inngest.createFunction(
                 achievements: profile?.achievements || "Successfully delivered projects for UK Government clients."
             });
 
-            // UK Vernacular post-processing
+            // UK Vernacular post-processing & Cleanups
             return result
                 .replace(/\bprogram\b/gi, 'programme')
                 .replace(/\bmobilization\b/gi, 'mobilisation')
-                .replace(/\borganization\b/gi, 'organisation');
+                .replace(/\borganization\b/gi, 'organisation')
+                .replace(/Word count:?\s*\d+/gi, '')
+                .replace(/\(\d+\s*words\)/gi, '')
+                .replace(/\[.*?\]/g, ''); // Remove citations
         });
 
         // Update status: Critiquing
@@ -721,7 +724,10 @@ export const generateAutonomousProposal = inngest.createFunction(
                 .replace(/\bmobilization\b/gi, 'mobilisation')
                 .replace(/\borganization\b/gi, 'organisation')
                 .replace(/#{1,}/g, '') // Remove any markdown headers
-                .replace(/\*{1,}/g, ''); // Remove asterisks
+                .replace(/\*{1,}/g, '') // Remove asterisks
+                .replace(/Word count:?\s*\d+/gi, '')
+                .replace(/\(\d+\s*words\)/gi, '')
+                .replace(/\[.*?\]/g, '');
 
             return {
                 finalContent: proposalText,

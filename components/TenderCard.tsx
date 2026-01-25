@@ -62,7 +62,7 @@ function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={handleDragEnd}
-            className="absolute top-0 w-full max-w-md h-[600px] bg-black border-2 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing origin-bottom shadow-2xl"
+            className="absolute top-0 w-full max-w-md h-[600px] bg-black border-2 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing origin-bottom shadow-2xl rounded-3xl"
             variants={variants}
             initial="initial"
             animate="animate"
