@@ -273,8 +273,8 @@ export const generateProposalFunction = inngest.createFunction(
 );
 
 // =========================================
-// V3: AUTONOMOUS PROPOSAL GENERATION
-// Triggered by swipe-right → runs full pipeline
+// V4: HYBRID AUTONOMOUS PROPOSAL (2 API CALLS)
+// Optimized: Research+Strategy+Draft in 1 call, Critique+Humanize in 1 call
 // =========================================
 export const generateAutonomousProposal = inngest.createFunction(
     {
@@ -307,10 +307,10 @@ export const generateAutonomousProposal = inngest.createFunction(
     async ({ event, step }) => {
         const { proposalId, userId, tenderId, tenderTitle, tenderBuyer, ideaInjection } = event.data;
 
-        console.log(`[AUTONOMOUS] Starting proposal for: ${tenderTitle}`);
+        console.log(`[HYBRID V4] Starting 2-call proposal for: ${tenderTitle}`);
 
         // 1. Update status: Researching
-        await step.run("status-researching", async () => {
+        await step.run("status-start", async () => {
             if (!supabase) return;
             await supabase.from('proposals').update({
                 status: 'researching',
@@ -323,144 +323,100 @@ export const generateAutonomousProposal = inngest.createFunction(
             if (!supabase) return null;
             const { data } = await supabase
                 .from('profiles')
-                .select('company_name, business_description, website, sectors')
+                .select('company_name, business_description, website, sectors, iso_certs, achievements')
                 .eq('id', userId)
                 .single();
             return data;
         });
 
-        // 3. Research phase
-        const researchOutput = await step.run("research", async () => {
-            const researchPrompt = PromptTemplate.fromTemplate(`
-                You are a Strategic Bid Researcher.
-                Research this tender opportunity and find intelligence.
+        // =====================================================
+        // CALL 1: MEGA-PROMPT (Research + Strategy + Draft)
+        // =====================================================
+        const draftContent = await step.run("mega-draft", async () => {
+            const megaPrompt = PromptTemplate.fromTemplate(`
+                You are an elite UK Government Bid Writer with a 92% win rate. You work for {companyName}.
+                You will perform 3 tasks in sequence and output ONLY the final proposal.
 
-                TENDER: {tenderTitle}
-                BUYER: {tenderBuyer}
-                COMPANY: {companyName}
-                SECTORS: {sectors}
+                ===============================
+                PHASE 1: RESEARCH (Internal)
+                ===============================
+                Research this tender opportunity:
+                - TENDER: {tenderTitle}
+                - BUYER: {tenderBuyer}
+                - COMPANY: {companyName}
+                - SECTORS: {sectors}
+                - USER STRATEGY: {ideaInjection}
 
-                USER INPUT (if any): {ideaInjection}
+                Identify:
+                1. 3 key buyer pain points
+                2. 3 company differentiators
+                3. Compliance requirements (Social Value, Carbon, Modern Slavery)
 
-                TASK:
-                1. Identify 3 key buyer pain points we can address
-                2. Find 3 differentiators for this company
-                3. Identify compliance requirements (Social Value, Carbon, Modern Slavery)
-                4. Suggest strategic positioning
-
-                Output a concise briefing note.
-            `);
-
-            const chain = researchPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
-            try {
-                return await chain.invoke({
-                    tenderTitle,
-                    tenderBuyer,
-                    companyName: profile?.company_name || "Our Company",
-                    sectors: profile?.sectors?.join(", ") || "General",
-                    ideaInjection: ideaInjection || "No specific angles provided"
-                });
-            } catch (e) {
-                return "Research unavailable. Proceeding with standard approach.";
-            }
-        });
-
-        // 4. Update status: Strategizing
-        await step.run("status-strategizing", async () => {
-            if (!supabase) return;
-            await supabase.from('proposals').update({
-                status: 'strategizing',
-                research_output: { summary: researchOutput },
-                updated_at: new Date().toISOString()
-            }).eq('id', proposalId);
-        });
-
-        // 5. Strategy generation
-        const strategyOutput = await step.run("strategize", async () => {
-            const strategyPrompt = PromptTemplate.fromTemplate(`
-                You are a Bid Strategy Director.
-                Based on the research, define the winning strategy.
-
-                RESEARCH: {research}
-                USER ANGLES: {ideaInjection}
-
-                Generate a clear strategy with:
+                ===============================
+                PHASE 2: STRATEGY (Internal)
+                ===============================
+                Define winning strategy:
                 1. Win Theme (one powerful sentence)
                 2. Key Messages (3 bullets)
-                3. Evidence to highlight
+                3. Evidence to highlight from company profile
                 4. Risk mitigation approach
-            `);
 
-            const chain = strategyPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
-            return await chain.invoke({
-                research: researchOutput,
-                ideaInjection: ideaInjection || "Autonomous mode"
-            });
-        });
+                ===============================
+                PHASE 3: WRITE FULL PROPOSAL
+                ===============================
+                Now write the complete 1500+ word proposal using the strategy.
 
-        // 6. Update status: Drafting
-        await step.run("status-drafting", async () => {
-            if (!supabase) return;
-            await supabase.from('proposals').update({
-                status: 'drafting',
-                strategy_output: { summary: strategyOutput },
-                updated_at: new Date().toISOString()
-            }).eq('id', proposalId);
-        });
-
-        // 7. Write proposal
-        const draftContent = await step.run("write", async () => {
-            const writePrompt = PromptTemplate.fromTemplate(`
-                You are an elite UK Government Bid Writer with a 92% win rate.
-                You are a HUMAN EXPERT. You work for {companyName}.
+                ## COMPANY PROFILE:
+                {businessDescription}
+                
+                ## ISO CERTIFICATIONS: {isoCerts}
+                ## ACHIEVEMENTS: {achievements}
 
                 ## CRITICAL OUTPUT RULES:
-                - ABSOLUTELY NO MARKDOWN. Do not use #, ##, **, *, _ or any formatting symbols.
-                - NO CITATIONS. Never use [1], [2] or any bracketed references.
-                - NO AI DISCLOSURE. Never say "I am an AI", "As an AI", "I don't have the ability", etc.
+                - ABSOLUTELY NO MARKDOWN. No #, ##, **, *, _ or formatting symbols.
+                - NO CITATIONS. Never use [1], [2] or bracketed references.
+                - NO AI DISCLOSURE. Never say "I am an AI", "As an AI".
                 - Write in PLAIN TEXT only. Use numbered lists (1. 2. 3.) for structure.
                 - UK SPELLING: Programme, Mobilisation, Organisation
 
-                ## LENGTH REQUIREMENT:
-                YOU MUST WRITE AT LEAST 1500 WORDS. Expand every section fully.
+                ## DOCUMENT STRUCTURE (Plain numbered sections):
+                1. EXECUTIVE SUMMARY (300 words) - Hook with specific benefits
+                2. PROPOSED SOLUTION (600 words) - Technical methodology
+                3. DELIVERY AND IMPLEMENTATION (400 words) - Timeline, Mobilisation
+                4. SOCIAL VALUE AND COMPLIANCE (300 words) - Carbon, Modern Slavery Act, ISO standards
+                5. COMMERCIALS (200 words) - Value for Money
 
-                ## CONTEXT:
-                Tender: {tenderTitle}
-                Buyer: {tenderBuyer}
-                Company: {companyName}
-                Strategy: {strategy}
-                Research: {research}
+                ## MANDATORY INCLUSIONS:
+                - Reference Modern Slavery Act compliance
+                - Reference ISO 9001/27001 if applicable
+                - PPN 06/20 Social Value commitments
+                - Specific measurable outcomes
 
-                ## DOCUMENT STRUCTURE (Plain numbered sections, no markdown):
-                1. EXECUTIVE SUMMARY (300 words) - Hook the reader with specific benefits.
-                2. PROPOSED SOLUTION (600 words) - Technical deep dive. Methods. Tools. Specifics.
-                3. DELIVERY AND IMPLEMENTATION (400 words) - Timeline, Mobilisation, Risk mitigation.
-                4. SOCIAL VALUE AND COMPLIANCE (300 words) - Carbon reduction, Modern Slavery Act, ISO 9001/14001/27001.
-                5. COMMERCIALS (200 words) - Value for Money, Cost efficiencies.
+                ## BANNED WORDS: Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies, Holistic, Leverage
 
-                ## BANNED WORDS (Never use):
-                Delve, Comprehensive, Tapestry, Pivotal, Unlock, Synergies, Holistic, Leverage
-
-                Write the full proposal now in plain text:
+                OUTPUT ONLY THE FINAL PROPOSAL TEXT (no research notes, no strategy notes):
             `);
 
-            const chain = writePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+            const chain = megaPrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
             const result = await chain.invoke({
                 tenderTitle,
                 tenderBuyer,
                 companyName: profile?.company_name || "Our Company",
-                strategy: strategyOutput,
-                research: researchOutput
+                sectors: profile?.sectors?.join(", ") || "General",
+                ideaInjection: ideaInjection || "Autonomous mode - focus on value and expertise",
+                businessDescription: profile?.business_description || "A leading UK professional services provider.",
+                isoCerts: profile?.iso_certs?.join(", ") || "ISO 9001, ISO 27001",
+                achievements: profile?.achievements || "Successfully delivered projects for UK Government clients."
             });
 
-            // Post-processing: UK Vernacular
+            // UK Vernacular post-processing
             return result
                 .replace(/\bprogram\b/gi, 'programme')
                 .replace(/\bmobilization\b/gi, 'mobilisation')
                 .replace(/\borganization\b/gi, 'organisation');
         });
 
-        // 8. Update status: Critiquing
+        // Update status: Critiquing
         await step.run("status-critiquing", async () => {
             if (!supabase) return;
             await supabase.from('proposals').update({
@@ -470,177 +426,99 @@ export const generateAutonomousProposal = inngest.createFunction(
             }).eq('id', proposalId);
         });
 
-        // V2 AGENT ORCHESTRATION: Critique + Humanize Loop with Retry
-        let currentDraft = draftContent;
-        let critiqueOutput: any = { score: 0, status: 'REJECT', ui_pointers: {}, feedback: [] };
-        let attempts = 0;
-        const MAX_ATTEMPTS = 2;
+        // =====================================================
+        // CALL 2: MEGA-PROMPT (Critique + Humanize Combined)
+        // =====================================================
+        const { finalContent, score, ui_pointers } = await step.run("mega-critique-humanize", async () => {
+            const megaCritiquePrompt = PromptTemplate.fromTemplate(`
+                You will perform 2 tasks and output the FINAL IMPROVED PROPOSAL.
 
-        while (attempts < MAX_ATTEMPTS) {
-            attempts++;
+                ===============================
+                PHASE 1: BRUTAL CRITIQUE (Internal Analysis)
+                ===============================
+                Score this proposal on 4 pillars (0-10 each):
+                1. EVIDENCE DENSITY: Are there specific numbers, dates, £ values?
+                2. COMPLIANCE: Does it mention Modern Slavery Act, ISO 9001/27001, PPN 06/20?
+                3. SOCIAL VALUE: Are commitments measurable (X apprentices, £X investment)?
+                4. REAL ESTATE: Is it 1400-1600 words?
 
-            // 9. V2 RED TEAM CRITIC (4-Pillar Scoring)
-            critiqueOutput = await step.run(`critique-${attempts}`, async () => {
-                const critiquePrompt = PromptTemplate.fromTemplate(`
-                    You are a BRUTAL UK Procurement Officer. Your job is to find reasons to FAIL this bid.
+                PROPOSAL TO CRITIQUE:
+                {draft}
 
-                    CRITICAL: Score HARSHLY. Only ACCEPT if all criteria are met.
+                ===============================
+                PHASE 2: HUMANIZE AND FIX
+                ===============================
+                Now rewrite the proposal to:
+                1. ADD specific numbers, dates, £ amounts if lacking
+                2. ADD explicit Modern Slavery and ISO sections if missing
+                3. ADD measurable Social Value commitments if vague
+                4. EXPAND to 1500+ words if too short
+                5. Use Short-Long-Short sentence rhythm for natural flow
+                6. Inject "lived experience": "In our X years of operation..."
+                7. REMOVE any markdown symbols (#, *, **)
+                8. REMOVE AI-isms (delve, underscore, testament)
 
-                    ## THE 4-PILLAR SCORING SYSTEM (0-10 each):
+                ## OUTPUT FORMAT:
+                Start your response with this JSON block, then the proposal:
+                ---SCORES---
+                {{"evidence": X, "compliance": X, "social_value": X, "real_estate": X, "total": X}}
+                ---PROPOSAL---
+                [Full improved proposal text here]
+            `);
 
-                    1. EVIDENCE DENSITY: Are there specific numbers, dates, £ values from real projects?
-                       - 10 = Every claim has evidence
-                       - 5 = Generic claims
-                       - 0 = No evidence at all
+            const chain = megaCritiquePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+            const result = await chain.invoke({ draft: draftContent });
 
-                    2. COMPLIANCE: Does it mention:
-                       - Modern Slavery Act compliance
-                       - ISO 9001/27001/14001 standards  
-                       - PPN 06/20 (Social Value)
-                       - PPN 02/23 (Modern Slavery)
+            // Parse scores and extract proposal
+            let scores = { evidence: 7, compliance: 7, social_value: 7, real_estate: 7, total: 7 };
+            let proposalText = result;
 
-                    3. SOCIAL VALUE: Is it MEASURABLE social value?
-                       - 10 = Specific commitments (X apprentices, £X community investment)
-                       - 0 = Vague "we care about community"
-
-                    4. REAL ESTATE: Word count vs target
-                       - Target: 1400-1600 words
-                       - Score 10 if within range, reduce for under/over
-
-                    ## MANDATORY REJECTION CRITERIA:
-                    - REJECT if markdown symbols (#, *, **) are present
-                    - REJECT if word count < 1200 words
-                    - REJECT if NO ISO or Modern Slavery mentioned
-
-                    PROPOSAL TO JUDGE:
-                    {draft}
-
-                    COMPANY PROFILE (verify claims against this):
-                    {profile}
-
-                    Respond in JSON ONLY:
-                    {{
-                        "total_score": number (0-10 average),
-                        "status": "ACCEPT" or "REJECT",
-                        "ui_pointers": {{
-                            "evidence": number,
-                            "compliance": number,
-                            "social_value": number,
-                            "real_estate": number
-                        }},
-                        "harsh_feedback": ["Specific issue 1...", "Specific issue 2..."],
-                        "word_count": number
-                    }}
-                `);
-
-                const chain = critiquePrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
-                const result = await chain.invoke({
-                    draft: currentDraft,
-                    profile: JSON.stringify({
-                        company_name: profile?.company_name,
-                        sectors: profile?.sectors,
-                        description: profile?.business_description?.substring(0, 500)
-                    })
-                });
-
-                try {
-                    const jsonMatch = result.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        const parsed = JSON.parse(jsonMatch[0]);
-                        return {
-                            score: parsed.total_score || parsed.score || 7,
-                            status: parsed.status || 'ACCEPT',
-                            ui_pointers: parsed.ui_pointers || { evidence: 5, compliance: 5, social_value: 5, real_estate: 5 },
-                            feedback: parsed.harsh_feedback || parsed.feedback || [],
-                            word_count: parsed.word_count || currentDraft.split(/\s+/).length
-                        };
-                    }
-                } catch (e) {
-                    console.warn('[CRITIC] Failed to parse JSON:', e);
+            try {
+                const scoresMatch = result.match(/---SCORES---\s*(\{[^}]+\})/);
+                if (scoresMatch) {
+                    scores = JSON.parse(scoresMatch[1]);
                 }
-                return { score: 7, status: 'ACCEPT', ui_pointers: { evidence: 5, compliance: 5, social_value: 5, real_estate: 5 }, feedback: [] };
-            });
-
-            // If ACCEPT or max attempts, break
-            if (critiqueOutput.status === 'ACCEPT' || attempts >= MAX_ATTEMPTS) {
-                break;
+                const proposalMatch = result.match(/---PROPOSAL---\s*([\s\S]+)/);
+                if (proposalMatch) {
+                    proposalText = proposalMatch[1].trim();
+                }
+            } catch (e) {
+                console.warn("[HYBRID] Failed to parse scores, using defaults");
             }
 
-            // 10. V2 HUMANIZER (with Burstiness Protocol)
-            await step.run(`status-revising-${attempts}`, async () => {
-                if (!supabase) return;
-                await supabase.from('proposals').update({
-                    status: 'humanizing',
-                    critique: critiqueOutput,
-                    updated_at: new Date().toISOString()
-                }).eq('id', proposalId);
-            });
+            // UK Vernacular cleanup
+            proposalText = proposalText
+                .replace(/\bprogram\b/gi, 'programme')
+                .replace(/\bmobilization\b/gi, 'mobilisation')
+                .replace(/\borganization\b/gi, 'organisation')
+                .replace(/#{1,}/g, '') // Remove any markdown headers
+                .replace(/\*{1,}/g, ''); // Remove asterisks
 
-            currentDraft = await step.run(`humanize-${attempts}`, async () => {
-                const humanizePrompt = PromptTemplate.fromTemplate(`
-                    You are a Master Editor. The Critic has REJECTED this proposal.
-                    You MUST address EVERY item in the feedback or it will be rejected again.
+            return {
+                finalContent: proposalText,
+                score: scores.total || 7,
+                ui_pointers: {
+                    evidence: scores.evidence || 7,
+                    compliance: scores.compliance || 7,
+                    social_value: scores.social_value || 7,
+                    real_estate: scores.real_estate || 7
+                }
+            };
+        });
 
-                    ## CRITIQUE FEEDBACK (MUST ADDRESS):
-                    {feedback}
-
-                    ## 4-PILLAR SCORES:
-                    Evidence: {evidence}/10
-                    Compliance: {compliance}/10
-                    Social Value: {social_value}/10
-                    Real Estate: {real_estate}/10
-
-                    ## ORIGINAL PROPOSAL:
-                    {draft}
-
-                    ## BURSTINESS PROTOCOL:
-                    Use Short-Long-Short rhythm. A 5-word sentence. Followed by a 30-word detailed explanation with specifics. Then a 10-word summary.
-
-                    ## LIVED EXPERIENCE:
-                    Inject company history: "In our [X] years of operation, we have found that..."
-
-                    ## MANDATORY FIXES:
-                    1. If compliance < 8: ADD explicit Modern Slavery Act and ISO 9001/27001 sections
-                    2. If evidence < 8: ADD specific numbers, dates, £ amounts
-                    3. If social_value < 8: ADD measurable commitments (X apprentices, £X investment)
-                    4. If real_estate < 8: EXPAND to 1500+ words
-
-                    ## OUTPUT RULES:
-                    - NO MARKDOWN. No #, *, **, _ symbols.
-                    - Plain text with numbered sections only.
-                    - Keep ALL content, only ADD and improve.
-
-                    Output the COMPLETE rewritten proposal:
-                `);
-
-                const chain = humanizePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
-                return await chain.invoke({
-                    feedback: JSON.stringify(critiqueOutput.feedback),
-                    evidence: critiqueOutput.ui_pointers?.evidence || 5,
-                    compliance: critiqueOutput.ui_pointers?.compliance || 5,
-                    social_value: critiqueOutput.ui_pointers?.social_value || 5,
-                    real_estate: critiqueOutput.ui_pointers?.real_estate || 5,
-                    draft: currentDraft
-                });
-            });
-
-            console.log(`[AGENT V2] Retry ${attempts}: Score ${critiqueOutput.score}, Status ${critiqueOutput.status}`);
-        }
-
-        const finalContent = currentDraft;
-
-        // 12. Save final result
+        // Save final result
         await step.run("save-final", async () => {
             if (!supabase) return;
             await supabase.from('proposals').update({
                 status: 'complete',
                 final_content: finalContent,
-                score: critiqueOutput.score,
+                score: score,
+                critique: { ui_pointers, feedback: [] },
                 updated_at: new Date().toISOString()
             }).eq('id', proposalId);
         });
 
-        // 13. Send completion email
+        // Send completion email
         await step.run("send-email", async () => {
             if (!supabase) return;
             const { data: user } = await supabase.auth.admin.getUserById(userId).catch(() => ({ data: null }));
@@ -650,13 +528,13 @@ export const generateAutonomousProposal = inngest.createFunction(
                     userName: user.user.user_metadata?.first_name || 'there',
                     proposalTitle: tenderTitle,
                     proposalId,
-                    score: critiqueOutput.score || 7
+                    score: score || 7
                 });
             }
         });
 
-        console.log(`[AUTONOMOUS] Complete: ${tenderTitle} - Score: ${critiqueOutput.score}`);
-        return { success: true, proposalId, score: critiqueOutput.score };
+        console.log(`[HYBRID V4] Complete: ${tenderTitle} - Score: ${score} (2 API calls only!)`);
+        return { success: true, proposalId, score, mode: 'hybrid-v4' };
     }
 );
 
