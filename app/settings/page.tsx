@@ -147,6 +147,7 @@ export default function SettingsPage() {
                                         router.refresh()
                                         // Optional: Reload local state
                                         const loadUser = async () => {
+                                            if (!supabase) return
                                             const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
                                             if (data) setProfile(data)
                                         }
