@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import { Header } from "@/components/Header"
 import { Briefcase, Calendar, PoundSterling, Trash2, ArrowRight, Zap, Trophy, FileText, Clock, Activity, Eye, Loader2, AlertCircle, CheckCircle2, RotateCcw, Search, Sparkles } from "lucide-react"
 import type { Tender } from "@/lib/mock-tenders"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
+import { toast } from "sonner"
 
 // Proposal status type
 type ProposalStatus = 'queued' | 'researching' | 'strategizing' | 'drafting' | 'critiquing' | 'humanizing' | 'complete' | 'failed'
@@ -58,6 +59,7 @@ export default function DashboardPage() {
     const [proposalsLoading, setProposalsLoading] = useState(true)
     const [user, setUser] = useState<any>(null)
     const [filterSector, setFilterSector] = useState<string>('All')
+    const previousProposalsRef = useRef<Proposal[]>([])
 
     // Derived state for filtering
     const sectors = ['All', ...Array.from(new Set(savedTenders.map(t => t.tender_data?.sector || 'Other')))]
