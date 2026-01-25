@@ -141,7 +141,7 @@ function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
             </div>
 
             {/* Key Stats Grid */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6 px-8">
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                     <div className="text-xs text-white/40 uppercase tracking-wider mb-1 flex items-center gap-2">
                         <PoundSterling className="w-4 h-4" /> Value
@@ -161,7 +161,7 @@ function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
             </div>
 
             {/* Description */}
-            <div className="flex-1 overflow-hidden relative">
+            <div className="flex-1 overflow-hidden relative px-8">
                 <p className="text-white/80 leading-relaxed text-sm line-clamp-5">
                     {tender.description}
                 </p>
@@ -182,7 +182,7 @@ function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
             </button>
 
             {/* Footer Location */}
-            <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm">
+            <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-white/40 text-sm mx-8 pb-6">
                 <MapPin className="w-5 h-5" />
                 {tender.location}
             </div>

@@ -2,6 +2,8 @@ import { Resend } from 'resend';
 
 // Lazy-load Resend client to avoid build-time API key requirement
 let resend: Resend | null = null;
+const FROM_DOMAIN = process.env.EMAIL_FROM_DOMAIN || 'bidswipe.xyz';
+const FROM_NAME = process.env.EMAIL_FROM_NAME || 'BidSwipe';
 
 function getResendClient(): Resend | null {
     if (!process.env.RESEND_API_KEY) {
@@ -71,7 +73,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 
     try {
         await client.emails.send({
-            from: 'BidSwipe <welcome@bidswipe.xyz>',
+            from: `${FROM_NAME} <welcome@${FROM_DOMAIN}>`,
             to: email,
             subject: 'Welcome to the Future of Bidding ⚡',
             html: wrapHtml(
@@ -102,7 +104,7 @@ export async function sendVerificationEmail(email: string, link: string) {
 
     try {
         await client.emails.send({
-            from: 'BidSwipe Security <security@bidswipe.xyz>',
+            from: `${FROM_NAME} Security <security@${FROM_DOMAIN}>`,
             to: email,
             subject: 'Verify your Identity 🔐',
             html: wrapHtml(
@@ -142,7 +144,7 @@ export async function sendNewTenderAlertEmail({
 
     try {
         const { data } = await client.emails.send({
-            from: 'BidSwipe Intel <alerts@bidswipe.xyz>',
+            from: `${FROM_NAME} Intel <alerts@${FROM_DOMAIN}>`,
             to: [to],
             subject: `🚨 ${matchScore}% Match: ${tenderTitle.substring(0, 30)}...`,
             html: wrapHtml(
@@ -197,7 +199,7 @@ export async function sendProposalCompleteEmail({
 
     try {
         const { data } = await client.emails.send({
-            from: 'BidSwipe <noreply@bidswipe.xyz>',
+            from: `${FROM_NAME} <noreply@${FROM_DOMAIN}>`,
             to: [to],
             subject: `✅ Proposal Ready: ${proposalTitle}`,
             html: wrapHtml(
@@ -244,7 +246,7 @@ export async function sendProposalFailedEmail({
 
     try {
         const { data } = await client.emails.send({
-            from: 'BidSwipe <noreply@bidswipe.xyz>',
+            from: `${FROM_NAME} <noreply@${FROM_DOMAIN}>`,
             to: [to],
             subject: `⚠️ Generation Failed: ${proposalTitle}`,
             html: wrapHtml(
