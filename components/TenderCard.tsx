@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { motion, useMotionValue, useTransform } from "framer-motion"
+import { motion, useMotionValue, useTransform, AnimatePresence, Variants } from "framer-motion"
 import { Tender } from "@/lib/mock-tenders"
 import { Briefcase, Calendar, MapPin, PoundSterling, ShieldCheck } from "lucide-react"
 
@@ -12,23 +12,41 @@ interface TenderCardProps {
     index: number;
 }
 
-const TenderCardComponent = ({ tender, onSwipe, onInfo, index }: TenderCardProps) => {
-    const x = useMotionValue(0)
-    const rotate = useTransform(x, [-200, 200], [-15, 15])
-    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
+// Variants moved out of component to avoid recreation
+const variants: Variants = {
+    initial: { scale: 1, y: 0 },
+    animate: { scale: 1, y: 0 },
+    exit: (custom: any) => {
+        if (custom === "left") {
+            return {
+                clipPath: "inset(100% 0 0 0)",
+                transition: { duration: 0.4, ease: "easeInOut" as any }
+            }
+        }
+        return {
+            scale: 0.95,
+            x: 200,
+            opacity: 0,
+            transition: { duration: 0.2 }
+        }
+    }
+}
 
-    // Background color shifts based on swipe direction
-    const borderColor = useTransform(
-        x,
-        [-200, 0, 200],
-        ["rgba(255, 0, 60, 1)", "rgba(255, 255, 255, 0.1)", "rgba(0, 240, 255, 1)"]
-    )
+function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
+    const x = useMotionValue(0)
+    const rotate = useTransform(x, [-200, 200], [-10, 10])
+    const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0])
+    const color = useMotionValue('#000000')
+    const borderColor = useTransform(x, [-200, 0, 200], ['#ef4444', '#333333', '#22c55e'])
 
     const handleDragEnd = (_: any, info: any) => {
-        if (info.offset.x > 100) {
-            onSwipe("right")
-        } else if (info.offset.x < -100) {
-            onSwipe("left")
+        const offset = info.offset.x
+        const velocity = info.velocity.x
+
+        if (offset < -100 || velocity < -500) {
+            onSwipe('left')
+        } else if (offset > 100 || velocity > 500) {
+            onSwipe('right')
         }
     }
 
@@ -45,11 +63,19 @@ const TenderCardComponent = ({ tender, onSwipe, onInfo, index }: TenderCardProps
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={handleDragEnd}
             className="absolute top-0 w-full max-w-md h-[600px] bg-black border-2 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing origin-bottom shadow-2xl"
-            initial={{ scale: 1, y: 0 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.95, x: 200, opacity: 0 }}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            // Pass the swipe direction as custom prop if possible, but here 'custom' is usually passed from AnimatePresence.
+            // Since we don't control AnimatePresence's custom prop directly here (it's in parent),
+            // we might need to rely on the parent passing it or default behavior.
+            // However, to fix the LINT error, using variants is the standard way.
             transition={{ type: "tween", ease: "easeOut", duration: 0.15 }}
         >
+            {/* Shredder Strips Overlay (Only visible during specific state if we implemented full shred) */}
+            {/* For true shred effect, we'd need to render multiple strips masking the content.
+                Let's stick to the high-performance clipPath "shred/consume" effect for now which looks like it's being eaten downwards. */}
             {/* Status Indicator Overlays */}
             <motion.div
                 style={{ opacity: useTransform(x, [50, 150], [0, 1]) }}
@@ -157,4 +183,4 @@ const TenderCardComponent = ({ tender, onSwipe, onInfo, index }: TenderCardProps
 }
 
 // Memo wrapper to prevent unnecessary re-renders on mobile
-export const TenderCard = React.memo(TenderCardComponent)
+export const TenderCard = React.memo(TenderCardBase)

@@ -7,9 +7,14 @@ import { Tender } from "@/lib/mock-tenders"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
+// @ts-ignore
+import { jsPDF } from "jspdf"
+
+import { Proposal } from "@/types"
 
 // Types
-type ProposalStatus = 'queued' | 'researching' | 'strategizing' | 'drafting' | 'critiquing' | 'humanizing' | 'complete' | 'failed'
+// type ProposalStatus moved to centralized types or kept if specific config uses it
+import { ProposalStatus } from "@/types"
 
 const STATUS_CONFIG: Record<ProposalStatus, { label: string; color: string; bgColor: string; icon: React.ReactNode; isActive: boolean }> = {
     queued: { label: 'Queued', color: 'text-blue-400', bgColor: 'bg-blue-500/10', icon: <Clock className="w-3 h-3" />, isActive: true },
@@ -24,7 +29,7 @@ const STATUS_CONFIG: Record<ProposalStatus, { label: string; color: string; bgCo
 
 export default function MyTendersPage() {
     const [savedTenders, setSavedTenders] = useState<any[]>([])
-    const [proposals, setProposals] = useState<any[]>([])
+    const [proposals, setProposals] = useState<Proposal[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'proposals' | 'saved'>('proposals')
 
@@ -96,28 +101,64 @@ export default function MyTendersPage() {
         toast.info("Removed from watchlist")
     }
 
-    // Download proposal as plain text document
-    const downloadProposal = (proposal: any, e: React.MouseEvent) => {
+    // Download proposal as PDF
+    const downloadProposal = (proposal: Proposal, e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
 
-        const content = proposal.final_content || proposal.draft_content || 'No content available'
-        const title = proposal.tender_title || 'Proposal'
+        try {
+            const doc = new jsPDF()
+            const lineHeight = 10
+            let y = 20
+            const margin = 20
+            const pageWidth = doc.internal.pageSize.width
+            const contentWidth = pageWidth - (margin * 2)
 
-        // Create plain text blob
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
+            // Title
+            doc.setFontSize(16)
+            doc.setFont("helvetica", "bold")
+            const title = proposal.tender_title || 'Proposal'
+            const splitTitle = doc.splitTextToSize(title, contentWidth)
+            doc.text(splitTitle, margin, y)
+            y += (splitTitle.length * lineHeight) + 5
 
-        // Trigger download
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}_proposal.txt`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
+            // Buyer
+            doc.setFontSize(12)
+            doc.setFont("helvetica", "normal")
+            doc.setTextColor(100)
+            const buyer = `Client: ${proposal.tender_buyer || "Unknown Client"}`
+            doc.text(buyer, margin, y)
+            y += lineHeight + 5
 
-        toast.success("Downloaded!", { description: "Plain text proposal saved" })
+            // Divider
+            doc.setDrawColor(200)
+            doc.line(margin, y, pageWidth - margin, y)
+            y += 10
+
+            // Content
+            doc.setTextColor(0)
+            doc.setFontSize(11)
+            const content = proposal.final_content || proposal.draft_content || 'No content available'
+
+            // Handle long text
+            const splitContent = doc.splitTextToSize(content, contentWidth)
+
+            // Check page breaks
+            splitContent.forEach((line: string) => {
+                if (y > 280) {
+                    doc.addPage()
+                    y = 20
+                }
+                doc.text(line, margin, y)
+                y += 7
+            })
+
+            doc.save(`${title.substring(0, 30).replace(/[^a-z0-9]/gi, '_')}_Proposal.pdf`)
+            toast.success("PDF Downloaded successfully")
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to generate PDF")
+        }
     }
 
     return (

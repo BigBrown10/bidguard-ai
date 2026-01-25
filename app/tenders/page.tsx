@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { MOCK_TENDERS, Tender } from "@/lib/mock-tenders"
 import { TenderCard } from "@/components/TenderCard"
 import { AnimatePresence, motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
 import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
@@ -14,7 +15,8 @@ import { TenderDetailsModal } from "@/components/TenderDetailsModal"
 import { IdeaInjectionModal } from "@/components/IdeaInjectionModal"
 import { CompanyDetailsGate } from "@/components/CompanyDetailsGate"
 
-export default function TenderPage() {
+export default function TendersPage() {
+    const router = useRouter()
     const [allTenders, setAllTenders] = useState<Tender[]>([])
     const [tenders, setTenders] = useState<Tender[]>([])
     const [selectedTender, setSelectedTender] = useState<Tender | null>(null)
@@ -227,7 +229,7 @@ export default function TenderPage() {
                     description: 'Track progress in My Tenders',
                     action: {
                         label: 'View My Tenders',
-                        onClick: () => window.location.href = '/favourites'
+                        onClick: () => router.push('/favourites')
                     }
                 }
             },
