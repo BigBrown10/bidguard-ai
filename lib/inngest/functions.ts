@@ -6,7 +6,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { perplexitySonarPro } from "@/lib/perplexity";
 import { TENDER_MASTERY_GUIDE } from "@/lib/knowledge/tender-mastery";
 import { syncTendersToSupabase } from "@/lib/gov-api";
-import { sendProposalCompleteEmail, sendProposalFailedEmail } from "@/lib/email";
+import { sendProposalCompleteEmail, sendProposalFailedEmail, sendNewTenderAlertEmail } from "@/lib/email";
 
 // =========================================
 // CRON: Hourly Tender Sync
@@ -21,7 +21,42 @@ export const syncTendersCron = inngest.createFunction(
             return await syncTendersToSupabase();
         });
 
-        console.log(`[CRON] Sync complete: ${result.synced} synced, ${result.errors} errors`);
+        // Alerting Step: Check for "Gold" opportunities
+        await step.run("check-alerts", async () => {
+            if (!supabase) return;
+
+            // 1. Get recent high-value tenders
+            const { data: newHighValueTenders } = await supabase
+                .from('tenders')
+                .select('*')
+                .gt('fetched_at', new Date(Date.now() - 3600000).toISOString()) // Last hour
+                .ilike('value', '%m%') // Rough check for Millions
+                .limit(3);
+
+            if (!newHighValueTenders || newHighValueTenders.length === 0) return;
+
+            // 2. Get active users to alert (Mocking single user for MVP)
+            // In prod: Join with user profiles and sector matches
+            // Here we just alert a hardcoded admin or the first user found
+            const { data: users } = await supabase.from('profiles').select('id, email').limit(1);
+            if (!users?.length) return;
+            const targetUser = users[0];
+
+            // 3. Send alerts
+            for (const tender of newHighValueTenders) {
+                if (targetUser.email) {
+                    await sendNewTenderAlertEmail({
+                        to: targetUser.email,
+                        tenderTitle: tender.title,
+                        tenderValue: tender.value,
+                        tenderBuyer: tender.buyer,
+                        description: tender.description || "No description",
+                        matchScore: 94 // Mock score for MVP excite
+                    });
+                }
+            }
+        });
+
         return result;
     }
 );

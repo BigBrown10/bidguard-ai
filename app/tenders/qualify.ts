@@ -49,6 +49,11 @@ You must respond with a professional recommendation and a "Confidence Score."
 
 export async function qualifyTender(tenderId: string, userId: string): Promise<QualificationResult> {
     try {
+        if (!supabase) {
+            console.error("Supabase Admin client missing")
+            throw new Error("Supabase internal error")
+        }
+
         // 1. Fetch Tender & User Data
         const { data: tender } = await supabase.from('tenders').select('title, description, value, region, buyer, status').eq('id', tenderId).single()
         const { data: profile } = await supabase.from('profiles').select('company_name, business_description, iso_certs, sectors').eq('id', userId).single()
