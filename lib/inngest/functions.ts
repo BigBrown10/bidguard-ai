@@ -470,67 +470,164 @@ export const generateAutonomousProposal = inngest.createFunction(
             }).eq('id', proposalId);
         });
 
-        // 9. Critique
-        const critiqueOutput = await step.run("critique", async () => {
-            const critiquePrompt = PromptTemplate.fromTemplate(`
-                You are the BRUTAL RED TEAM CRITIC.
-                Score this proposal (0-10) and provide harsh feedback.
+        // V2 AGENT ORCHESTRATION: Critique + Humanize Loop with Retry
+        let currentDraft = draftContent;
+        let critiqueOutput: any = { score: 0, status: 'REJECT', ui_pointers: {}, feedback: [] };
+        let attempts = 0;
+        const MAX_ATTEMPTS = 2;
 
-                ## MANDATORY CHECKS:
-                1. Does it mention **Modern Slavery Act** compliance? If not, REJECT or demand it.
-                2. Does it mention **ISO Standards** (9001, 27001, 14001)? If not, demand it.
-                3. Is it under 1000 words? If yes, demand expansion.
+        while (attempts < MAX_ATTEMPTS) {
+            attempts++;
 
-                PROPOSAL:
-                {draft}
+            // 9. V2 RED TEAM CRITIC (4-Pillar Scoring)
+            critiqueOutput = await step.run(`critique-${attempts}`, async () => {
+                const critiquePrompt = PromptTemplate.fromTemplate(`
+                    You are a BRUTAL UK Procurement Officer. Your job is to find reasons to FAIL this bid.
 
-                Respond in JSON: {{ "score": number, "status": "ACCEPT/REJECT", "feedback": ["...missing ISO...", "...missing Modern Slavery..."] }}
-            `);
+                    CRITICAL: Score HARSHLY. Only ACCEPT if all criteria are met.
 
-            const chain = critiquePrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
-            const result = await chain.invoke({ draft: draftContent });
+                    ## THE 4-PILLAR SCORING SYSTEM (0-10 each):
 
-            try {
-                const jsonMatch = result.match(/\{[\s\S]*\}/);
-                return jsonMatch ? JSON.parse(jsonMatch[0]) : { score: 7, status: "ACCEPT", feedback: [] };
-            } catch {
-                return { score: 7, status: "ACCEPT", feedback: ["Auto-parsed"] };
-            }
-        });
+                    1. EVIDENCE DENSITY: Are there specific numbers, dates, £ values from real projects?
+                       - 10 = Every claim has evidence
+                       - 5 = Generic claims
+                       - 0 = No evidence at all
 
-        // 10. Update status: Humanizing
-        await step.run("status-humanizing", async () => {
-            if (!supabase) return;
-            await supabase.from('proposals').update({
-                status: 'humanizing',
-                critique: critiqueOutput,
-                updated_at: new Date().toISOString()
-            }).eq('id', proposalId);
-        });
+                    2. COMPLIANCE: Does it mention:
+                       - Modern Slavery Act compliance
+                       - ISO 9001/27001/14001 standards  
+                       - PPN 06/20 (Social Value)
+                       - PPN 02/23 (Modern Slavery)
 
-        // 11. Humanize
-        const finalContent = await step.run("humanize", async () => {
-            const humanizePrompt = PromptTemplate.fromTemplate(`
-                You are a Master Editor. Use this feedback to rewrite the proposal.
+                    3. SOCIAL VALUE: Is it MEASURABLE social value?
+                       - 10 = Specific commitments (X apprentices, £X community investment)
+                       - 0 = Vague "we care about community"
 
-                CRITIQUE FEEDBACK: {feedback}
-                ORIGINAL: {draft}
+                    4. REAL ESTATE: Word count vs target
+                       - Target: 1400-1600 words
+                       - Score 10 if within range, reduce for under/over
 
-                INSTRUCTIONS:
-                1. **Integrate Compliance**: Ensure Modern Slavery and ISO standards are explicitly mentioned if requested.
-                2. **Expand**: Do NOT shorten the text. Keep it long and detailed (1500+ words).
-                3. **Humanize**: Remove AI-isms (delve, underscore, testament).
-                4. **Style**: Short, punchy sentences. High evidence density.
+                    ## MANDATORY REJECTION CRITERIA:
+                    - REJECT if markdown symbols (#, *, **) are present
+                    - REJECT if word count < 1200 words
+                    - REJECT if NO ISO or Modern Slavery mentioned
 
-                Output ONLY the rewritten text.
-            `);
+                    PROPOSAL TO JUDGE:
+                    {draft}
 
-            const chain = humanizePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
-            return await chain.invoke({
-                feedback: JSON.stringify(critiqueOutput.feedback),
-                draft: draftContent
+                    COMPANY PROFILE (verify claims against this):
+                    {profile}
+
+                    Respond in JSON ONLY:
+                    {{
+                        "total_score": number (0-10 average),
+                        "status": "ACCEPT" or "REJECT",
+                        "ui_pointers": {{
+                            "evidence": number,
+                            "compliance": number,
+                            "social_value": number,
+                            "real_estate": number
+                        }},
+                        "harsh_feedback": ["Specific issue 1...", "Specific issue 2..."],
+                        "word_count": number
+                    }}
+                `);
+
+                const chain = critiquePrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+                const result = await chain.invoke({
+                    draft: currentDraft,
+                    profile: JSON.stringify({
+                        company_name: profile?.company_name,
+                        sectors: profile?.sectors,
+                        description: profile?.business_description?.substring(0, 500)
+                    })
+                });
+
+                try {
+                    const jsonMatch = result.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        return {
+                            score: parsed.total_score || parsed.score || 7,
+                            status: parsed.status || 'ACCEPT',
+                            ui_pointers: parsed.ui_pointers || { evidence: 5, compliance: 5, social_value: 5, real_estate: 5 },
+                            feedback: parsed.harsh_feedback || parsed.feedback || [],
+                            word_count: parsed.word_count || currentDraft.split(/\s+/).length
+                        };
+                    }
+                } catch (e) {
+                    console.warn('[CRITIC] Failed to parse JSON:', e);
+                }
+                return { score: 7, status: 'ACCEPT', ui_pointers: { evidence: 5, compliance: 5, social_value: 5, real_estate: 5 }, feedback: [] };
             });
-        });
+
+            // If ACCEPT or max attempts, break
+            if (critiqueOutput.status === 'ACCEPT' || attempts >= MAX_ATTEMPTS) {
+                break;
+            }
+
+            // 10. V2 HUMANIZER (with Burstiness Protocol)
+            await step.run(`status-revising-${attempts}`, async () => {
+                if (!supabase) return;
+                await supabase.from('proposals').update({
+                    status: 'humanizing',
+                    critique: critiqueOutput,
+                    updated_at: new Date().toISOString()
+                }).eq('id', proposalId);
+            });
+
+            currentDraft = await step.run(`humanize-${attempts}`, async () => {
+                const humanizePrompt = PromptTemplate.fromTemplate(`
+                    You are a Master Editor. The Critic has REJECTED this proposal.
+                    You MUST address EVERY item in the feedback or it will be rejected again.
+
+                    ## CRITIQUE FEEDBACK (MUST ADDRESS):
+                    {feedback}
+
+                    ## 4-PILLAR SCORES:
+                    Evidence: {evidence}/10
+                    Compliance: {compliance}/10
+                    Social Value: {social_value}/10
+                    Real Estate: {real_estate}/10
+
+                    ## ORIGINAL PROPOSAL:
+                    {draft}
+
+                    ## BURSTINESS PROTOCOL:
+                    Use Short-Long-Short rhythm. A 5-word sentence. Followed by a 30-word detailed explanation with specifics. Then a 10-word summary.
+
+                    ## LIVED EXPERIENCE:
+                    Inject company history: "In our [X] years of operation, we have found that..."
+
+                    ## MANDATORY FIXES:
+                    1. If compliance < 8: ADD explicit Modern Slavery Act and ISO 9001/27001 sections
+                    2. If evidence < 8: ADD specific numbers, dates, £ amounts
+                    3. If social_value < 8: ADD measurable commitments (X apprentices, £X investment)
+                    4. If real_estate < 8: EXPAND to 1500+ words
+
+                    ## OUTPUT RULES:
+                    - NO MARKDOWN. No #, *, **, _ symbols.
+                    - Plain text with numbered sections only.
+                    - Keep ALL content, only ADD and improve.
+
+                    Output the COMPLETE rewritten proposal:
+                `);
+
+                const chain = humanizePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+                return await chain.invoke({
+                    feedback: JSON.stringify(critiqueOutput.feedback),
+                    evidence: critiqueOutput.ui_pointers?.evidence || 5,
+                    compliance: critiqueOutput.ui_pointers?.compliance || 5,
+                    social_value: critiqueOutput.ui_pointers?.social_value || 5,
+                    real_estate: critiqueOutput.ui_pointers?.real_estate || 5,
+                    draft: currentDraft
+                });
+            });
+
+            console.log(`[AGENT V2] Retry ${attempts}: Score ${critiqueOutput.score}, Status ${critiqueOutput.status}`);
+        }
+
+        const finalContent = currentDraft;
 
         // 12. Save final result
         await step.run("save-final", async () => {
