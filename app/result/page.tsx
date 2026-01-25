@@ -6,6 +6,7 @@ import { Suspense } from "react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Download, RefreshCw, Loader2, FileText } from "lucide-react"
+import { toast } from "sonner"
 import ReactMarkdown from 'react-markdown'
 import { WinMeter } from "@/components/WinMeter"
 import { ComplianceSidebar, ComplianceItem } from "@/components/ComplianceSidebar"
@@ -135,9 +136,10 @@ function ResultContent() {
             }
 
             pdf.save(`BidSwipe_Proposal_${Date.now()}.pdf`)
+            pdf.save(`BidSwipe_Proposal_${Date.now()}.pdf`)
         } catch (error) {
             console.error("PDF Export failed:", error)
-            window.print()
+            toast.error("Download Failed", { description: "Could not generate PDF. Please try again." })
         } finally {
             setExporting(false)
         }
