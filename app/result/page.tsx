@@ -77,6 +77,13 @@ function ResultContent() {
             .replace(/I am an AI.*?\./gi, '')
             .replace(/I don't have the ability.*?\./gi, '')
             .replace(/I cannot.*?\./gi, '')
+            // Remove raw metadata blocks if they leaked
+            .replace(/---SCORES---[\s\S]*?---PROPOSAL---/g, '')
+            .replace(/---SCORES---[\s\S]*?\}/g, '')
+            .replace(/---PROPOSAL---/g, '')
+            // Remove Word count lines specifically
+            .replace(/Word count:?\s*\d+/gi, '')
+            .replace(/\(\d+\s*words\)/gi, '')
 
         // Remove banned words (case insensitive) but preserve sentence structure
         BANNED_WORDS.forEach(word => {
@@ -171,8 +178,8 @@ function ResultContent() {
                         <Button className='bg-secondary/20 hover:bg-secondary/30 text-secondary' onClick={() => window.location.href = '/edit'}>
                             <FileText className="mr-2 h-4 w-4" /> Edit Proposal
                         </Button>
-                        <Button onClick={handleExportPDF} disabled={exporting}>
-                            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="mr-2 h-4 w-4" /> Export PDF</>}
+                        <Button onClick={handleExportPDF} disabled={exporting} className="bg-primary text-black hover:bg-primary/90 font-bold">
+                            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="mr-2 h-4 w-4" /> Download Proposal (PDF)</>}
                         </Button>
                     </div>
                 </div>
@@ -190,10 +197,34 @@ function ResultContent() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {/* Hidden div for PDF (white background) */}
-                            <div ref={contentRef} className="hidden">
-                                <div className="bg-white text-black p-8" style={{ fontFamily: 'Georgia, serif' }}>
-                                    <ReactMarkdown>{cleanText(result.finalText)}</ReactMarkdown>
+                            {/* Hidden div for PDF generation (Off-screen but rendered) */}
+                            <div style={{ position: 'fixed', left: '-10000px', top: 0 }}>
+                                <div ref={contentRef} className="bg-white text-black p-12 max-w-[800px] mx-auto" style={{ fontFamily: 'Georgia, serif' }}>
+                                    {/* Evaluation Report Header for PDF only */}
+                                    <div className="mb-8 border-b-2 border-black pb-4">
+                                        <h1 className="text-3xl font-bold uppercase tracking-tight mb-2">Tender Proposal</h1>
+                                        <p className="text-sm text-gray-600">Generated Strategy Document • {new Date().toLocaleDateString()}</p>
+                                    </div>
+
+                                    <ReactMarkdown
+                                        components={{
+                                            h1: ({ ...props }) => <h1 className="text-2xl font-bold mb-4 mt-8 pb-2 border-b border-gray-300 uppercase" {...props} />,
+                                            h2: ({ ...props }) => <h2 className="text-xl font-bold mb-3 mt-6 uppercase text-gray-800" {...props} />,
+                                            h3: ({ ...props }) => <h3 className="text-lg font-bold mb-2 mt-4 text-gray-700" {...props} />,
+                                            p: ({ ...props }) => <p className="mb-3 leading-relaxed text-gray-900 text-justify" style={{ fontSize: '11pt' }} {...props} />,
+                                            ul: ({ ...props }) => <ul className="list-disc pl-6 mb-4 space-y-1" {...props} />,
+                                            ol: ({ ...props }) => <ol className="list-decimal pl-6 mb-4 space-y-1" {...props} />,
+                                            li: ({ ...props }) => <li className="pl-1 leading-relaxed" style={{ fontSize: '11pt' }} {...props} />,
+                                            strong: ({ ...props }) => <strong className="font-bold text-black" {...props} />,
+                                        }}
+                                    >
+                                        {cleanText(result.finalText)}
+                                    </ReactMarkdown>
+
+                                    {/* Simple Footer */}
+                                    <div className="mt-12 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
+                                        Page 1
+                                    </div>
                                 </div>
                             </div>
 

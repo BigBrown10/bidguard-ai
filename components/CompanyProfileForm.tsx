@@ -64,7 +64,7 @@ export function CompanyProfileForm({ userId, initialData, onComplete, isModal = 
 
         } catch (error) {
             console.error('Save failed:', error)
-            toast.error("Save Failed", { description: "Please try again." })
+            toast.error("Save Failed", { description: (error as any).message || "Please try again." })
         } finally {
             setLoading(false)
         }
@@ -137,8 +137,8 @@ export function CompanyProfileForm({ userId, initialData, onComplete, isModal = 
                             type="button"
                             onClick={() => toggleIso(iso.id)}
                             className={`px-3 py-2 rounded-md text-xs font-medium border transition-all ${formData.iso_certs.includes(iso.id)
-                                    ? 'bg-primary/20 border-primary text-primary'
-                                    : 'bg-black/30 border-white/10 text-white/50 hover:border-white/30'
+                                ? 'bg-primary/20 border-primary text-primary'
+                                : 'bg-black/30 border-white/10 text-white/50 hover:border-white/30'
                                 }`}
                         >
                             {iso.label}

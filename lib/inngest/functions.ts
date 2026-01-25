@@ -688,13 +688,28 @@ export const generateAutonomousProposal = inngest.createFunction(
             let proposalText = result;
 
             try {
-                const scoresMatch = result.match(/---SCORES---\s*(\{[^}]+\})/);
-                if (scoresMatch) {
-                    scores = JSON.parse(scoresMatch[1]);
-                }
-                const proposalMatch = result.match(/---PROPOSAL---\s*([\s\S]+)/);
-                if (proposalMatch) {
-                    proposalText = proposalMatch[1].trim();
+                try {
+                    // 1. Try to extract scores
+                    const scoresMatch = result.match(/---SCORES---\s*(\{[^}]+\})/);
+                    if (scoresMatch) {
+                        try {
+                            scores = JSON.parse(scoresMatch[1]);
+                        } catch (e) {
+                            console.error("Score parse error", e)
+                        }
+                    }
+
+                    // 2. Extract Proposal Text
+                    // Split by marker to be safe
+                    const parts = result.split('---PROPOSAL---');
+                    if (parts.length > 1) {
+                        proposalText = parts[1].trim();
+                    } else {
+                        // Fallback: If no marker, but we have SCORES, try to remove scores block
+                        proposalText = result.replace(/---SCORES---[\s\S]*?(\{[^}]+\})/, '').replace('---PROPOSAL---', '').trim();
+                    }
+                } catch (e) {
+                    console.warn("[HYBRID] Failed to parsing output blocks, using raw result");
                 }
             } catch (e) {
                 console.warn("[HYBRID] Failed to parse scores, using defaults");

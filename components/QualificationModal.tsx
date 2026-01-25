@@ -27,7 +27,7 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl relative"
+                    className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative"
                 >
                     {/* Header */}
                     <div className="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-950/50">
@@ -60,12 +60,12 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                                     <div className={`
                                         relative px-8 py-4 rounded-full border-2 flex items-center gap-4 shadow-[0_0_30px_rgba(0,0,0,0.3)]
                                         ${result.traffic_light === 'GREEN' ? 'border-green-500/50 bg-green-500/10 text-green-400' : ''}
-                                        ${result.traffic_light === 'AMBER' ? 'border-amber-500/50 bg-amber-500/10 text-amber-400' : ''}
+                                        ${result.traffic_light === 'AMBER' ? 'border-white/20 bg-white/5 text-white' : ''}
                                         ${result.traffic_light === 'RED' ? 'border-red-500/50 bg-red-500/10 text-red-400' : ''}
                                     `}>
                                         <div className={`w-4 h-4 rounded-full animate-pulse ${result.traffic_light === 'GREEN' ? 'bg-green-500' :
-                                                result.traffic_light === 'AMBER' ? 'bg-amber-500' :
-                                                    'bg-red-500'
+                                            result.traffic_light === 'AMBER' ? 'bg-white' :
+                                                'bg-red-500'
                                             }`} />
                                         <div className="text-center">
                                             <div className="text-xs uppercase tracking-widest font-bold opacity-70">Recommendation</div>
@@ -89,7 +89,7 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                                             <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-zinc-950/50 border border-white/5">
                                                 <div className="mt-1">
                                                     {result.traffic_light === 'GREEN' && <Check className="w-4 h-4 text-green-500" />}
-                                                    {result.traffic_light === 'AMBER' && <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                                                    {result.traffic_light === 'AMBER' && <AlertTriangle className="w-4 h-4 text-white" />}
                                                     {result.traffic_light === 'RED' && <X className="w-4 h-4 text-red-500" />}
                                                 </div>
                                                 <span className="text-zinc-300 text-sm leading-relaxed">{reason}</span>
@@ -143,7 +143,7 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                                             px-8 py-3 rounded-lg text-sm font-bold text-black shadow-lg transition-all flex items-center gap-2
                                             ${result.traffic_light === 'GREEN'
                                                 ? 'bg-green-500 hover:bg-green-400 shadow-green-500/20'
-                                                : 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/20'}
+                                                : 'bg-white hover:bg-gray-200 text-black shadow-white/10'}
                                         `}
                                     >
                                         {result.traffic_light === 'GREEN' ? (
