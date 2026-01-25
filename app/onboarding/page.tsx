@@ -10,6 +10,7 @@ import { Toaster } from 'sonner'
 export default function OnboardingPage() {
     const router = useRouter()
     const [user, setUser] = useState<any>(null)
+    const [profile, setProfile] = useState<any>(null)
 
     useEffect(() => {
         const checkUser = async () => {
@@ -19,6 +20,9 @@ export default function OnboardingPage() {
                 router.push('/login')
             } else {
                 setUser(user)
+                // Load existing data if any
+                const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+                if (data) setProfile(data)
             }
         }
         checkUser()
@@ -55,6 +59,7 @@ export default function OnboardingPage() {
                 >
                     <CompanyProfileForm
                         userId={user.id}
+                        initialData={profile}
                         onComplete={() => router.push('/tenders')}
                     />
                 </motion.div>
