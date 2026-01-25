@@ -137,30 +137,32 @@ export function QualificationModal({ isOpen, onClose, result, isLoading, onProce
                                     >
                                         Pass
                                     </button>
-                                    className={`
+                                    <button
+                                        onClick={onProceed}
+                                        className={`
                                             px-8 py-3 rounded-lg text-sm font-bold text-black shadow-lg transition-all flex items-center gap-2
                                             ${result.traffic_light === 'GREEN'
-                                            ? 'bg-green-500 hover:bg-green-400 shadow-green-500/20'
-                                            : 'bg-white hover:bg-gray-200 text-black shadow-white/10'}
+                                                ? 'bg-green-500 hover:bg-green-400 shadow-green-500/20'
+                                                : 'bg-white hover:bg-gray-200 text-black shadow-white/10'}
                                         `}
                                     >
-                                    {result.traffic_light === 'GREEN' ? (
-                                        <>
-                                            <Check className="w-4 h-4" />
-                                            Auto-Pilot Mode 🚀
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FileText className="w-4 h-4" />
-                                            Proceed Anyway
-                                        </>
-                                    )}
-                                </button>
-                        </>
+                                        {result.traffic_light === 'GREEN' ? (
+                                            <>
+                                                <Check className="w-4 h-4" />
+                                                Auto-Pilot Mode 🚀
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileText className="w-4 h-4" />
+                                                Proceed Anyway
+                                            </>
+                                        )}
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     )}
-            </div>
-                    )}
-        </motion.div>
+                </motion.div>
             </div >
         </AnimatePresence >
     )
