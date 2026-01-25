@@ -29,6 +29,25 @@ export const syncTendersCron = inngest.createFunction(
 // =========================================
 // PROPOSAL GENERATION FUNCTION
 // =========================================
+const researchTemplate = `
+You are a Strategic Intelligence Agent.
+Target: {tenderBuyer}
+Sector: {tenderTitle}
+
+Your mission is to find "Ghost in the Machine" intelligence - problems the buyer has but hasn't explicitly stated.
+
+TASK:
+1. Search for "{tenderBuyer} strategic plan 2024 2025" or "annual report".
+2. Identify their TOP 3 Strategic Objectives (e.g. Net Zero by 2030, Digital Transformation).
+3. Find 1 recent news story or challenge they are facing (budget cuts, new regulation).
+4. Identify 2 keywords or phrases they use frequently in their own docs (e.g. "Levelling Up", "One NHS").
+
+OUTPUT FORMAT (Plain Text Bullet Points):
+- STRATEGY: [Objective 1], [Objective 2], [Objective 3]
+- CHALLENGE: [Recent Challenge]
+- KEYWORDS: [Keyword 1], [Keyword 2]
+`;
+
 const writerTemplate = `
 You are a Senior Human Bid Writer. You are NOT an AI.
 Your goal is to write a SUBSTANTIAL, DETAILED DRAFT PROPOSAL (approx 1500 words).
@@ -330,6 +349,35 @@ export const generateAutonomousProposal = inngest.createFunction(
         });
 
         // =====================================================
+        // CALL 0.5: RESEARCH AGENT (Buyer Intelligence)
+        // =====================================================
+        const buyerResearch = await step.run("research-buyer", async () => {
+            console.log(`[RESEARCH] analyzing ${tenderBuyer}...`);
+            const researchPrompt = PromptTemplate.fromTemplate(researchTemplate);
+            const chain = researchPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+
+            try {
+                const result = await chain.invoke({
+                    tenderBuyer,
+                    tenderTitle
+                });
+                return result;
+            } catch (e) {
+                console.error("Research failed:", e);
+                return "STRATEGY: Enhance efficiency.\nCHALLENGE: Budget constraints.\nKEYWORDS: Value for Money.";
+            }
+        });
+
+        // Save Research to Draft immediately so user sees it
+        await step.run("save-research", async () => {
+            if (!supabase) return;
+            await supabase.from('proposals').update({
+                draft_content: `## 🕵️ BUYER INTELLIGENCE DOSSIER\n${buyerResearch}\n\n## 📝 GENERATING PROPOSAL...`,
+                updated_at: new Date().toISOString()
+            }).eq('id', proposalId);
+        });
+
+        // =====================================================
         // CALL 1: MEGA-PROMPT (Research + Strategy + Draft)
         // =====================================================
         const draftContent = await step.run("mega-draft", async () => {
@@ -338,11 +386,12 @@ export const generateAutonomousProposal = inngest.createFunction(
                 You will perform 3 tasks in sequence and output ONLY the final proposal.
 
                 ===============================
-                PHASE 1: RESEARCH (Internal)
+                PHASE 1: RESEARCH (Internal & External)
                 ===============================
                 Research this tender opportunity:
                 - TENDER: {tenderTitle}
                 - BUYER: {tenderBuyer}
+                - EXTERNAL INTELLIGENCE: {buyerResearch}
                 - COMPANY: {companyName}
                 - SECTORS: {sectors}
                 - USER STRATEGY: {ideaInjection}
@@ -401,6 +450,7 @@ export const generateAutonomousProposal = inngest.createFunction(
             const result = await chain.invoke({
                 tenderTitle,
                 tenderBuyer,
+                buyerResearch,
                 companyName: profile?.company_name || "Our Company",
                 sectors: profile?.sectors?.join(", ") || "General",
                 ideaInjection: ideaInjection || "Autonomous mode - focus on value and expertise",
