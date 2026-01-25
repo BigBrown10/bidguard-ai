@@ -45,10 +45,10 @@ const TenderCardComponent = ({ tender, onSwipe, onInfo, index }: TenderCardProps
             dragConstraints={{ left: 0, right: 0 }}
             onDragEnd={handleDragEnd}
             className="absolute top-0 w-full max-w-md h-[600px] bg-black border-2 flex flex-col overflow-hidden cursor-grab active:cursor-grabbing origin-bottom shadow-2xl"
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "tween", ease: "backOut", duration: 0.3 }}
+            initial={{ scale: 1, y: 0 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.95, x: 200, opacity: 0 }}
+            transition={{ type: "tween", ease: "easeOut", duration: 0.15 }}
         >
             {/* Status Indicator Overlays */}
             <motion.div

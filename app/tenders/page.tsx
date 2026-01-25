@@ -29,6 +29,7 @@ export default function TenderPage() {
     const [ideaModalOpen, setIdeaModalOpen] = useState(false)
     const [pendingTender, setPendingTender] = useState<Tender | null>(null)
     const [showOnboarding, setShowOnboarding] = useState(false)
+    const [profileComplete, setProfileComplete] = useState(false)
 
     // Industry filters with predefined common sectors + dynamically extracted
     const sectorFilters = useMemo(() => {
@@ -96,8 +97,11 @@ export default function TenderPage() {
                         .single()
 
                     // Only show onboarding if company_name is missing or empty
-                    if (!profile?.company_name || profile.company_name.trim() === '') {
+                    if (!profile?.company_name || profile.company_name.trim() === '' || !profile?.business_description) {
                         setShowOnboarding(true)
+                        setProfileComplete(false)
+                    } else {
+                        setProfileComplete(true)
                     }
                 }
             }
@@ -153,6 +157,18 @@ export default function TenderPage() {
         if (direction === "right") {
             if (!userId) {
                 window.location.href = '/register'
+                return
+            }
+
+            // BLOCK BID if profile not complete
+            if (!profileComplete) {
+                toast.error("Complete your profile first", {
+                    description: "We need your company details to generate winning bids."
+                })
+                setShowOnboarding(true)
+                // Re-add tender to stack
+                setTenders(prev => [...prev, swipedTender])
+                setAllTenders(prev => [...prev, swipedTender])
                 return
             }
 
@@ -408,7 +424,10 @@ export default function TenderPage() {
 
             <CompanyDetailsGate
                 isOpen={showOnboarding}
-                onComplete={() => setShowOnboarding(false)}
+                onComplete={() => {
+                    setShowOnboarding(false)
+                    setProfileComplete(true)
+                }}
             />
 
             <TenderDetailsModal
