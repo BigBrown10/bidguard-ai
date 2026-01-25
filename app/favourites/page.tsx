@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
-import { Loader2, Briefcase, Calendar, PoundSterling, Trash2, ArrowRight, FileText, CheckCircle2, AlertCircle, Clock, Edit3, Eye, MoreHorizontal, LayoutGrid, List, RefreshCw } from "lucide-react"
+import { Loader2, Briefcase, Calendar, PoundSterling, Trash2, ArrowRight, FileText, CheckCircle2, AlertCircle, Clock, Edit3, Eye, MoreHorizontal, LayoutGrid, List, RefreshCw, Download } from "lucide-react"
 import { Tender } from "@/lib/mock-tenders"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -96,6 +96,30 @@ export default function MyTendersPage() {
         toast.info("Removed from watchlist")
     }
 
+    // Download proposal as plain text document
+    const downloadProposal = (proposal: any, e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        const content = proposal.final_content || proposal.draft_content || 'No content available'
+        const title = proposal.tender_title || 'Proposal'
+
+        // Create plain text blob
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+
+        // Trigger download
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${title.replace(/[^a-z0-9]/gi, '_').substring(0, 50)}_proposal.txt`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        toast.success("Downloaded!", { description: "Plain text proposal saved" })
+    }
+
     return (
         <div className="min-h-screen bg-background relative">
             <div className="container mx-auto px-6 py-12">
@@ -181,8 +205,16 @@ export default function MyTendersPage() {
                                                                     </button>
                                                                 </div>
                                                                 <button
+                                                                    onClick={(e) => downloadProposal(proposal, e)}
+                                                                    className="bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 p-2 rounded-lg transition-colors"
+                                                                    title="Download as text file"
+                                                                >
+                                                                    <Download className="w-4 h-4" />
+                                                                </button>
+                                                                <button
                                                                     onClick={(e) => { e.preventDefault(); window.location.href = `/result?id=${proposal.id}` }}
                                                                     className="bg-white/5 hover:bg-white/10 text-white border border-white/10 p-2 rounded-lg transition-colors"
+                                                                    title="Preview proposal"
                                                                 >
                                                                     <Eye className="w-4 h-4" />
                                                                 </button>

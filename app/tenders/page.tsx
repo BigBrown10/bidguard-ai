@@ -221,7 +221,16 @@ export default function TenderPage() {
             return response.json()
         }, {
             loading: 'Queuing autonomous proposal...',
-            success: 'Superagent is preparing your Bid proposal. Check My Tenders.',
+            success: (data) => {
+                return {
+                    message: 'Superagent is preparing your Bid!',
+                    description: 'Track progress in My Tenders',
+                    action: {
+                        label: 'View My Tenders',
+                        onClick: () => window.location.href = '/favourites'
+                    }
+                }
+            },
             error: 'Failed to start proposal'
         })
 
