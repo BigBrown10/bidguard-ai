@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2, Link as LinkIcon, UserCircle, FileText } from 'lucide-react'
+import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2, UserCircle } from 'lucide-react'
 import Link from 'next/link'
 import { Toaster, toast } from 'sonner'
 
@@ -13,12 +13,10 @@ export default function RegisterPage() {
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
 
-    // Form State
+    // Form State - simplified to essentials only
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
-    const [companyUrl, setCompanyUrl] = useState('')
-    const [aboutCompany, setAboutCompany] = useState('')
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -33,7 +31,7 @@ export default function RegisterPage() {
                 password,
                 options: {
                     data: {
-                        first_name: fullName // Storing name in metadata
+                        first_name: fullName
                     }
                 }
             })
@@ -46,8 +44,7 @@ export default function RegisterPage() {
                 return
             }
 
-            // CRITICAL CHECK: Did we get a session? (i.e. is Auto-Confirm enabled?)
-            // If NOT, we must stop and tell the user to verify email.
+            // Check if email verification required
             if (authData.user && !authData.session) {
                 toast.info("Verification Link Sent", {
                     description: "Check your email to verify account before logging in.",
@@ -55,7 +52,6 @@ export default function RegisterPage() {
                     icon: <Mail className="text-secondary" />
                 })
 
-                // UX: Redirect to login so they are ready
                 setTimeout(() => {
                     router.push('/login')
                 }, 4000)
@@ -64,15 +60,13 @@ export default function RegisterPage() {
                 return
             }
 
-            // 2. Create Profile Entry (Only if we have a session AND user is defined)
+            // 2. Create empty profile - company details will be collected in onboarding gate
             if (authData.session && authData.user) {
                 const { error: profileError } = await supabase
                     .from('profiles')
                     .insert({
                         id: authData.user.id,
-                        company_name: "My Company",
-                        website: companyUrl,
-                        business_description: aboutCompany,
+                        onboarding_complete: false, // Flag to trigger company profile gate
                         updated_at: new Date().toISOString()
                     })
 
@@ -80,21 +74,21 @@ export default function RegisterPage() {
                     console.error("Profile creation failed", profileError)
                 }
 
-                toast.success("Account Created", {
-                    description: "Welcome to the network.",
+                toast.success("Account Created!", {
+                    description: "Let's set up your company profile.",
                 })
 
-                // Redirect
+                // Redirect to tenders - CompanyDetailsGate will appear
                 router.refresh()
                 setTimeout(() => {
                     window.location.href = '/tenders'
                 }, 800)
             }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Registration error:", err)
             toast.error("Registration Failed", {
-                description: err.message || "Could not create account.",
+                description: err instanceof Error ? err.message : "Could not create account.",
             })
         } finally {
             setLoading(false)
@@ -117,11 +111,11 @@ export default function RegisterPage() {
                 <div className="text-center mb-8">
                     <Link href="/">
                         <h1 className="text-3xl font-black uppercase tracking-tighter cursor-pointer mb-2">
-                            BidGuard <span className="text-secondary text-glow-red">ID</span>
+                            BidGuard <span className="text-secondary text-glow-red">AI</span>
                         </h1>
                     </Link>
                     <p className="text-white/50 text-sm tracking-widest uppercase">
-                        Create Operative Account
+                        Create Your Account
                     </p>
                 </div>
 
@@ -167,6 +161,7 @@ export default function RegisterPage() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 required
+                                minLength={6}
                                 className="cyber-input w-full pl-12 pr-12 h-12 bg-black/60 focus:bg-black/80"
                                 placeholder="••••••••••••"
                                 value={password}
@@ -182,38 +177,6 @@ export default function RegisterPage() {
                         </div>
                     </div>
 
-                    <div className="border-t border-white/5 my-1" />
-
-                    {/* Company URL */}
-                    <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-white/50 tracking-wider ml-1">Company URL</label>
-                        <div className="relative group">
-                            <LinkIcon className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
-                            <input
-                                type="url"
-                                required
-                                className="cyber-input w-full pl-12 h-12 bg-black/60 focus:bg-black/80"
-                                placeholder="https://mycompany.com"
-                                value={companyUrl}
-                                onChange={e => setCompanyUrl(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {/* About Company */}
-                    <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-white/50 tracking-wider ml-1">About Company (Public)</label>
-                        <div className="relative group">
-                            <FileText className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
-                            <textarea
-                                className="cyber-input w-full pl-12 h-[100px] resize-none leading-relaxed py-3 bg-black/60 focus:bg-black/80"
-                                placeholder="We specialize in..."
-                                value={aboutCompany}
-                                onChange={e => setAboutCompany(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
                     <div className="pt-4">
                         <button
                             disabled={loading}
@@ -223,7 +186,7 @@ export default function RegisterPage() {
                                 <Loader2 className="w-6 h-6 animate-spin" />
                             ) : (
                                 <>
-                                    Complete Registration
+                                    Create Account
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -304,3 +267,4 @@ export default function RegisterPage() {
         </div>
     )
 }
+
