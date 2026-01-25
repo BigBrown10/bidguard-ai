@@ -172,3 +172,87 @@ export async function sendProposalFailedEmail({
         return null;
     }
 }
+
+interface NewTenderAlertProps {
+    to: string;
+    tenderTitle: string;
+    tenderValue: string;
+    tenderBuyer: string;
+    description: string;
+    matchScore: number;
+}
+
+export async function sendNewTenderAlertEmail({
+    to,
+    tenderTitle,
+    tenderValue,
+    tenderBuyer,
+    description,
+    matchScore
+}: NewTenderAlertProps) {
+    const client = getResendClient();
+    if (!client) return null;
+
+    try {
+        const { data, error } = await client.emails.send({
+            from: 'BidGuard Intel <alerts@bidguard.ai>',
+            to: [to],
+            subject: `🚨 ${matchScore}% Match Found: ${tenderTitle.substring(0, 40)}...`,
+            html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #000; color: #fff; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #111; border: 1px solid #333; border-radius: 12px; overflow: hidden; }
+        .header { background: #EAB308; color: #000; padding: 20px; font-weight: 800; text-align: center; font-size: 18px; text-transform: uppercase; }
+        .content { padding: 30px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: #222; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-label { color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .stat-value { font-size: 16px; font-weight: bold; color: #fff; }
+        .description { color: #aaa; font-size: 14px; line-height: 1.5; margin-bottom: 30px; border-left: 2px solid #EAB308; padding-left: 15px; }
+        .cta { display: block; background: #EAB308; color: #000; padding: 15px; text-align: center; text-decoration: none; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            ⚡ Strategic Opportunity Detected
+        </div>
+        <div class="content">
+            <h2 style="margin-top: 0; font-size: 20px;">${tenderTitle}</h2>
+            <div style="color: #666; margin-bottom: 20px;">${tenderBuyer}</div>
+
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Value</div>
+                    <div class="stat-value">${tenderValue}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">AI Match Score</div>
+                    <div class="stat-value" style="color: #EAB308;">${matchScore}%</div>
+                </div>
+            </div>
+
+            <div class="description">
+                ${description.substring(0, 150)}...
+            </div>
+
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://bidguard.ai'}/tenders" class="cta">
+                View Opportunity
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+            `
+        });
+
+        if (error) console.error('[Email] Alert failed:', error);
+        return data;
+    } catch (e) {
+        console.error('[Email] Alert error:', e);
+        return null;
+    }
+}
