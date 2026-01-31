@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { inngest } from "@/lib/inngest/client"
 import { proposalStartSchema } from "@/lib/validation"
 import { audit } from "@/lib/audit"
+import { checkCredits, useCredit } from "@/lib/credits"
 
 export async function POST(req: NextRequest) {
     try {
@@ -29,6 +30,15 @@ export async function POST(req: NextRequest) {
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        // CREDITS CHECK: Ensure user has credits before proceeding
+        const hasCredits = await checkCredits(user.id)
+        if (!hasCredits) {
+            return NextResponse.json(
+                { error: "Out of credits", code: "CREDITS_EXHAUSTED" },
+                { status: 402 } // Payment Required
+            )
         }
 
         // SECURITY: Validate input with Zod
@@ -86,6 +96,9 @@ export async function POST(req: NextRequest) {
                 ideaInjection: ideaInjection ? ideaInjection.substring(0, 1000) : ""
             }
         })
+
+        // USE CREDIT: Deduct 1 credit after successful proposal start
+        await useCredit(user.id)
 
         return NextResponse.json({
             success: true,

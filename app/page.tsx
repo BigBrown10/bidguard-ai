@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles } from "lucide-react"
+import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles, ArrowLeftRight, Filter, Clock, Edit, Star, Download, Undo2 } from "lucide-react"
 import { GlobalHeader } from "@/components/GlobalHeader"
 
 // Agent Workflow Steps Data - Using consistent primary blue (#007AFF)
@@ -31,6 +31,14 @@ const agentSteps = [
     description: "The final proposal is generated in your exact tone, grounded only in your real evidence.",
     icon: PenTool,
   },
+]
+
+// Feature highlights data
+const featureHighlights = [
+  { icon: Edit, title: "Edit Proposals", description: "Refine AI-generated content to match your voice" },
+  { icon: Star, title: "Rate Quality", description: "Train the system with your feedback" },
+  { icon: Download, title: "Download PDF", description: "Export submission-ready documents" },
+  { icon: Undo2, title: "Undo Swipes", description: "Go back to reconsideren tenders" },
 ]
 
 export default function LandingPage() {
@@ -86,20 +94,153 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             {/* PRIMARY BUTTON - Apple Style */}
-            <Link href="/register">
+            <Link href="/tenders">
               <button className="group relative h-14 px-8 rounded-full bg-gradient-to-b from-white to-gray-200 text-black text-sm font-semibold tracking-wide flex items-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-                Start Free Trial
+                Find Tenders
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </Link>
 
             {/* SECONDARY BUTTON - Glass Style */}
-            <Link href="/tenders">
+            <Link href="/register">
               <button className="h-14 px-8 rounded-full bg-white/5 text-white text-sm font-medium tracking-wide border border-white/10 backdrop-blur-lg hover:bg-white/10 hover:border-white/20 transition-all duration-200">
-                Browse Live Tenders
+                Start Free Trial
               </button>
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* SWIPE FEATURE SHOWCASE */}
+      <section className="py-24 bg-black relative overflow-hidden">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+            {/* Left: Animated Card Stack */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative h-[400px] flex items-center justify-center"
+            >
+              {/* Stacked Cards Animation */}
+              <div className="relative w-full max-w-[300px]">
+                {/* Background Cards */}
+                <motion.div
+                  animate={{ rotate: -6, x: -20 }}
+                  className="absolute inset-0 bg-white/[0.02] border border-white/10 rounded-3xl"
+                />
+                <motion.div
+                  animate={{ rotate: 3, x: 10 }}
+                  className="absolute inset-0 bg-white/[0.04] border border-white/10 rounded-3xl"
+                />
+
+                {/* Main Card */}
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                  className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-2xl"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-medium text-primary uppercase tracking-wide">Healthcare</span>
+                    <span className="text-xs text-white/40">£2.5M</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">NHS Digital Transformation</h3>
+                  <p className="text-sm text-white/50 mb-4">End-to-end digital infrastructure modernization...</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-white/30">Deadline: 14 days</span>
+                    <div className="flex gap-2">
+                      <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                        <span className="text-red-400 text-lg">✕</span>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                        <span className="text-green-400 text-lg">✓</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Swipe Indicators */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0], x: [-50, 0, 50] }}
+                  transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                >
+                  <ArrowLeftRight className="w-12 h-12 text-primary/50" />
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Right: Copy */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-8"
+            >
+              <div>
+                <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">Tinder for Tenders</span>
+                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-4">
+                  Swipe Through <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Opportunities</span>
+                </h2>
+                <p className="text-white/50 leading-relaxed">
+                  Browse live government contracts with a swipe. Filter by your industry, see match scores instantly, and get proposals generated before your competitors even know the tender exists.
+                </p>
+              </div>
+
+              <ul className="space-y-4">
+                <li className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                    <Filter className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-white/80">Filter by your industry</span>
+                </li>
+                <li className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-white/80">See opportunities first</span>
+                </li>
+                <li className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="text-white/80">AI match scoring</span>
+                </li>
+              </ul>
+
+              <Link href="/tenders">
+                <button className="h-12 px-6 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
+                  Browse Tenders →
+                </button>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURE HIGHLIGHTS */}
+      <section className="py-16 bg-[#030303] border-y border-white/5">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {featureHighlights.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="text-center p-6"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <feature.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h4 className="text-sm font-bold text-white mb-1">{feature.title}</h4>
+                <p className="text-xs text-white/40">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

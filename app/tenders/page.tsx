@@ -38,6 +38,9 @@ export default function TendersPage() {
     const [showOnboarding, setShowOnboarding] = useState(false)
     const [profileComplete, setProfileComplete] = useState(false)
 
+    // Swipe history for undo functionality
+    const [swipeHistory, setSwipeHistory] = useState<Tender[]>([])
+
     // Industry filters with predefined common sectors + dynamically extracted
     const sectorFilters = useMemo(() => {
         // Predefined major industries
@@ -160,6 +163,9 @@ export default function TendersPage() {
         newTenders.pop()
         setTenders(newTenders)
         setAllTenders(prev => prev.filter(t => t.id !== swipedTender.id))
+
+        // Track swipe history for undo (limit to last 10)
+        setSwipeHistory(prev => [swipedTender, ...prev].slice(0, 10))
 
         if (direction === "right") {
             if (!userId) {
@@ -404,7 +410,28 @@ export default function TendersPage() {
 
 
                 {/* Controls - BOLD */}
-                <div className="mt-8 flex gap-8 items-center text-white text-sm font-black uppercase tracking-widest relative z-50">
+                <div className="mt-8 flex gap-6 items-center text-white text-sm font-black uppercase tracking-widest relative z-50">
+                    {/* UNDO Button */}
+                    <button
+                        onClick={() => {
+                            if (swipeHistory.length > 0) {
+                                const [lastTender, ...rest] = swipeHistory
+                                setSwipeHistory(rest)
+                                setTenders(prev => [...prev, lastTender])
+                                setAllTenders(prev => [...prev, lastTender])
+                            }
+                        }}
+                        disabled={swipeHistory.length === 0}
+                        className={`flex flex-col items-center gap-2 group cursor-pointer transition-all ${swipeHistory.length === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    >
+                        <div className="w-12 h-12 rounded-full border-2 border-white/20 group-hover:border-amber-400 group-hover:scale-110 group-active:scale-95 transition-all flex items-center justify-center text-white/40 group-hover:text-amber-400 backdrop-blur-sm bg-black/60">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                        </div>
+                        <span className="text-white/40 group-hover:text-amber-400 text-[10px]">Undo</span>
+                    </button>
+
                     <button
                         onClick={() => tenders.length > 0 && handleSwipe("left", tenders.length - 1)}
                         className="flex flex-col items-center gap-2 group cursor-pointer transition-colors"
