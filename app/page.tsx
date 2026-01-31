@@ -4,6 +4,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { ArrowRight, CheckCircle, Shield, Zap, Brain, Lock, Globe } from "lucide-react"
 import { GlobalHeader } from "@/components/GlobalHeader"
+import { AgentWorkflowVisualization } from "@/components/AgentWorkflowVisualization"
 
 export default function LandingPage() {
   return (
