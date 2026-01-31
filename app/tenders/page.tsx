@@ -182,29 +182,14 @@ export default function TendersPage() {
             // V3: Run Advisory Agent checks first
             setPendingTender(swipedTender)
 
-            // Open Qualification Modal and start analysis
-            setQualificationModalOpen(true)
-            setIsQualifying(true)
-            setQualificationResult(null)
+            // BYPASS Qualification Modal (Bid/No Bid) for now
+            // setQualificationModalOpen(true)
+            // setIsQualifying(true)
+            // setQualificationResult(null)
+            // qualifyTender(...)
 
-            // Run server action
-            qualifyTender(swipedTender.id, userId).then(result => {
-                setQualificationResult(result)
-                setIsQualifying(false)
-            }).catch(err => {
-                console.error("Qualification failed", err)
-                setIsQualifying(false)
-                // Fallback result
-                setQualificationResult({
-                    recommendation: "PROCEED WITH CAUTION",
-                    confidence_score: 0,
-                    traffic_light: "AMBER",
-                    reasoning: ["System connectivity issue during analysis."],
-                    strategic_advice: "Proceed with caution."
-                })
-            })
-
-            // Originally setIdeaModalOpen(true) - now deferred to QualificationModal confirm
+            // Direct to Proposal Generation
+            setIdeaModalOpen(true)
 
         } else if (direction === "watchlist") {
             if (!userId) {
