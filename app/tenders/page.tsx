@@ -164,8 +164,11 @@ export default function TendersPage() {
         setTenders(newTenders)
         setAllTenders(prev => prev.filter(t => t.id !== swipedTender.id))
 
-        // Track swipe history for undo (limit to last 10)
-        setSwipeHistory(prev => [swipedTender, ...prev].slice(0, 10))
+        // Track swipe history for undo - ONLY for passed (left) and watchlist, NOT for bids
+        // Bids start a proposal and should not be undoable
+        if (direction !== "right") {
+            setSwipeHistory(prev => [swipedTender, ...prev].slice(0, 10))
+        }
 
         if (direction === "right") {
             if (!userId) {
