@@ -5,35 +5,31 @@ import { motion } from "framer-motion"
 import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles } from "lucide-react"
 import { GlobalHeader } from "@/components/GlobalHeader"
 
-// Agent Workflow Steps Data
+// Agent Workflow Steps Data - Using consistent primary blue (#007AFF)
 const agentSteps = [
   {
     id: 1,
     title: "Company Research",
     description: "We ingest your case studies, certifications, and unique value propositions to build your bidding DNA.",
     icon: Building2,
-    gradient: "from-blue-500 to-cyan-400",
   },
   {
     id: 2,
     title: "RFP Intelligence",
     description: "Our agents deconstruct the requirements document, identifying compliance traps and scoring criteria.",
     icon: FileSearch,
-    gradient: "from-purple-500 to-pink-400",
   },
   {
     id: 3,
     title: "Red Team Critique",
     description: "An adversarial AI simulates evaluator scoring, flagging weaknesses before submission.",
     icon: ShieldAlert,
-    gradient: "from-amber-500 to-orange-400",
   },
   {
     id: 4,
     title: "Autonomous Drafting",
     description: "The final proposal is generated in your exact tone, grounded only in your real evidence.",
     icon: PenTool,
-    gradient: "from-emerald-500 to-green-400",
   },
 ]
 
@@ -136,24 +132,24 @@ export default function LandingPage() {
                 className="group relative"
               >
                 {/* Card */}
-                <div className="relative h-full bg-white/[0.03] border border-white/10 rounded-3xl p-8 backdrop-blur-sm overflow-hidden hover:border-white/20 hover:bg-white/[0.05] transition-all duration-500">
+                <div className="relative h-full bg-white/[0.03] border border-white/10 rounded-3xl p-8 backdrop-blur-sm overflow-hidden hover:border-primary/30 hover:bg-white/[0.05] transition-all duration-500">
 
                   {/* Step Number */}
                   <div className="absolute top-6 right-6 text-5xl font-black text-white/5 group-hover:text-white/10 transition-colors">
                     {String(step.id).padStart(2, '0')}
                   </div>
 
-                  {/* Icon */}
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center mb-6 shadow-lg`}>
-                    <step.icon className="w-7 h-7 text-white" strokeWidth={1.5} />
+                  {/* Icon - Using Primary Blue */}
+                  <div className="w-14 h-14 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center mb-6">
+                    <step.icon className="w-7 h-7 text-primary" strokeWidth={1.5} />
                   </div>
 
                   {/* Content */}
                   <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{step.title}</h3>
                   <p className="text-sm text-white/50 leading-relaxed">{step.description}</p>
 
-                  {/* Hover Glow */}
-                  <div className={`absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-br ${step.gradient} rounded-full blur-[80px] opacity-0 group-hover:opacity-30 transition-opacity duration-700`} />
+                  {/* Hover Glow - Primary Blue */}
+                  <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-primary rounded-full blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-700" />
                 </div>
 
                 {/* Connector Line (Desktop) */}
