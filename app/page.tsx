@@ -38,7 +38,7 @@ const featureHighlights = [
   { icon: Edit, title: "Edit Proposals", description: "Refine AI-generated content to match your voice" },
   { icon: Star, title: "Rate Quality", description: "Train the system with your feedback" },
   { icon: Download, title: "Download PDF", description: "Export submission-ready documents" },
-  { icon: Undo2, title: "Undo Swipes", description: "Go back to reconsideren tenders" },
+  { icon: Sparkles, title: "AI Match Scoring", description: "See how well you fit each tender" },
 ]
 
 export default function LandingPage() {
@@ -180,7 +180,7 @@ export default function LandingPage() {
               className="space-y-8"
             >
               <div>
-                <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">Tinder for Tenders</span>
+                <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">Smart Contract Matching</span>
                 <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-4">
                   Swipe Through <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Opportunities</span>
                 </h2>

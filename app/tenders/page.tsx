@@ -136,11 +136,24 @@ export default function TendersPage() {
     useEffect(() => {
         let filtered = allTenders
 
-        // 1. Industry Filter
+        // Industry keywords mapping for smarter filtering
+        const industryKeywords: Record<string, string[]> = {
+            healthcare: ['nhs', 'health', 'hospital', 'clinical', 'medical', 'care', 'nursing', 'pharmacy'],
+            construction: ['construction', 'building', 'civil', 'architect', 'contractor', 'renovation'],
+            it: ['it', 'software', 'digital', 'technology', 'cyber', 'data', 'cloud', 'system'],
+            education: ['education', 'school', 'university', 'college', 'training', 'academy'],
+            transport: ['transport', 'logistics', 'vehicle', 'fleet', 'bus', 'rail', 'highway'],
+            defence: ['defence', 'defense', 'mod', 'military', 'security', 'armed'],
+            energy: ['energy', 'electricity', 'renewable', 'solar', 'power', 'utility', 'gas'],
+        }
+
+        // 1. Industry Filter - check sector, title, AND description with keyword matching
         if (activeFilter !== "all") {
-            filtered = filtered.filter(t =>
-                t.sector.toLowerCase().includes(activeFilter.toLowerCase())
-            )
+            const keywords = industryKeywords[activeFilter] || [activeFilter]
+            filtered = filtered.filter(t => {
+                const searchText = `${t.sector || ''} ${t.title || ''} ${t.description || ''}`.toLowerCase()
+                return keywords.some(kw => searchText.includes(kw.toLowerCase()))
+            })
         }
 
         // 2. Price Filter

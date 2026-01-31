@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
     FileText, Edit3, Wand2, Copy, Check,
     Sparkles, Target, BookOpen, Zap, Cloud, Loader2,
-    ChevronLeft, Eye
+    ChevronLeft, Eye, Download
 } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
@@ -317,6 +317,25 @@ function EditorContent() {
                             className="text-white/70"
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                                const blob = new Blob([editedText], { type: 'text/plain' })
+                                const url = URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url
+                                a.download = `proposal-${proposalId || 'draft'}.txt`
+                                document.body.appendChild(a)
+                                a.click()
+                                document.body.removeChild(a)
+                                URL.revokeObjectURL(url)
+                            }}
+                            className="text-white/70"
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
                         </Button>
                         <Button
                             variant="outline"

@@ -271,14 +271,14 @@ export default function RedTeamPage() {
                                         <div className="flex items-center justify-between mb-6">
                                             <div>
                                                 <p className="text-xs text-white/50 uppercase tracking-widest mb-1">Overall Score</p>
-                                                <p className={`text-5xl font-black ${getScoreColor(result.score)}`}>
-                                                    {result.score.toFixed(1)}
+                                                <p className={`text-5xl font-black ${getScoreColor(Math.min(result.score, 10))}`}>
+                                                    {Math.min(result.score, 10).toFixed(1)}
                                                     <span className="text-xl text-white/30">/10</span>
                                                 </p>
                                             </div>
                                             <div className={`px-4 py-2 rounded-full text-sm font-bold ${result.status === "ACCEPT"
-                                                    ? "bg-green-500/20 text-green-400"
-                                                    : "bg-red-500/20 text-red-400"
+                                                ? "bg-green-500/20 text-green-400"
+                                                : "bg-red-500/20 text-red-400"
                                                 }`}>
                                                 {result.status}
                                             </div>

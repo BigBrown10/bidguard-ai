@@ -68,7 +68,7 @@ export default function AdminDashboard() {
 
             const { data: { user } } = await supabase.auth.getUser()
 
-            if (!user || !ADMIN_EMAILS.includes(user.email || "")) {
+            if (!user || !ADMIN_EMAILS.includes((user.email || "").toLowerCase())) {
                 toast.error("Access Denied", { description: "You are not authorized to view this page." })
                 router.push("/")
                 return
