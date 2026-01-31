@@ -1,11 +1,14 @@
 import { supabaseAdmin } from "@/lib/supabase-admin"
 
-// Whitelist of admin emails - add your email here
+// Whitelist of admin emails
 const ADMIN_EMAILS = [
+    "edogunosamudiamen@gmail.com",
+    "brownhood10@gmail.com",
+    "mudybrown10@gmail.com",
+    "viralculture10@gmail.com",
     "admin@bidswipe.xyz",
-    // Add more admin emails as needed
     process.env.ADMIN_EMAIL || ""
-].filter(Boolean)
+].filter(Boolean).map(e => e.toLowerCase())
 
 /**
  * Check if an email is an admin
