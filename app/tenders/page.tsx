@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
 import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
-import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark, Sparkles } from "lucide-react"
+import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark, Sparkles, User, LayoutGrid, List } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
@@ -40,6 +40,9 @@ export default function TendersPage() {
 
     // Swipe history for undo functionality
     const [swipeHistory, setSwipeHistory] = useState<Tender[]>([])
+
+    // View mode: 'single' (swipe), 'card' (grid), 'list' (rows)
+    const [viewMode, setViewMode] = useState<'single' | 'card' | 'list'>('single')
 
     // Industry filters with predefined common sectors + dynamically extracted
     const sectorFilters = useMemo(() => {
@@ -322,13 +325,39 @@ export default function TendersPage() {
                             <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider">
                                 Filtering by {activeFilter === 'all' ? 'All Sectors' : activeFilter}
                             </span>
-                            <button
-                                onClick={() => setExpandedFilters(!expandedFilters)}
-                                className="text-[10px] text-primary hover:text-white uppercase font-bold tracking-wider flex items-center gap-1 transition-colors"
-                            >
-                                {expandedFilters ? 'Collapse' : 'View All'}
-                                <ChevronDown className={`w-3 h-3 transition-transform ${expandedFilters ? 'rotate-180' : ''}`} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {/* View Mode Toggle */}
+                                <div className="flex items-center gap-0.5 bg-white/5 rounded-lg p-0.5">
+                                    <button
+                                        onClick={() => setViewMode('single')}
+                                        className={`p-1.5 rounded ${viewMode === 'single' ? 'bg-primary text-black' : 'text-white/40 hover:text-white'}`}
+                                        title="Single View"
+                                    >
+                                        <User className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('card')}
+                                        className={`p-1.5 rounded ${viewMode === 'card' ? 'bg-primary text-black' : 'text-white/40 hover:text-white'}`}
+                                        title="Card View"
+                                    >
+                                        <LayoutGrid className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-primary text-black' : 'text-white/40 hover:text-white'}`}
+                                        title="List View"
+                                    >
+                                        <List className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={() => setExpandedFilters(!expandedFilters)}
+                                    className="text-[10px] text-primary hover:text-white uppercase font-bold tracking-wider flex items-center gap-1 transition-colors"
+                                >
+                                    {expandedFilters ? 'Collapse' : 'View All'}
+                                    <ChevronDown className={`w-3 h-3 transition-transform ${expandedFilters ? 'rotate-180' : ''}`} />
+                                </button>
+                            </div>
                         </div>
 
                         <motion.div
@@ -390,38 +419,94 @@ export default function TendersPage() {
                     </p>
                 </div>
 
-                <div className="relative w-full max-w-md h-[600px]">
-                    <AnimatePresence>
-                        {tenders.length > 0 ? (
-                            tenders.map((tender, index) => (
-                                // Render only the top 2 cards for performance, but let's render all for now as stack depth isn't huge
-                                // Actually, stacking logic: Last item in array is on TOP visually in CSS absolute layout
-                                <TenderCard
-                                    key={tender.id}
-                                    tender={tender}
-                                    index={tenders.length - 1 - index} // Reverses Z-index so last item is top
-                                    onSwipe={(dir) => handleSwipe(dir, index)}
-                                    onInfo={() => setSelectedTender(tender)}
-                                />
-                            ))
-                        ) : (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="flex flex-col items-center justify-center h-full text-white/50 space-y-4"
-                            >
-                                <RefreshCw className="w-12 h-12 mb-4 animate-spin-slow opacity-20" />
-                                <p>No more opportunities in this region.</p>
-                                <button
-                                    onClick={() => setTenders(MOCK_TENDERS)}
-                                    className="cyber-button px-6 py-2 text-sm"
+                {/* View Mode: Single (Swipe) */}
+                {viewMode === 'single' && (
+                    <div className="relative w-full max-w-md h-[600px]">
+                        <AnimatePresence>
+                            {tenders.length > 0 ? (
+                                tenders.map((tender, index) => (
+                                    <TenderCard
+                                        key={tender.id}
+                                        tender={tender}
+                                        index={tenders.length - 1 - index}
+                                        onSwipe={(dir) => handleSwipe(dir, index)}
+                                        onInfo={() => setSelectedTender(tender)}
+                                    />
+                                ))
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="flex flex-col items-center justify-center h-full text-white/50 space-y-4"
                                 >
-                                    Refresh Feed
-                                </button>
+                                    <RefreshCw className="w-12 h-12 mb-4 animate-spin-slow opacity-20" />
+                                    <p>No more opportunities in this region.</p>
+                                    <button
+                                        onClick={() => setTenders(MOCK_TENDERS)}
+                                        className="cyber-button px-6 py-2 text-sm"
+                                    >
+                                        Refresh Feed
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
+
+                {/* View Mode: Card Grid */}
+                {viewMode === 'card' && (
+                    <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[70vh] overflow-y-auto px-2">
+                        {tenders.map((tender) => (
+                            <motion.div
+                                key={tender.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-primary/30 transition-all cursor-pointer"
+                                onClick={() => setSelectedTender(tender)}
+                            >
+                                <div className="flex items-start justify-between mb-2">
+                                    <span className="text-xs text-primary font-medium">{tender.sector}</span>
+                                    <span className="text-xs text-white/40">{tender.deadline}</span>
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-2 line-clamp-2">{tender.title}</h3>
+                                <p className="text-xs text-white/50 mb-3 line-clamp-2">{tender.description}</p>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-secondary font-bold">{tender.value}</span>
+                                    <span className="text-xs text-white/30">{tender.buyer}</span>
+                                </div>
                             </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* View Mode: List */}
+                {viewMode === 'list' && (
+                    <div className="w-full max-w-4xl space-y-2 max-h-[70vh] overflow-y-auto px-2">
+                        {tenders.map((tender) => (
+                            <motion.div
+                                key={tender.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex items-center gap-4 bg-white/[0.03] border border-white/5 rounded-lg p-4 hover:border-white/20 transition-all cursor-pointer"
+                                onClick={() => setSelectedTender(tender)}
+                            >
+                                <div className="flex-shrink-0 w-2 h-12 rounded-full bg-primary/50" />
+                                <div className="flex-grow min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xs text-primary font-medium">{tender.sector}</span>
+                                        <span className="text-xs text-white/30">•</span>
+                                        <span className="text-xs text-white/30">{tender.buyer}</span>
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white truncate">{tender.title}</h3>
+                                </div>
+                                <div className="flex-shrink-0 text-right">
+                                    <p className="text-sm text-secondary font-bold">{tender.value}</p>
+                                    <p className="text-xs text-white/40">{tender.deadline}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
 
 
 

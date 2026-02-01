@@ -144,21 +144,18 @@ export default function RedTeamPage() {
                             exit={{ opacity: 0, x: -50 }}
                             className="max-w-2xl mx-auto space-y-6"
                         >
-                            {/* RFP Input */}
-                            <Card className="border-white/5">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm flex items-center justify-between">
-                                        <span className="flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-white/50" />
-                                            RFP Requirements (Optional)
-                                        </span>
-                                        <button
-                                            onClick={() => rfpFileInputRef.current?.click()}
-                                            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
-                                        >
-                                            <Upload className="w-3 h-3" />
-                                            Upload File
-                                        </button>
+                            {/* RFP Input - Upload Only */}
+                            <Card className="border-white/10 bg-white/[0.02]">
+                                <CardContent className="p-6">
+                                    <div
+                                        onClick={() => rfpFileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-white/[0.02] transition-all"
+                                    >
+                                        <FileText className="w-10 h-10 text-white/30 mx-auto mb-3" />
+                                        <p className="text-white/60 font-medium mb-1">
+                                            {rfpText ? "RFP Uploaded ✓" : "Upload RFP Requirements"}
+                                        </p>
+                                        <p className="text-xs text-white/40">(Optional) .txt, .doc, .docx, .pdf</p>
                                         <input
                                             ref={rfpFileInputRef}
                                             type="file"
@@ -166,33 +163,22 @@ export default function RedTeamPage() {
                                             onChange={(e) => handleFileUpload(e, 'rfp')}
                                             className="hidden"
                                         />
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <textarea
-                                        value={rfpText}
-                                        onChange={(e) => setRfpText(e.target.value)}
-                                        placeholder="Paste the original tender requirements here for context-aware analysis..."
-                                        className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder:text-white/30 resize-none focus:outline-none focus:border-primary/50"
-                                    />
+                                    </div>
                                 </CardContent>
                             </Card>
 
-                            {/* Proposal Input */}
-                            <Card className="border-white/5">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm flex items-center justify-between">
-                                        <span className="flex items-center gap-2">
-                                            <File className="w-4 h-4 text-white/50" />
-                                            Your Proposal *
-                                        </span>
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
-                                        >
-                                            <Upload className="w-3 h-3" />
-                                            Upload File
-                                        </button>
+                            {/* Proposal Input - Upload Only */}
+                            <Card className="border-white/10 bg-white/[0.02]">
+                                <CardContent className="p-6">
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
+                                    >
+                                        <Upload className="w-10 h-10 text-primary/50 mx-auto mb-3" />
+                                        <p className="text-white font-medium mb-1">
+                                            {proposalText ? "Proposal Uploaded ✓" : "Upload Your Proposal *"}
+                                        </p>
+                                        <p className="text-xs text-white/40">.txt, .doc, .docx, .pdf</p>
                                         <input
                                             ref={fileInputRef}
                                             type="file"
@@ -200,15 +186,7 @@ export default function RedTeamPage() {
                                             onChange={(e) => handleFileUpload(e, 'proposal')}
                                             className="hidden"
                                         />
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <textarea
-                                        value={proposalText}
-                                        onChange={(e) => setProposalText(e.target.value)}
-                                        placeholder="Paste your proposal text here for brutal analysis..."
-                                        className="w-full h-64 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder:text-white/30 resize-none focus:outline-none focus:border-primary/50"
-                                    />
+                                    </div>
                                 </CardContent>
                             </Card>
 

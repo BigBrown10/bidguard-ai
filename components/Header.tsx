@@ -66,7 +66,7 @@ export function Header() {
                                 </Link>
 
                                 <Link href="/rate-proposal" className="transition-colors hover:text-yellow-400 hover:text-glow">
-                                    Rate Proposal
+                                    Audit Tool
                                 </Link>
                                 <Link href="/newbid" className="text-primary font-bold hover:text-glow transition-colors">
                                     + New Bid
@@ -181,7 +181,7 @@ export function Header() {
                                     Dashboard
                                 </Link>
                                 <Link href="/rate-proposal" onClick={() => setMobileMenuOpen(false)} className="py-2 text-white/70 hover:text-yellow-400">
-                                    Rate Proposal
+                                    Audit Tool
                                 </Link>
                                 <Link href="/newbid" onClick={() => setMobileMenuOpen(false)} className="py-2 text-primary font-bold">
                                     + New Bid
