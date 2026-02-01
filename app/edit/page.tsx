@@ -42,6 +42,7 @@ function EditorContent() {
     const [editedText, setEditedText] = useState<string>("")
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [exporting, setExporting] = useState(false)
     const [lastSaved, setLastSaved] = useState<Date | null>(null)
     const [copied, setCopied] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
@@ -321,21 +322,36 @@ function EditorContent() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                                const blob = new Blob([editedText], { type: 'text/plain' })
-                                const url = URL.createObjectURL(blob)
-                                const a = document.createElement('a')
-                                a.href = url
-                                a.download = `proposal-${proposalId || 'draft'}.txt`
-                                document.body.appendChild(a)
-                                a.click()
-                                document.body.removeChild(a)
-                                URL.revokeObjectURL(url)
+                            disabled={exporting}
+                            onClick={async () => {
+                                setExporting(true)
+                                try {
+                                    const html2canvas = (await import('html2canvas')).default
+                                    const { jsPDF } = await import('jspdf')
+
+                                    // Create a temporary div for PDF rendering
+                                    const tempDiv = document.createElement('div')
+                                    tempDiv.style.cssText = 'position:fixed;left:-10000px;top:0;background:white;color:black;padding:40px;width:800px;font-family:Georgia,serif;'
+                                    tempDiv.innerHTML = `<h1 style="font-size:24px;margin-bottom:16px;">Proposal Document</h1><div style="white-space:pre-wrap;line-height:1.6;">${editedText}</div>`
+                                    document.body.appendChild(tempDiv)
+
+                                    const canvas = await html2canvas(tempDiv, { scale: 2, backgroundColor: '#ffffff' })
+                                    document.body.removeChild(tempDiv)
+
+                                    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+                                    const imgWidth = 210
+                                    const imgHeight = (canvas.height * imgWidth) / canvas.width
+                                    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight)
+                                    pdf.save(`proposal-${proposalId || 'draft'}.pdf`)
+                                } catch (e) {
+                                    console.error('PDF export failed:', e)
+                                }
+                                setExporting(false)
                             }}
                             className="text-white/70"
                         >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
+                            {exporting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+                            Download PDF
                         </Button>
                         <Button
                             variant="outline"

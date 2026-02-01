@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Download, RefreshCw, Loader2, FileText } from "lucide-react"
+import { Download, RefreshCw, Loader2, FileText, Eye, X } from "lucide-react"
 import { toast } from "sonner"
 import ReactMarkdown from 'react-markdown'
 import { WinMeter } from "@/components/WinMeter"
@@ -18,6 +18,7 @@ function ResultContent() {
 
     const [result, setResult] = React.useState<any>(null)
     const [exporting, setExporting] = React.useState(false)
+    const [showRFP, setShowRFP] = React.useState(false)
     const contentRef = React.useRef<HTMLDivElement>(null)
 
     React.useEffect(() => {
@@ -173,18 +174,52 @@ function ResultContent() {
                         <h1 className="text-3xl font-bold tracking-tight text-white">Final Proposal</h1>
                         <p className="text-white/60">The Swarm has selected and humanized the optimum strategy.</p>
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-wrap">
                         <Button className='bg-white/10 hover:bg-white/20' onClick={() => window.location.href = '/draft'}>
                             <RefreshCw className="mr-2 h-4 w-4" /> Retry
                         </Button>
                         <Button className='bg-secondary/20 hover:bg-secondary/30 text-secondary' onClick={() => window.location.href = '/edit'}>
                             <FileText className="mr-2 h-4 w-4" /> Edit Proposal
                         </Button>
+                        <Button className='bg-blue-500/20 hover:bg-blue-500/30 text-blue-400' onClick={() => setShowRFP(true)}>
+                            <Eye className="mr-2 h-4 w-4" /> View RFP
+                        </Button>
                         <Button onClick={handleExportPDF} disabled={exporting} className="bg-primary text-black hover:bg-primary/90 font-bold">
-                            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="mr-2 h-4 w-4" /> Download Proposal (PDF)</>}
+                            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="mr-2 h-4 w-4" /> Download PDF</>}
                         </Button>
                     </div>
                 </div>
+
+                {/* RFP Modal */}
+                {showRFP && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-[#0A0A0A] border border-white/10 rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden">
+                            <div className="flex items-center justify-between p-4 border-b border-white/10">
+                                <h2 className="text-lg font-bold text-white">Tender Requirements (RFP)</h2>
+                                <button onClick={() => setShowRFP(false)} className="text-white/50 hover:text-white">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto max-h-[60vh]">
+                                {result.tender ? (
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-white mb-2">{result.tender.title}</h3>
+                                            <p className="text-white/50">{result.tender.buyer}</p>
+                                        </div>
+                                        <div className="h-px bg-white/10" />
+                                        <div className="text-white/80 whitespace-pre-wrap leading-relaxed">
+                                            {result.tender.description || result.tender.content ||
+                                                "Full tender description not available. The proposal was generated based on the tender title and available metadata."}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-white/50 text-center py-8">Tender details not available for this proposal.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block">
 
