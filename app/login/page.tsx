@@ -12,6 +12,8 @@ export default function LoginPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
+    const [loginMode, setLoginMode] = useState<'password' | 'magic'>('password')
+    const [magicLinkSent, setMagicLinkSent] = useState(false)
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -49,6 +51,41 @@ export default function LoginPage() {
         }
     }
 
+    const handleMagicLink = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+
+        try {
+            if (!supabase) throw new Error("Supabase client not initialized")
+            if (!email) throw new Error("Please enter your email address")
+
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                }
+            })
+
+            if (error) throw error
+
+            setMagicLinkSent(true)
+            toast.success("Magic Link Sent!", {
+                description: "Check your email for the login link",
+                icon: <CheckCircle2 className="text-primary" />,
+                duration: 10000
+            })
+
+        } catch (err: any) {
+            console.error("Magic link error:", err)
+            toast.error("Failed to send magic link", {
+                description: err.message || "Please try again.",
+                icon: <AlertTriangle className="text-red-500" />
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
             {/* Toaster for Notifications */}
@@ -74,63 +111,115 @@ export default function LoginPage() {
                     </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-6">
+                {/* Login Mode Toggle */}
+                <div className="flex bg-black/40 border border-white/10 rounded-none mb-6">
+                    <button
+                        type="button"
+                        onClick={() => { setLoginMode('password'); setMagicLinkSent(false) }}
+                        className={`flex-1 py-2.5 text-xs uppercase font-bold tracking-wider transition-all ${loginMode === 'password'
+                                ? 'bg-primary/20 text-primary border-b-2 border-primary'
+                                : 'text-white/40 hover:text-white/60'
+                            }`}
+                    >
+                        Password
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => { setLoginMode('magic'); setMagicLinkSent(false) }}
+                        className={`flex-1 py-2.5 text-xs uppercase font-bold tracking-wider transition-all ${loginMode === 'magic'
+                                ? 'bg-primary/20 text-primary border-b-2 border-primary'
+                                : 'text-white/40 hover:text-white/60'
+                            }`}
+                    >
+                        Email Link
+                    </button>
+                </div>
 
-                    {/* Email Input */}
-                    <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Email Address</label>
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
-                            <input
-                                type="email"
-                                required
-                                className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-4 text-white placeholder-white/20 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
-                                placeholder="name@company.com"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                            />
+                {/* Magic Link Sent State */}
+                {magicLinkSent && loginMode === 'magic' ? (
+                    <div className="text-center space-y-4 py-8">
+                        <div className="w-16 h-16 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto">
+                            <Mail className="w-8 h-8 text-primary" />
                         </div>
-                    </div>
-
-                    {/* Password Input */}
-                    <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Password</label>
-                        <div className="relative group">
-                            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                required
-                                className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-12 text-white placeholder-white/20 focus:border-secondary focus:ring-1 focus:ring-secondary transition-all outline-none"
-                                placeholder="••••••••••••"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-3.5 text-white/30 hover:text-white transition-colors"
-                            >
-                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="pt-2">
+                        <h3 className="text-xl font-bold text-white">Check Your Email</h3>
+                        <p className="text-white/50 text-sm">
+                            We sent a login link to<br />
+                            <span className="text-primary font-medium">{email}</span>
+                        </p>
                         <button
-                            disabled={loading}
-                            className="w-full cyber-button h-12 flex items-center justify-center gap-2 group"
+                            type="button"
+                            onClick={() => setMagicLinkSent(false)}
+                            className="text-xs text-white/40 hover:text-white underline mt-4"
                         >
-                            {loading ? (
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : (
-                                <>
-                                    Login
-                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
+                            Didn&apos;t receive it? Try again
                         </button>
                     </div>
-                </form>
+                ) : (
+                    <form onSubmit={loginMode === 'magic' ? handleMagicLink : handleLogin} className="space-y-6">
+
+                        {/* Email Input */}
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Email Address</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-primary transition-colors" />
+                                <input
+                                    type="email"
+                                    required
+                                    className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-4 text-white placeholder-white/20 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
+                                    placeholder="name@company.com"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password Input - Only show in password mode */}
+                        {loginMode === 'password' && (
+                            <div className="space-y-2">
+                                <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Password</label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-4 top-3.5 w-5 h-5 text-white/30 group-focus-within:text-secondary transition-colors" />
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        required
+                                        className="w-full bg-black/40 border border-white/10 rounded-none py-3 pl-12 pr-12 text-white placeholder-white/20 focus:border-secondary focus:ring-1 focus:ring-secondary transition-all outline-none"
+                                        placeholder="••••••••••••"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-3.5 text-white/30 hover:text-white transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="pt-2">
+                            <button
+                                disabled={loading}
+                                className="w-full cyber-button h-12 flex items-center justify-center gap-2 group"
+                            >
+                                {loading ? (
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : loginMode === 'magic' ? (
+                                    <>
+                                        Send Login Link
+                                        <Mail className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                ) : (
+                                    <>
+                                        Login
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                )}
 
                 {/* Social Login Divider */}
                 <div className="flex items-center gap-4 my-6">

@@ -85,40 +85,49 @@ export default function AdminDashboard() {
     const loadData = async () => {
         if (!supabase) return
 
-        // Load users
-        const { data: usersData } = await supabase
-            .from("profiles")
-            .select("*")
-            .order("created_at", { ascending: false })
-
-        setUsers(usersData || [])
-
-        // Load proposals
-        const { data: proposalsData } = await supabase
-            .from("proposals")
-            .select("*, profiles(company_name)")
-            .order("created_at", { ascending: false })
-            .limit(100)
-
-        setProposals(proposalsData || [])
-
-        // Calculate stats
-        const userCount = usersData?.length || 0
-        const allProposals = proposalsData || []
-
-        setStats({
-            userCount,
-            proposalStats: {
-                total: allProposals.length,
-                completed: allProposals.filter(p => p.status === "completed").length,
-                failed: allProposals.filter(p => p.status === "failed" || p.status === "error").length,
-                queued: allProposals.filter(p => p.status === "queued" || p.status === "processing").length,
-            },
-            creditStats: {
-                total: usersData?.reduce((sum, u) => sum + (u.credits || 0), 0) || 0,
-                used: usersData?.reduce((sum, u) => sum + (u.credits_used || 0), 0) || 0,
+        try {
+            // Get current session token
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.access_token) {
+                toast.error("No session found")
+                return
             }
-        })
+
+            // Fetch data from admin API (bypasses RLS)
+            const response = await fetch('/api/admin/data', {
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                toast.error("Failed to load admin data", { description: errorData.error })
+                return
+            }
+
+            const data = await response.json()
+
+            setUsers(data.users || [])
+            setProposals(data.proposals || [])
+            setStats(data.stats || {
+                userCount: 0,
+                proposalStats: { total: 0, completed: 0, failed: 0, queued: 0 },
+                creditStats: { total: 0, used: 0 }
+            })
+
+            // Log auth users vs profile users for debugging
+            console.log(`[Admin] Auth users: ${data.authUsers?.length}, Profile users: ${data.users?.length}`)
+            if (data.authUsers?.length > data.users?.length) {
+                toast.info("Some auth users don't have profiles", {
+                    description: `${data.authUsers.length - data.users.length} users may be missing profile records`
+                })
+            }
+
+        } catch (error) {
+            console.error("[Admin] Error loading data:", error)
+            toast.error("Failed to load admin data")
+        }
     }
 
     const handleDeleteUser = async (userId: string) => {
