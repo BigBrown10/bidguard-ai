@@ -13,7 +13,6 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
     const [loginMode, setLoginMode] = useState<'password' | 'magic'>('password')
-    const [magicLinkSent, setMagicLinkSent] = useState(false)
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -51,7 +50,10 @@ export default function LoginPage() {
         }
     }
 
-    const handleMagicLink = async (e: React.FormEvent) => {
+    const [otpCode, setOtpCode] = useState('')
+    const [otpSent, setOtpSent] = useState(false)
+
+    const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
 
@@ -59,26 +61,62 @@ export default function LoginPage() {
             if (!supabase) throw new Error("Supabase client not initialized")
             if (!email) throw new Error("Please enter your email address")
 
+            // Send OTP email (no redirect - they'll enter the code)
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    shouldCreateUser: true, // Allow new users too
                 }
             })
 
             if (error) throw error
 
-            setMagicLinkSent(true)
-            toast.success("Magic Link Sent!", {
-                description: "Check your email for the login link",
+            setOtpSent(true)
+            toast.success("Code Sent!", {
+                description: "Check your email for the 6-digit code",
                 icon: <CheckCircle2 className="text-primary" />,
                 duration: 10000
             })
 
         } catch (err: any) {
-            console.error("Magic link error:", err)
-            toast.error("Failed to send magic link", {
+            console.error("OTP send error:", err)
+            toast.error("Failed to send code", {
                 description: err.message || "Please try again.",
+                icon: <AlertTriangle className="text-red-500" />
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleVerifyOTP = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+
+        try {
+            if (!supabase) throw new Error("Supabase client not initialized")
+            if (!otpCode || otpCode.length !== 6) throw new Error("Please enter the 6-digit code")
+
+            const { error } = await supabase.auth.verifyOtp({
+                email,
+                token: otpCode,
+                type: 'email'
+            })
+
+            if (error) throw error
+
+            toast.success("Identity Verified!", {
+                description: "Accessing secure environment...",
+                icon: <CheckCircle2 className="text-secondary" />
+            })
+
+            // Redirect on success
+            window.location.href = '/'
+
+        } catch (err: any) {
+            console.error("OTP verify error:", err)
+            toast.error("Invalid Code", {
+                description: err.message || "Please check the code and try again.",
                 icon: <AlertTriangle className="text-red-500" />
             })
         } finally {
@@ -115,47 +153,79 @@ export default function LoginPage() {
                 <div className="flex bg-black/40 border border-white/10 rounded-none mb-6">
                     <button
                         type="button"
-                        onClick={() => { setLoginMode('password'); setMagicLinkSent(false) }}
+                        onClick={() => { setLoginMode('password'); setOtpSent(false); setOtpCode('') }}
                         className={`flex-1 py-2.5 text-xs uppercase font-bold tracking-wider transition-all ${loginMode === 'password'
-                                ? 'bg-primary/20 text-primary border-b-2 border-primary'
-                                : 'text-white/40 hover:text-white/60'
+                            ? 'bg-primary/20 text-primary border-b-2 border-primary'
+                            : 'text-white/40 hover:text-white/60'
                             }`}
                     >
                         Password
                     </button>
                     <button
                         type="button"
-                        onClick={() => { setLoginMode('magic'); setMagicLinkSent(false) }}
+                        onClick={() => { setLoginMode('magic'); setOtpSent(false); setOtpCode('') }}
                         className={`flex-1 py-2.5 text-xs uppercase font-bold tracking-wider transition-all ${loginMode === 'magic'
-                                ? 'bg-primary/20 text-primary border-b-2 border-primary'
-                                : 'text-white/40 hover:text-white/60'
+                            ? 'bg-primary/20 text-primary border-b-2 border-primary'
+                            : 'text-white/40 hover:text-white/60'
                             }`}
                     >
-                        Email Link
+                        Email Code
                     </button>
                 </div>
 
-                {/* Magic Link Sent State */}
-                {magicLinkSent && loginMode === 'magic' ? (
-                    <div className="text-center space-y-4 py-8">
-                        <div className="w-16 h-16 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto">
-                            <Mail className="w-8 h-8 text-primary" />
+                {/* OTP Code Entry State */}
+                {otpSent && loginMode === 'magic' ? (
+                    <form onSubmit={handleVerifyOTP} className="space-y-6">
+                        <div className="text-center space-y-4 mb-6">
+                            <div className="w-16 h-16 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto">
+                                <Mail className="w-8 h-8 text-primary" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">Enter Your Code</h3>
+                            <p className="text-white/50 text-sm">
+                                We sent a 6-digit code to<br />
+                                <span className="text-primary font-medium">{email}</span>
+                            </p>
                         </div>
-                        <h3 className="text-xl font-bold text-white">Check Your Email</h3>
-                        <p className="text-white/50 text-sm">
-                            We sent a login link to<br />
-                            <span className="text-primary font-medium">{email}</span>
-                        </p>
+
+                        {/* OTP Code Input */}
+                        <div className="space-y-2">
+                            <label className="text-xs uppercase font-bold text-white/70 tracking-wider ml-1">Verification Code</label>
+                            <input
+                                type="text"
+                                maxLength={6}
+                                required
+                                className="w-full bg-black/40 border border-white/10 rounded-none py-4 px-4 text-white text-center text-2xl tracking-[0.5em] font-mono placeholder-white/20 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
+                                placeholder="000000"
+                                value={otpCode}
+                                onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                autoFocus
+                            />
+                        </div>
+
+                        <button
+                            disabled={loading || otpCode.length !== 6}
+                            className="w-full cyber-button h-12 flex items-center justify-center gap-2 group disabled:opacity-50"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    Verify & Login
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+
                         <button
                             type="button"
-                            onClick={() => setMagicLinkSent(false)}
-                            className="text-xs text-white/40 hover:text-white underline mt-4"
+                            onClick={() => { setOtpSent(false); setOtpCode('') }}
+                            className="w-full text-xs text-white/40 hover:text-white underline"
                         >
                             Didn&apos;t receive it? Try again
                         </button>
-                    </div>
+                    </form>
                 ) : (
-                    <form onSubmit={loginMode === 'magic' ? handleMagicLink : handleLogin} className="space-y-6">
+                    <form onSubmit={loginMode === 'magic' ? handleSendOTP : handleLogin} className="space-y-6">
 
                         {/* Email Input */}
                         <div className="space-y-2">
@@ -207,7 +277,7 @@ export default function LoginPage() {
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : loginMode === 'magic' ? (
                                     <>
-                                        Send Login Link
+                                        Send Code
                                         <Mail className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                     </>
                                 ) : (

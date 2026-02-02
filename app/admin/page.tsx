@@ -31,6 +31,12 @@ interface User {
     created_at: string
 }
 
+interface AuthUser {
+    id: string
+    email: string
+    created_at: string
+}
+
 interface Proposal {
     id: string
     tender_title: string
@@ -41,6 +47,7 @@ interface Proposal {
 
 interface Stats {
     userCount: number
+    authUserCount: number
     proposalStats: { total: number; completed: number; failed: number; queued: number }
     creditStats: { total: number; used: number }
 }
@@ -50,9 +57,11 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [authorized, setAuthorized] = useState(false)
     const [users, setUsers] = useState<User[]>([])
+    const [authUsers, setAuthUsers] = useState<AuthUser[]>([])
     const [proposals, setProposals] = useState<Proposal[]>([])
     const [stats, setStats] = useState<Stats>({
         userCount: 0,
+        authUserCount: 0,
         proposalStats: { total: 0, completed: 0, failed: 0, queued: 0 },
         creditStats: { total: 0, used: 0 }
     })
@@ -109,20 +118,17 @@ export default function AdminDashboard() {
             const data = await response.json()
 
             setUsers(data.users || [])
+            setAuthUsers(data.authUsers || [])
             setProposals(data.proposals || [])
             setStats(data.stats || {
                 userCount: 0,
+                authUserCount: 0,
                 proposalStats: { total: 0, completed: 0, failed: 0, queued: 0 },
                 creditStats: { total: 0, used: 0 }
             })
 
             // Log auth users vs profile users for debugging
             console.log(`[Admin] Auth users: ${data.authUsers?.length}, Profile users: ${data.users?.length}`)
-            if (data.authUsers?.length > data.users?.length) {
-                toast.info("Some auth users don't have profiles", {
-                    description: `${data.authUsers.length - data.users.length} users may be missing profile records`
-                })
-            }
 
         } catch (error) {
             console.error("[Admin] Error loading data:", error)
@@ -165,9 +171,41 @@ export default function AdminDashboard() {
         }
     }
 
+    // Create a profile for an auth user who doesn't have one
+    const handleCreateProfile = async (authUser: AuthUser, credits: number = 3) => {
+        if (!supabase) return
+
+        const { error } = await supabase
+            .from("profiles")
+            .insert({
+                id: authUser.id,
+                company_name: authUser.email?.split('@')[0] || 'Unknown',
+                business_description: '',
+                industry: '',
+                credits: credits,
+                credits_used: 0
+            })
+
+        if (error) {
+            toast.error("Failed to create profile", { description: error.message })
+        } else {
+            toast.success("Profile created with " + credits + " credits")
+            await loadData() // Refresh to show the new profile
+        }
+    }
+
+    // Get auth users that don't have profiles (for missing users section)
+    const usersWithoutProfiles = authUsers.filter(authUser =>
+        !users.some(u => u.id === authUser.id)
+    )
+
     const filteredUsers = users.filter(u =>
         (u.company_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (u.industry || "").toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const filteredMissingUsers = usersWithoutProfiles.filter(u =>
+        (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
     )
 
     if (loading) {
@@ -386,6 +424,61 @@ export default function AdminDashboard() {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Auth Users Without Profiles */}
+                        {filteredMissingUsers.length > 0 && (
+                            <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl overflow-hidden">
+                                <div className="p-4 border-b border-amber-500/20 flex items-center gap-2">
+                                    <AlertCircle className="w-5 h-5 text-amber-400" />
+                                    <h3 className="font-bold text-amber-400">Auth Users Without Profiles ({filteredMissingUsers.length})</h3>
+                                </div>
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-amber-500/10">
+                                            <th className="text-left p-4 text-xs text-white/40 uppercase">Email</th>
+                                            <th className="text-left p-4 text-xs text-white/40 uppercase">Auth ID</th>
+                                            <th className="text-left p-4 text-xs text-white/40 uppercase">Created</th>
+                                            <th className="text-right p-4 text-xs text-white/40 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredMissingUsers.map(authUser => (
+                                            <tr key={authUser.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                                                <td className="p-4">
+                                                    <div className="font-medium text-amber-200">{authUser.email}</div>
+                                                </td>
+                                                <td className="p-4 text-white/40 text-xs font-mono">{authUser.id.slice(0, 8)}...</td>
+                                                <td className="p-4 text-white/40 text-sm">
+                                                    {new Date(authUser.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => handleCreateProfile(authUser, 3)}
+                                                            className="px-3 py-1.5 text-xs bg-primary/20 hover:bg-primary/30 text-primary rounded-lg transition-colors"
+                                                        >
+                                                            +3 Credits
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCreateProfile(authUser, 10)}
+                                                            className="px-3 py-1.5 text-xs bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors"
+                                                        >
+                                                            +10 Credits
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCreateProfile(authUser, 50)}
+                                                            className="px-3 py-1.5 text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors"
+                                                        >
+                                                            +50 Credits
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 )}
 
