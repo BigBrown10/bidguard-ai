@@ -6,7 +6,6 @@ import {
     Newspaper, TrendingUp, Lightbulb, BookOpen,
     Calendar, ExternalLink, ChevronRight, Sparkles
 } from "lucide-react"
-import { Header } from "@/components/Header"
 
 // Static news/tips data - could be fetched from API later
 const newsItems = [
@@ -85,8 +84,6 @@ export default function NewsPage() {
 
     return (
         <div className="min-h-screen bg-black text-white">
-            <Header />
-
             <main className="container mx-auto max-w-6xl px-6 py-12">
                 {/* Hero */}
                 <div className="text-center mb-12">
@@ -137,8 +134,8 @@ export default function NewsPage() {
                             key={cat.id}
                             onClick={() => setActiveCategory(cat.id)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeCategory === cat.id
-                                    ? "bg-primary text-black"
-                                    : "bg-white/5 text-white/60 hover:bg-white/10"
+                                ? "bg-primary text-black"
+                                : "bg-white/5 text-white/60 hover:bg-white/10"
                                 }`}
                         >
                             <cat.icon className="w-4 h-4" />

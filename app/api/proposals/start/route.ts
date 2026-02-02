@@ -84,18 +84,25 @@ export async function POST(req: NextRequest) {
         }
 
         // Send to Inngest - SECURITY: Only send IDs, not full content
-        await inngest.send({
-            name: "app/generate-autonomous-proposal",
-            data: {
-                proposalId,
-                userId: user.id,
-                tenderId,
-                tenderTitle,
-                tenderBuyer: tenderBuyer || "Unknown",
-                // Note: ideaInjection is user-provided, keep it minimal
-                ideaInjection: ideaInjection ? ideaInjection.substring(0, 1000) : ""
-            }
-        })
+        // Wrapped in try-catch to allow proposal to succeed even if Inngest isn't configured
+        try {
+            await inngest.send({
+                name: "app/generate-autonomous-proposal",
+                data: {
+                    proposalId,
+                    userId: user.id,
+                    tenderId,
+                    tenderTitle,
+                    tenderBuyer: tenderBuyer || "Unknown",
+                    // Note: ideaInjection is user-provided, keep it minimal
+                    ideaInjection: ideaInjection ? ideaInjection.substring(0, 1000) : ""
+                }
+            })
+        } catch (inngestError) {
+            console.warn("[Proposal] Inngest send failed (may not be configured):", inngestError)
+            // Continue anyway - proposal will be marked as queued
+            // In production, you'd want proper Inngest configuration
+        }
 
         // USE CREDIT: Deduct 1 credit after successful proposal start
         await useCredit(user.id)

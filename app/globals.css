@@ -168,7 +168,8 @@ li {
   border-radius: var(--radius-spatial);
   color: white;
   transition: all 0.3s ease;
-  padding: 1rem;
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
 }
 
 .cyber-input:focus {

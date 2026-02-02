@@ -141,21 +141,40 @@ export default function TendersPage() {
 
         // Industry keywords mapping for smarter filtering
         const industryKeywords: Record<string, string[]> = {
-            healthcare: ['nhs', 'health', 'hospital', 'clinical', 'medical', 'care', 'nursing', 'pharmacy'],
-            construction: ['construction', 'building', 'civil', 'architect', 'contractor', 'renovation'],
-            it: ['it', 'software', 'digital', 'technology', 'cyber', 'data', 'cloud', 'system'],
-            education: ['education', 'school', 'university', 'college', 'training', 'academy'],
-            transport: ['transport', 'logistics', 'vehicle', 'fleet', 'bus', 'rail', 'highway'],
-            defence: ['defence', 'defense', 'mod', 'military', 'security', 'armed'],
-            energy: ['energy', 'electricity', 'renewable', 'solar', 'power', 'utility', 'gas'],
+            healthcare: ['nhs', 'health', 'hospital', 'clinical', 'medical', 'care', 'nursing', 'pharmacy', 'patient', 'gp'],
+            construction: ['construction', 'building', 'civil', 'architect', 'contractor', 'renovation', 'infrastructure', 'demolition'],
+            it: ['software', 'digital', 'technology', 'cyber', 'data', 'cloud', 'system', 'network', 'database', 'api'],
+            education: ['education', 'school', 'university', 'college', 'training', 'academy', 'student', 'learning', 'teaching'],
+            transport: ['transport', 'logistics', 'vehicle', 'fleet', 'bus', 'rail', 'highway', 'road', 'traffic'],
+            defence: ['defence', 'defense', 'mod', 'military', 'security', 'armed', 'forces'],
+            energy: ['energy', 'electricity', 'renewable', 'solar', 'power', 'utility', 'gas', 'wind', 'nuclear'],
         }
 
-        // 1. Industry Filter - check sector, title, AND description with keyword matching
+        // Helper function to count keyword matches for a tender in a category
+        const countKeywordMatches = (tender: Tender, category: string): number => {
+            const keywords = industryKeywords[category] || []
+            const searchText = `${tender.title || ''} ${tender.description || ''}`.toLowerCase()
+            return keywords.filter(kw => searchText.includes(kw.toLowerCase())).length
+        }
+
+        // 1. Industry Filter - weighted matching (tender must have MORE matches for selected category than others)
         if (activeFilter !== "all") {
-            const keywords = industryKeywords[activeFilter] || [activeFilter]
-            filtered = filtered.filter(t => {
-                const searchText = `${t.sector || ''} ${t.title || ''} ${t.description || ''}`.toLowerCase()
-                return keywords.some(kw => searchText.includes(kw.toLowerCase()))
+            filtered = filtered.filter(tender => {
+                const selectedCategoryScore = countKeywordMatches(tender, activeFilter)
+
+                // Must have at least 1 match for the selected category
+                if (selectedCategoryScore === 0) return false
+
+                // Check if any OTHER category has more matches (if so, exclude this tender)
+                const allCategories = Object.keys(industryKeywords)
+                for (const category of allCategories) {
+                    if (category !== activeFilter) {
+                        const otherScore = countKeywordMatches(tender, category)
+                        // If another category has MORE matches, this tender belongs there instead
+                        if (otherScore > selectedCategoryScore) return false
+                    }
+                }
+                return true
             })
         }
 
