@@ -139,75 +139,127 @@ export default function TendersPage() {
     useEffect(() => {
         let filtered = allTenders
 
-        // Industry sector mapping - more specific keywords, no overlap
-        // Key: filter category, Value: { sectorMatch: sectors to match, keywords: specific keywords, excludeKeywords: words that indicate wrong category }
+        // Industry sector mapping - using EXACT word boundary matching to prevent false positives
+        // This is a senior-dev standard approach that prevents "audio" matching "healthcare" etc.
         const industryConfig: Record<string, {
-            sectorMatch: string[],
-            keywords: string[],
-            excludeKeywords: string[]
+            sectorPatterns: RegExp[],  // Regex patterns with word boundaries for sector
+            includePatterns: RegExp[], // Regex patterns that MUST match to include
+            excludePatterns: RegExp[]  // Regex patterns that immediately exclude
         }> = {
             healthcare: {
-                sectorMatch: ['health', 'nhs', 'clinical', 'medical'],
-                keywords: ['nhs', 'hospital', 'clinical trial', 'patient care', 'nursing home', 'pharmacy', 'medical equipment', 'healthcare', 'gp surgery', 'ambulance', 'mental health'],
-                excludeKeywords: ['audio', 'armour', 'armor', 'education', 'school', 'military', 'defence', 'construction', 'building', 'road', 'software development']
+                sectorPatterns: [/\bhealth\b/i, /\bnhs\b/i, /\bclinical\b/i, /\bmedical\b/i, /\bcare\b/i],
+                includePatterns: [
+                    /\bnhs\b/i, /\bhospital\b/i, /\bclinical\b/i, /\bpatient\b/i,
+                    /\bnursing\b/i, /\bpharmac/i, /\bmedical\b/i, /\bhealthcare\b/i,
+                    /\bgp\s+surgery/i, /\bambulance\b/i, /\bmental\s+health/i,
+                    /\bhealth\s+service/i, /\bsocial\s+care/i, /\bcare\s+home/i
+                ],
+                excludePatterns: [
+                    /\baudio\b/i, /\barmou?r/i, /\beducation\b/i, /\bschool\b/i,
+                    /\bmilitary\b/i, /\bdefence\b/i, /\bdefense\b/i, /\bconstruction\b/i,
+                    /\bbuilding\s+work/i, /\bsoftware\s+develop/i, /\bmod\b/i,
+                    /\belectrica?l?\s+work/i, /\bplumbing\b/i, /\bscaffold/i
+                ]
             },
             construction: {
-                sectorMatch: ['construction', 'building', 'civil engineering'],
-                keywords: ['construction', 'building work', 'civil engineering', 'renovation', 'demolition', 'contractor', 'scaffolding', 'roofing', 'groundwork'],
-                excludeKeywords: ['nhs', 'hospital', 'healthcare', 'software', 'digital', 'education']
+                sectorPatterns: [/\bconstruction\b/i, /\bbuilding\b/i, /\bcivil\s+engineering/i],
+                includePatterns: [
+                    /\bconstruction\b/i, /\bbuilding\s+work/i, /\bcivil\s+engineering/i,
+                    /\brenovation\b/i, /\bdemolition\b/i, /\bcontractor\b/i,
+                    /\bscaffolding\b/i, /\broofing\b/i, /\bgroundwork/i
+                ],
+                excludePatterns: [
+                    /\bnhs\b/i, /\bhospital\b/i, /\bhealthcare\b/i, /\bsoftware\b/i,
+                    /\bdigital\b/i, /\beducation\b/i, /\bschool\b/i
+                ]
             },
             it: {
-                sectorMatch: ['it', 'technology', 'software', 'digital', 'cyber'],
-                keywords: ['software', 'digital transformation', 'cyber security', 'cloud computing', 'it services', 'database', 'network infrastructure', 'saas', 'api development'],
-                excludeKeywords: ['construction', 'building', 'healthcare', 'medical', 'education', 'school']
+                sectorPatterns: [/\bit\b/i, /\btechnology\b/i, /\bsoftware\b/i, /\bdigital\b/i, /\bcyber/i],
+                includePatterns: [
+                    /\bsoftware\b/i, /\bdigital\s+transform/i, /\bcyber\s+security/i,
+                    /\bcloud\s+computing/i, /\bit\s+service/i, /\bdatabase\b/i,
+                    /\bnetwork\s+infrastructure/i, /\bsaas\b/i, /\bapi\b/i,
+                    /\bweb\s+develop/i, /\bapp\s+develop/i, /\bict\b/i
+                ],
+                excludePatterns: [
+                    /\bconstruction\b/i, /\bbuilding\b/i, /\bhealthcare\b/i,
+                    /\bmedical\b/i, /\beducation\b/i, /\bschool\b/i
+                ]
             },
             education: {
-                sectorMatch: ['education', 'schools', 'university', 'college', 'training'],
-                keywords: ['school', 'university', 'college', 'educational', 'student', 'academy', 'curriculum', 'teaching'],
-                excludeKeywords: ['nhs', 'healthcare', 'hospital', 'construction', 'defence']
+                sectorPatterns: [/\beducation\b/i, /\bschool/i, /\buniversit/i, /\bcollege\b/i, /\btraining\b/i],
+                includePatterns: [
+                    /\bschool\b/i, /\buniversit/i, /\bcollege\b/i, /\beducation\b/i,
+                    /\bstudent\b/i, /\bacademy\b/i, /\bcurriculum\b/i, /\bteaching\b/i,
+                    /\bpupil\b/i, /\blearning\b/i
+                ],
+                excludePatterns: [
+                    /\bnhs\b/i, /\bhealthcare\b/i, /\bhospital\b/i,
+                    /\bconstruction\b/i, /\bdefence\b/i, /\bdefense\b/i
+                ]
             },
             transport: {
-                sectorMatch: ['transport', 'logistics', 'highways'],
-                keywords: ['transport', 'logistics', 'vehicle fleet', 'bus service', 'rail', 'highway', 'traffic management', 'road maintenance'],
-                excludeKeywords: ['healthcare', 'nhs', 'education', 'school', 'software']
+                sectorPatterns: [/\btransport/i, /\blogistic/i, /\bhighway/i],
+                includePatterns: [
+                    /\btransport/i, /\blogistic/i, /\bvehicle\s+fleet/i,
+                    /\bbus\s+service/i, /\brail\b/i, /\bhighway/i,
+                    /\btraffic\s+management/i, /\broad\s+maintenance/i
+                ],
+                excludePatterns: [
+                    /\bhealthcare\b/i, /\bnhs\b/i, /\beducation\b/i,
+                    /\bschool\b/i, /\bsoftware\b/i
+                ]
             },
             defence: {
-                sectorMatch: ['defence', 'defense', 'military', 'mod'],
-                keywords: ['defence', 'defense', 'mod ', 'military', 'armed forces', 'ministry of defence', 'armoured', 'ammunition'],
-                excludeKeywords: ['nhs', 'healthcare', 'education', 'school']
+                sectorPatterns: [/\bdefence\b/i, /\bdefense\b/i, /\bmilitary\b/i, /\bmod\b/i],
+                includePatterns: [
+                    /\bdefence\b/i, /\bdefense\b/i, /\bmod\b/i, /\bmilitary\b/i,
+                    /\barmed\s+forces/i, /\bministry\s+of\s+defence/i,
+                    /\barmou?red?\b/i, /\bammunition\b/i
+                ],
+                excludePatterns: [
+                    /\bnhs\b/i, /\bhealthcare\b/i, /\beducation\b/i, /\bschool\b/i
+                ]
             },
             energy: {
-                sectorMatch: ['energy', 'utilities', 'renewable'],
-                keywords: ['energy', 'electricity', 'renewable', 'solar panel', 'wind farm', 'power generation', 'utility', 'gas supply', 'grid'],
-                excludeKeywords: ['healthcare', 'nhs', 'education', 'school', 'construction']
+                sectorPatterns: [/\benergy\b/i, /\butiliti/i, /\brenewable\b/i],
+                includePatterns: [
+                    /\benergy\b/i, /\belectricity\b/i, /\brenewable\b/i,
+                    /\bsolar\s+panel/i, /\bwind\s+farm/i, /\bpower\s+generation/i,
+                    /\butility\b/i, /\bgas\s+supply/i, /\bgrid\b/i
+                ],
+                excludePatterns: [
+                    /\bhealthcare\b/i, /\bnhs\b/i, /\beducation\b/i,
+                    /\bschool\b/i, /\bconstruction\b/i
+                ]
             },
         }
 
-        // Function to check if a tender matches a category
+        // Function to check if a tender matches a category using regex word boundaries
         const matchesCategory = (tender: Tender, category: string): boolean => {
             const config = industryConfig[category]
             if (!config) return false
 
-            const searchText = `${tender.title || ''} ${tender.description || ''} ${tender.sector || ''} ${tender.buyer || ''}`.toLowerCase()
+            const searchText = `${tender.title || ''} ${tender.description || ''} ${tender.sector || ''} ${tender.buyer || ''}`
 
-            // First check: Does it contain any EXCLUDE keywords for this category?
-            for (const excludeKw of config.excludeKeywords) {
-                if (searchText.includes(excludeKw.toLowerCase())) {
+            // FIRST: Check if ANY exclude pattern matches - if so, reject immediately
+            for (const pattern of config.excludePatterns) {
+                if (pattern.test(searchText)) {
                     return false
                 }
             }
 
-            // Second check: Does sector match?
-            const sectorLower = (tender.sector || '').toLowerCase()
-            for (const sm of config.sectorMatch) {
-                if (sectorLower.includes(sm.toLowerCase())) {
+            // SECOND: Check if sector matches any sector pattern
+            const sectorText = tender.sector || ''
+            for (const pattern of config.sectorPatterns) {
+                if (pattern.test(sectorText)) {
                     return true
                 }
             }
 
-            // Third check: Does it have specific keywords?
-            for (const kw of config.keywords) {
-                if (searchText.includes(kw.toLowerCase())) {
+            // THIRD: Check if any include pattern matches
+            for (const pattern of config.includePatterns) {
+                if (pattern.test(searchText)) {
                     return true
                 }
             }
@@ -215,7 +267,7 @@ export default function TendersPage() {
             return false
         }
 
-        // 1. Industry Filter - strict matching with exclusions
+        // 1. Industry Filter - strict regex-based matching with word boundaries
         if (activeFilter !== "all") {
             filtered = filtered.filter(tender => matchesCategory(tender, activeFilter))
         }

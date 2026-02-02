@@ -4,6 +4,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles, ArrowLeftRight, Filter, Clock, Edit, Star, Download, Undo2, ChevronRight } from "lucide-react"
 import { GlobalHeader } from "@/components/GlobalHeader"
+import { AnimatedBackground } from "@/components/AnimatedBackground"
 
 // Agent Workflow Steps Data - Using consistent primary blue (#007AFF)
 const agentSteps = [
@@ -48,11 +49,8 @@ export default function LandingPage() {
       {/* HERO SECTION */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-24 pb-16 overflow-hidden">
 
-        {/* Background Ambience */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-primary/15 rounded-full blur-[150px] opacity-50" />
-          <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[180px]" />
-        </div>
+        {/* Premium Animated Background */}
+        <AnimatedBackground />
 
         <div className="container relative z-10 px-6 text-center max-w-5xl mx-auto">
           <motion.div
@@ -65,7 +63,7 @@ export default function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
-            <span className="text-xs font-medium uppercase tracking-widest text-white/60">System Operational</span>
+            <span className="text-xs font-medium uppercase tracking-widest text-white/60">Tenders Are Live!</span>
           </motion.div>
 
           <motion.h1

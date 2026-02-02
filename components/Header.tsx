@@ -5,11 +5,12 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
-import { LogOut, User as UserIcon, Settings, LayoutDashboard, Menu, X } from "lucide-react"
+import { LogOut, User as UserIcon, Settings, LayoutDashboard, Menu, X, CreditCard } from "lucide-react"
 
 export function Header() {
     const router = useRouter()
     const [user, setUser] = useState<User | null>(null)
+    const [credits, setCredits] = useState<number | null>(null)
     const [menuOpen, setMenuOpen] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -21,12 +22,32 @@ export function Header() {
         const checkUser = async () => {
             const { data: { user } } = await client.auth.getUser()
             setUser(user)
+
+            // Fetch credits if user is logged in
+            if (user) {
+                const { data: profile } = await client
+                    .from("profiles")
+                    .select("credits")
+                    .eq("id", user.id)
+                    .single()
+                setCredits(profile?.credits ?? 3)
+            }
         }
         checkUser()
 
         // Subscribe to auth changes
-        const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = client.auth.onAuthStateChange(async (_event, session) => {
             setUser(session?.user ?? null)
+            if (session?.user) {
+                const { data: profile } = await client
+                    .from("profiles")
+                    .select("credits")
+                    .eq("id", session.user.id)
+                    .single()
+                setCredits(profile?.credits ?? 3)
+            } else {
+                setCredits(null)
+            }
         })
 
         return () => subscription.unsubscribe()
@@ -111,6 +132,21 @@ export function Header() {
                                                 <p className="text-sm text-white font-medium truncate">{user.email}</p>
                                                 <p className="text-xs text-white/50">Verified Operative</p>
                                             </div>
+
+                                            {/* Credits Display */}
+                                            <Link
+                                                href="/pricing"
+                                                className="flex items-center justify-between px-4 py-2 mx-2 mb-2 rounded-lg bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/20 hover:border-primary/40 transition-colors"
+                                                onClick={() => setMenuOpen(false)}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <CreditCard className="w-4 h-4 text-primary" />
+                                                    <span className="text-sm text-white/80">Credits</span>
+                                                </div>
+                                                <span className={`text-lg font-bold ${credits === 0 ? 'text-red-400' : 'text-primary'}`}>
+                                                    {credits ?? '...'}
+                                                </span>
+                                            </Link>
 
                                             <Link
                                                 href="/onboarding"
