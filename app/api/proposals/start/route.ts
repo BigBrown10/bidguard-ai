@@ -29,28 +29,39 @@ export async function POST(req: NextRequest) {
         // Get authenticated user
         const { data: { user }, error: authError } = await supabase.auth.getUser()
         if (authError || !user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+            console.log("[Proposal API] Auth failed:", authError?.message || "No user session")
+            return NextResponse.json({ error: "Unauthorized - Please log in first" }, { status: 401 })
         }
+
+        console.log("[Proposal API] User authenticated:", user.id)
 
         // CREDITS CHECK: Ensure user has credits before proceeding
         const hasCredits = await checkCredits(user.id)
         if (!hasCredits) {
+            console.log("[Proposal API] User out of credits:", user.id)
             return NextResponse.json(
-                { error: "Out of credits", code: "CREDITS_EXHAUSTED" },
+                { error: "Out of credits - Please upgrade your plan", code: "CREDITS_EXHAUSTED" },
                 { status: 402 } // Payment Required
             )
         }
 
+        console.log("[Proposal API] Credits check passed")
+
         // SECURITY: Validate input with Zod
         const rawBody = await req.json()
+        console.log("[Proposal API] Received body:", JSON.stringify(rawBody, null, 2))
+
         const validationResult = proposalStartSchema.safeParse(rawBody)
 
         if (!validationResult.success) {
+            console.log("[Proposal API] Validation failed:", validationResult.error.flatten())
             return NextResponse.json(
-                { error: "Invalid input", details: validationResult.error.flatten() },
+                { error: "Invalid input data", details: validationResult.error.flatten() },
                 { status: 400 }
             )
         }
+
+        console.log("[Proposal API] Validation passed")
 
         const { tenderId, tenderTitle, tenderBuyer, ideaInjection } = validationResult.data
 

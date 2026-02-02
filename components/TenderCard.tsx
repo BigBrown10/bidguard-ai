@@ -98,23 +98,25 @@ function TenderCardBase({ tender, onSwipe, onInfo, index }: TenderCardProps) {
                 I will add an onClick to the content div that only fires if not dragging. */}
             <div className="flex-1 p-8 flex flex-col relative z-10 select-none pointer-events-none">
 
-                {/* Header */}
-                <div className="mb-6">
-                    <ShieldCheck className="w-4 h-4" />
-                    {tender.sector}
-                </div>
+                {/* Header - Sector Badge */}
+                <div className="mb-4 flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] bg-white/10 text-white/70 font-medium border border-white/10">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        {tender.sector}
+                    </span>
 
-                {/* Source Badge (NHS/MOD) */}
-                {(tender.buyer.includes('NHS') || tender.buyer.includes('Trust')) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 font-bold ml-2 border border-blue-500/20">
-                        NHS
-                    </span>
-                )}
-                {(tender.buyer.includes('Defense') || tender.buyer.includes('MOD') || tender.buyer.includes('Ministry')) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-500 font-bold ml-2 border border-red-500/20">
-                        MOD
-                    </span>
-                )}
+                    {/* Source Badge (NHS/MOD) */}
+                    {(tender.buyer.includes('NHS') || tender.buyer.includes('Trust')) && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 font-bold border border-blue-500/20">
+                            NHS
+                        </span>
+                    )}
+                    {(tender.buyer.includes('Defense') || tender.buyer.includes('MOD') || tender.buyer.includes('Ministry')) && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-red-500/20 text-red-500 font-bold border border-red-500/20">
+                            MOD
+                        </span>
+                    )}
+                </div>
 
                 <h2 className="text-3xl font-black text-white leading-tight mb-2 drop-shadow-md line-clamp-2">
                     {tender.title}

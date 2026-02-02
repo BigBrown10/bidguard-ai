@@ -93,7 +93,8 @@ export default function RegisterPage() {
                             <input
                                 type="text"
                                 required
-                                className="cyber-input w-full pl-12 h-12 bg-black/60 focus:bg-black/80"
+                                className="cyber-input w-full h-12 bg-black/60 focus:bg-black/80"
+                                style={{ paddingLeft: '3rem' }}
                                 placeholder="John Doe"
                                 value={fullName}
                                 onChange={e => setFullName(e.target.value)}
@@ -109,7 +110,8 @@ export default function RegisterPage() {
                             <input
                                 type="email"
                                 required
-                                className="cyber-input w-full pl-12 h-12 bg-black/60 focus:bg-black/80"
+                                className="cyber-input w-full h-12 bg-black/60 focus:bg-black/80"
+                                style={{ paddingLeft: '3rem' }}
                                 placeholder="name@company.com"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
@@ -126,7 +128,8 @@ export default function RegisterPage() {
                                 type={showPassword ? "text" : "password"}
                                 required
                                 minLength={6}
-                                className="cyber-input w-full pl-12 pr-12 h-12 bg-black/60 focus:bg-black/80"
+                                className="cyber-input w-full h-12 bg-black/60 focus:bg-black/80"
+                                style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
                                 placeholder="••••••••••••"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}

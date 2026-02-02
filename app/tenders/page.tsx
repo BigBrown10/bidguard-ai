@@ -276,7 +276,11 @@ export default function TendersPage() {
                 })
             })
 
-            if (!response.ok) throw new Error('Failed to start proposal')
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                console.error('[Proposal] API Error:', response.status, errorData)
+                throw new Error(errorData.error || `Failed to start proposal (${response.status})`)
+            }
             return response.json()
         }, {
             loading: 'Queuing autonomous proposal...',
@@ -290,7 +294,7 @@ export default function TendersPage() {
                     }
                 }
             },
-            error: 'Failed to start proposal'
+            error: (err) => err.message || 'Failed to start proposal'
         })
 
         setPendingTender(null)
