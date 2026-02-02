@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles, ArrowLeftRight, Filter, Clock, Edit, Star, Download, Undo2 } from "lucide-react"
+import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles, ArrowLeftRight, Filter, Clock, Edit, Star, Download, Undo2, ChevronRight } from "lucide-react"
 import { GlobalHeader } from "@/components/GlobalHeader"
 
 // Agent Workflow Steps Data - Using consistent primary blue (#007AFF)
@@ -348,25 +348,180 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
-        <div className="container mx-auto px-6 text-center relative z-10">
+      {/* FAQ SECTION */}
+      <section className="py-24 relative" id="faq">
+        <div className="container mx-auto px-6 max-w-4xl">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <Sparkles className="w-10 h-10 text-primary mx-auto mb-6" />
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-8">
-              Ready to Dominate?
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-4">
+              Frequently Asked Questions
             </h2>
-            <Link href="/register">
-              <button className="group h-16 px-12 rounded-full bg-gradient-to-b from-white to-gray-100 text-black text-base font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300">
-                Deploy Your Agents
-              </button>
-            </Link>
+            <p className="text-white/50 text-lg">Everything you need to know about BidSwipe AI</p>
           </motion.div>
+
+          <div className="space-y-4">
+            {/* FAQ Item 1 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">How does the AI proposal generation work?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p className="mb-3">Our AI uses <strong className="text-primary">RAG (Retrieval-Augmented Generation)</strong> to create winning proposals:</p>
+                <ol className="list-decimal list-inside space-y-2 ml-2">
+                  <li><strong>Research Phase:</strong> The AI searches the web for the buyer&apos;s history, past contracts, and procurement patterns</li>
+                  <li><strong>Company Context:</strong> Your company profile (services, experience, sectors) is used to tailor the proposal to YOUR strengths</li>
+                  <li><strong>Tender Analysis:</strong> The AI deeply understands the tender requirements, evaluation criteria, and what buyers look for</li>
+                  <li><strong>Proposal Generation:</strong> Using all this context, it writes a professional, persuasive proposal that positions you as the ideal supplier</li>
+                </ol>
+                <p className="mt-3 text-sm text-white/40">The more complete your company profile, the better tailored your proposals will be.</p>
+              </div>
+            </motion.details>
+
+            {/* FAQ Item 2 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">Why do you need my company information?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p className="mb-3">Your company profile is <strong className="text-white">essential</strong> for generating relevant proposals:</p>
+                <ul className="list-disc list-inside space-y-2 ml-2">
+                  <li><strong>Company Name & Description:</strong> Used in proposal headers and to establish credibility</li>
+                  <li><strong>Sectors & Industries:</strong> Helps the AI highlight relevant experience and certifications</li>
+                  <li><strong>Past Projects:</strong> The AI references your track record to demonstrate capability</li>
+                  <li><strong>Company Size:</strong> Ensures proposals are appropriate for your scale of operations</li>
+                </ul>
+                <p className="mt-3 text-sm text-white/40">Your data is encrypted and never shared. It&apos;s only used to personalize YOUR proposals.</p>
+              </div>
+            </motion.details>
+
+            {/* FAQ Item 3 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">How long does proposal generation take?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p>Most proposals are generated in <strong className="text-primary">2-5 minutes</strong>. The AI performs deep research on the buyer, analyzes the tender, and crafts a comprehensive proposal. Complex tenders with extensive requirements may take slightly longer.</p>
+                <p className="mt-3">You&apos;ll receive a notification when your proposal is ready, and you can track progress in real-time from your dashboard.</p>
+              </div>
+            </motion.details>
+
+            {/* FAQ Item 4 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">What are credits and how do they work?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p className="mb-3">Credits are the currency for generating proposals:</p>
+                <ul className="list-disc list-inside space-y-2 ml-2">
+                  <li><strong>1 Credit = 1 Proposal:</strong> Each proposal generation costs 1 credit</li>
+                  <li><strong>Free Tier:</strong> New users get 3 free credits to try the platform</li>
+                  <li><strong>Pro Plan:</strong> Unlimited proposals for a monthly subscription</li>
+                </ul>
+                <p className="mt-3 text-sm text-white/40">Credits are only consumed when a proposal is successfully generated. Failed attempts don&apos;t cost credits.</p>
+              </div>
+            </motion.details>
+
+            {/* FAQ Item 5 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">Can I edit proposals after they&apos;re generated?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p>Absolutely! Generated proposals are just the starting point. You can:</p>
+                <ul className="list-disc list-inside space-y-2 ml-2 mt-3">
+                  <li>Edit any section directly in our rich text editor</li>
+                  <li>Add your own case studies and references</li>
+                  <li>Adjust pricing and delivery timelines</li>
+                  <li>Export to Word or PDF for final submission</li>
+                </ul>
+              </div>
+            </motion.details>
+
+            {/* FAQ Item 6 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">Where do the tenders come from?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p>We aggregate tenders from UK government procurement portals including:</p>
+                <ul className="list-disc list-inside space-y-2 ml-2 mt-3">
+                  <li><strong>Contracts Finder:</strong> Central UK government contracts</li>
+                  <li><strong>Find a Tender:</strong> Higher-value public contracts</li>
+                  <li><strong>NHS Supply Chain:</strong> Healthcare sector opportunities</li>
+                  <li><strong>Local Authority portals:</strong> Council and regional contracts</li>
+                </ul>
+                <p className="mt-3 text-sm text-white/40">New tenders are added daily and filtered to show only active opportunities.</p>
+              </div>
+            </motion.details>
+
+            {/* FAQ Item 7 */}
+            <motion.details
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.6 }}
+              className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+            >
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <span className="text-white font-semibold text-lg">Is my data secure?</span>
+                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+              </summary>
+              <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                <p>Security is our top priority:</p>
+                <ul className="list-disc list-inside space-y-2 ml-2 mt-3">
+                  <li><strong>Encryption:</strong> All data encrypted at rest and in transit (AES-256)</li>
+                  <li><strong>Authentication:</strong> Secure login with email verification</li>
+                  <li><strong>GDPR Compliant:</strong> We follow UK data protection regulations</li>
+                  <li><strong>No Data Sharing:</strong> Your company info and proposals are never shared or used for training</li>
+                </ul>
+              </div>
+            </motion.details>
+          </div>
         </div>
       </section>
 

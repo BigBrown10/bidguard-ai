@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { Header } from "@/components/Header"
 import { saveTenderAction, rejectTenderAction } from "./actions"
 import { supabase } from "@/lib/supabase"
-import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark, Sparkles, User, LayoutGrid, List } from "lucide-react"
+import { Loader2, RefreshCw, Filter, ChevronDown, Bookmark, Sparkles, User, LayoutGrid, List, ArrowRight } from "lucide-react"
 import { Toaster, toast } from "sonner"
 
 import { TenderDetailsModal } from "@/components/TenderDetailsModal"
@@ -139,43 +139,85 @@ export default function TendersPage() {
     useEffect(() => {
         let filtered = allTenders
 
-        // Industry keywords mapping for smarter filtering
-        const industryKeywords: Record<string, string[]> = {
-            healthcare: ['nhs', 'health', 'hospital', 'clinical', 'medical', 'care', 'nursing', 'pharmacy', 'patient', 'gp'],
-            construction: ['construction', 'building', 'civil', 'architect', 'contractor', 'renovation', 'infrastructure', 'demolition'],
-            it: ['software', 'digital', 'technology', 'cyber', 'data', 'cloud', 'system', 'network', 'database', 'api'],
-            education: ['education', 'school', 'university', 'college', 'training', 'academy', 'student', 'learning', 'teaching'],
-            transport: ['transport', 'logistics', 'vehicle', 'fleet', 'bus', 'rail', 'highway', 'road', 'traffic'],
-            defence: ['defence', 'defense', 'mod', 'military', 'security', 'armed', 'forces'],
-            energy: ['energy', 'electricity', 'renewable', 'solar', 'power', 'utility', 'gas', 'wind', 'nuclear'],
+        // Industry sector mapping - more specific keywords, no overlap
+        // Key: filter category, Value: { sectorMatch: sectors to match, keywords: specific keywords, excludeKeywords: words that indicate wrong category }
+        const industryConfig: Record<string, {
+            sectorMatch: string[],
+            keywords: string[],
+            excludeKeywords: string[]
+        }> = {
+            healthcare: {
+                sectorMatch: ['health', 'nhs', 'clinical', 'medical'],
+                keywords: ['nhs', 'hospital', 'clinical trial', 'patient care', 'nursing home', 'pharmacy', 'medical equipment', 'healthcare', 'gp surgery', 'ambulance', 'mental health'],
+                excludeKeywords: ['audio', 'armour', 'armor', 'education', 'school', 'military', 'defence', 'construction', 'building', 'road', 'software development']
+            },
+            construction: {
+                sectorMatch: ['construction', 'building', 'civil engineering'],
+                keywords: ['construction', 'building work', 'civil engineering', 'renovation', 'demolition', 'contractor', 'scaffolding', 'roofing', 'groundwork'],
+                excludeKeywords: ['nhs', 'hospital', 'healthcare', 'software', 'digital', 'education']
+            },
+            it: {
+                sectorMatch: ['it', 'technology', 'software', 'digital', 'cyber'],
+                keywords: ['software', 'digital transformation', 'cyber security', 'cloud computing', 'it services', 'database', 'network infrastructure', 'saas', 'api development'],
+                excludeKeywords: ['construction', 'building', 'healthcare', 'medical', 'education', 'school']
+            },
+            education: {
+                sectorMatch: ['education', 'schools', 'university', 'college', 'training'],
+                keywords: ['school', 'university', 'college', 'educational', 'student', 'academy', 'curriculum', 'teaching'],
+                excludeKeywords: ['nhs', 'healthcare', 'hospital', 'construction', 'defence']
+            },
+            transport: {
+                sectorMatch: ['transport', 'logistics', 'highways'],
+                keywords: ['transport', 'logistics', 'vehicle fleet', 'bus service', 'rail', 'highway', 'traffic management', 'road maintenance'],
+                excludeKeywords: ['healthcare', 'nhs', 'education', 'school', 'software']
+            },
+            defence: {
+                sectorMatch: ['defence', 'defense', 'military', 'mod'],
+                keywords: ['defence', 'defense', 'mod ', 'military', 'armed forces', 'ministry of defence', 'armoured', 'ammunition'],
+                excludeKeywords: ['nhs', 'healthcare', 'education', 'school']
+            },
+            energy: {
+                sectorMatch: ['energy', 'utilities', 'renewable'],
+                keywords: ['energy', 'electricity', 'renewable', 'solar panel', 'wind farm', 'power generation', 'utility', 'gas supply', 'grid'],
+                excludeKeywords: ['healthcare', 'nhs', 'education', 'school', 'construction']
+            },
         }
 
-        // Helper function to count keyword matches for a tender in a category
-        const countKeywordMatches = (tender: Tender, category: string): number => {
-            const keywords = industryKeywords[category] || []
-            const searchText = `${tender.title || ''} ${tender.description || ''}`.toLowerCase()
-            return keywords.filter(kw => searchText.includes(kw.toLowerCase())).length
-        }
+        // Function to check if a tender matches a category
+        const matchesCategory = (tender: Tender, category: string): boolean => {
+            const config = industryConfig[category]
+            if (!config) return false
 
-        // 1. Industry Filter - weighted matching (tender must have MORE matches for selected category than others)
-        if (activeFilter !== "all") {
-            filtered = filtered.filter(tender => {
-                const selectedCategoryScore = countKeywordMatches(tender, activeFilter)
+            const searchText = `${tender.title || ''} ${tender.description || ''} ${tender.sector || ''} ${tender.buyer || ''}`.toLowerCase()
 
-                // Must have at least 1 match for the selected category
-                if (selectedCategoryScore === 0) return false
-
-                // Check if any OTHER category has more matches (if so, exclude this tender)
-                const allCategories = Object.keys(industryKeywords)
-                for (const category of allCategories) {
-                    if (category !== activeFilter) {
-                        const otherScore = countKeywordMatches(tender, category)
-                        // If another category has MORE matches, this tender belongs there instead
-                        if (otherScore > selectedCategoryScore) return false
-                    }
+            // First check: Does it contain any EXCLUDE keywords for this category?
+            for (const excludeKw of config.excludeKeywords) {
+                if (searchText.includes(excludeKw.toLowerCase())) {
+                    return false
                 }
-                return true
-            })
+            }
+
+            // Second check: Does sector match?
+            const sectorLower = (tender.sector || '').toLowerCase()
+            for (const sm of config.sectorMatch) {
+                if (sectorLower.includes(sm.toLowerCase())) {
+                    return true
+                }
+            }
+
+            // Third check: Does it have specific keywords?
+            for (const kw of config.keywords) {
+                if (searchText.includes(kw.toLowerCase())) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        // 1. Industry Filter - strict matching with exclusions
+        if (activeFilter !== "all") {
+            filtered = filtered.filter(tender => matchesCategory(tender, activeFilter))
         }
 
         // 2. Price Filter
@@ -478,56 +520,106 @@ export default function TendersPage() {
 
                 {/* View Mode: Card Grid */}
                 {viewMode === 'card' && (
-                    <div className="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[70vh] overflow-y-auto px-2">
-                        {tenders.map((tender) => (
-                            <motion.div
-                                key={tender.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-primary/30 transition-all cursor-pointer"
-                                onClick={() => setSelectedTender(tender)}
-                            >
-                                <div className="flex items-start justify-between mb-2">
-                                    <span className="text-xs text-primary font-medium">{tender.sector}</span>
-                                    <span className="text-xs text-white/40">{tender.deadline}</span>
-                                </div>
-                                <h3 className="text-sm font-bold text-white mb-2 line-clamp-2">{tender.title}</h3>
-                                <p className="text-xs text-white/50 mb-3 line-clamp-2">{tender.description}</p>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-secondary font-bold">{tender.value}</span>
-                                    <span className="text-xs text-white/30">{tender.buyer}</span>
-                                </div>
-                            </motion.div>
-                        ))}
+                    <div className="w-full max-w-6xl px-4">
+                        <p className="text-xs uppercase tracking-widest text-white/40 mb-6 text-center font-medium">
+                            {tenders.length} ACTIVE OPPORTUNITIES
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[75vh] overflow-y-auto pb-8 pr-2">
+                            {tenders.map((tender, index) => (
+                                <motion.div
+                                    key={tender.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.02 }}
+                                    className="group bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/10 rounded-2xl p-5 hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,122,255,0.1)] transition-all duration-300 cursor-pointer relative overflow-hidden"
+                                    onClick={() => setSelectedTender(tender)}
+                                >
+                                    {/* Hover glow */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                                    <div className="relative z-10">
+                                        {/* Header row */}
+                                        <div className="flex items-start justify-between mb-3">
+                                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/20 text-primary border border-primary/20 uppercase tracking-wider">
+                                                {tender.sector}
+                                            </span>
+                                            <span className="text-[11px] text-white/40 font-medium">{tender.deadline}</span>
+                                        </div>
+
+                                        {/* Title */}
+                                        <h3 className="text-base font-bold text-white mb-2 line-clamp-2 leading-tight group-hover:text-primary/90 transition-colors">
+                                            {tender.title}
+                                        </h3>
+
+                                        {/* Description */}
+                                        <p className="text-xs text-white/50 mb-4 line-clamp-2 leading-relaxed">
+                                            {tender.description}
+                                        </p>
+
+                                        {/* Footer */}
+                                        <div className="flex items-end justify-between pt-3 border-t border-white/5">
+                                            <div>
+                                                <p className="text-lg font-black text-secondary tracking-tight">{tender.value}</p>
+                                                <p className="text-[10px] text-white/30 uppercase tracking-wider mt-0.5 line-clamp-1 max-w-[150px]">{tender.buyer}</p>
+                                            </div>
+                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <ArrowRight className="w-4 h-4 text-primary" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {/* View Mode: List */}
                 {viewMode === 'list' && (
-                    <div className="w-full max-w-4xl space-y-2 max-h-[70vh] overflow-y-auto px-2">
-                        {tenders.map((tender) => (
-                            <motion.div
-                                key={tender.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="flex items-center gap-4 bg-white/[0.03] border border-white/5 rounded-lg p-4 hover:border-white/20 transition-all cursor-pointer"
-                                onClick={() => setSelectedTender(tender)}
-                            >
-                                <div className="flex-shrink-0 w-2 h-12 rounded-full bg-primary/50" />
-                                <div className="flex-grow min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs text-primary font-medium">{tender.sector}</span>
-                                        <span className="text-xs text-white/30">•</span>
-                                        <span className="text-xs text-white/30">{tender.buyer}</span>
+                    <div className="w-full max-w-6xl px-4">
+                        <p className="text-xs uppercase tracking-widest text-white/40 mb-6 text-center font-medium">
+                            {tenders.length} ACTIVE OPPORTUNITIES
+                        </p>
+                        <div className="space-y-4 max-h-[75vh] overflow-y-auto pb-8 pr-2">
+                            {tenders.map((tender, index) => (
+                                <motion.div
+                                    key={tender.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.015 }}
+                                    className="group flex items-center gap-6 bg-gradient-to-r from-white/[0.05] to-white/[0.02] border border-white/10 rounded-xl p-5 hover:border-primary/30 hover:shadow-[0_0_20px_rgba(0,122,255,0.05)] transition-all duration-300 cursor-pointer"
+                                    onClick={() => setSelectedTender(tender)}
+                                >
+                                    {/* Left accent bar */}
+                                    <div className="flex-shrink-0 w-1 h-16 rounded-full bg-gradient-to-b from-primary to-primary/30" />
+
+                                    {/* Main content */}
+                                    <div className="flex-grow min-w-0 space-y-2">
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-primary border border-primary/20 uppercase tracking-wider">
+                                                {tender.sector}
+                                            </span>
+                                            <span className="text-xs text-white/30">•</span>
+                                            <span className="text-xs text-white/40 truncate max-w-[200px]">{tender.buyer}</span>
+                                        </div>
+                                        <h3 className="text-base font-bold text-white group-hover:text-primary/90 transition-colors line-clamp-1">
+                                            {tender.title}
+                                        </h3>
+                                        <p className="text-xs text-white/40 line-clamp-1">{tender.description}</p>
                                     </div>
-                                    <h3 className="text-sm font-bold text-white truncate">{tender.title}</h3>
-                                </div>
-                                <div className="flex-shrink-0 text-right">
-                                    <p className="text-sm text-secondary font-bold">{tender.value}</p>
-                                    <p className="text-xs text-white/40">{tender.deadline}</p>
-                                </div>
-                            </motion.div>
-                        ))}
+
+                                    {/* Right side info */}
+                                    <div className="flex-shrink-0 text-right space-y-1">
+                                        <p className="text-xl font-black text-secondary tracking-tight">{tender.value}</p>
+                                        <p className="text-[11px] text-white/40 font-medium">{tender.deadline}</p>
+                                    </div>
+
+                                    {/* Hover arrow */}
+                                    <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ArrowRight className="w-5 h-5 text-primary" />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
