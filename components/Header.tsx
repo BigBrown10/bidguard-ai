@@ -65,9 +65,9 @@ export function Header() {
             <div className="container mx-auto flex h-16 items-center justify-between px-6">
                 <Link href="/" className="flex items-center gap-2 group">
                     <img
-                        src="/logo-b.png"
-                        alt="B"
-                        className="h-10 w-auto object-contain mix-blend-screen hover:brightness-125 transition-all"
+                        src="/logo.png"
+                        alt="BidSwipe"
+                        className="h-12 w-auto object-contain hover:brightness-125 transition-all"
                     />
                 </Link>
 
