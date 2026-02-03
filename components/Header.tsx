@@ -77,6 +77,9 @@ export function Header() {
                         <Link href="/tenders" className="transition-colors hover:text-primary hover:text-glow">
                             Live Tenders
                         </Link>
+                        <Link href="/news" className="transition-colors hover:text-primary hover:text-glow">
+                            News
+                        </Link>
                         {user && (
                             <>
                                 <Link href="/favourites" className="transition-colors hover:text-white hover:text-glow">
@@ -207,6 +210,9 @@ export function Header() {
                     <div className="absolute top-16 left-0 w-full bg-black/95 backdrop-blur-xl border-b border-white/10 p-4 md:hidden flex flex-col gap-4 animate-in slide-in-from-top-2">
                         <Link href="/tenders" onClick={() => setMobileMenuOpen(false)} className="py-2 text-white/70 hover:text-primary">
                             Live Tenders
+                        </Link>
+                        <Link href="/news" onClick={() => setMobileMenuOpen(false)} className="py-2 text-white/70 hover:text-primary">
+                            News
                         </Link>
                         {user ? (
                             <>

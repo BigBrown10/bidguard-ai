@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles, ArrowLeftRight, Filter, Clock, Edit, Star, Download, Undo2, ChevronRight } from "lucide-react"
 import { GlobalHeader } from "@/components/GlobalHeader"
 import { AnimatedBackground } from "@/components/AnimatedBackground"
+import { LatestNews } from "@/components/LatestNews"
 
 // Agent Workflow Steps Data - Using consistent primary blue (#007AFF)
 const agentSteps = [
@@ -345,6 +346,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* LATEST NEWS */}
+      <LatestNews />
 
       {/* FAQ SECTION */}
       <section className="py-24 relative" id="faq">
