@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
     content TEXT NOT NULL,
     source TEXT,
     tags TEXT[],
-    embedding vector(768), -- For semantic search (optional, requires pgvector)
+    -- embedding vector(768), -- Uncomment if you enable pgvector: CREATE EXTENSION vector;
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
