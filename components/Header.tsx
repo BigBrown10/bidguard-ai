@@ -67,7 +67,7 @@ export function Header() {
                     <img
                         src="/logo.png"
                         alt="BidSwipe"
-                        className="h-12 w-auto object-contain hover:brightness-125 transition-all"
+                        className="h-16 w-auto object-contain hover:brightness-125 transition-all"
                     />
                 </Link>
 

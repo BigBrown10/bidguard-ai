@@ -1,15 +1,16 @@
 /**
- * News Content Agent
+ * Tender News & Tips Scraper
  * 
- * Scrapes procurement/tender news from various sources,
- * humanizes the content with AI, and posts to the /news page.
+ * Scrapes:
+ * 1. News ABOUT tenders (procurement news, policy changes, industry updates)
+ * 2. Tips & tricks from social media on winning tenders
  * 
- * Sources:
- * - GOV.UK procurement news
- * - Public sector tender announcements
- * - Industry publications
+ * Uses the data to:
+ * - Generate blog posts for /news page (SEO)
+ * - Build a knowledge base for training AI agents to write better proposals
  */
 
+import puppeteer from "puppeteer"
 import { createClient } from "@supabase/supabase-js"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import * as dotenv from "dotenv"
@@ -23,40 +24,68 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const GEMINI_KEY = process.env.GEMINI_API_KEY!
 
+// Initialize clients
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const genAI = new GoogleGenerativeAI(GEMINI_KEY)
+
 // News sources to scrape
 const NEWS_SOURCES = [
     {
-        name: "GOV.UK Procurement",
-        url: "https://www.gov.uk/search/news-and-communications?topical_events%5B%5D=public-procurement-reform",
-        type: "government"
+        name: "GOV.UK Procurement News",
+        url: "https://www.gov.uk/search/news-and-communications?topics%5B%5D=government-buying",
+        selectors: {
+            items: ".gem-c-document-list__item",
+            title: ".gem-c-document-list__item-title a",
+            excerpt: ".gem-c-document-list__item-description",
+            link: ".gem-c-document-list__item-title a"
+        },
+        category: "News"
     },
     {
-        name: "Contracts Finder",
-        url: "https://www.gov.uk/contracts-finder",
-        type: "tenders"
+        name: "Supply Management Magazine",
+        url: "https://www.supplymanagement.com/news",
+        selectors: {
+            items: "article.teaser",
+            title: "h2 a, h3 a",
+            excerpt: ".teaser__standfirst, .teaser__summary",
+            link: "h2 a, h3 a"
+        },
+        category: "News"
+    },
+    {
+        name: "CIPS (Procurement & Supply)",
+        url: "https://www.cips.org/intelligence-hub/",
+        selectors: {
+            items: ".resource-card",
+            title: ".resource-card__title, h3",
+            excerpt: ".resource-card__description",
+            link: "a"
+        },
+        category: "Strategy"
     }
 ]
 
-// SEO keywords to naturally include
-const SEO_KEYWORDS = [
-    "government bids",
-    "bid writing",
-    "tender opportunities",
-    "public sector contracts",
-    "NHS tenders",
-    "MOD contracts",
-    "procurement UK",
-    "how to win bids",
-    "AI bid writing",
-    "contract finder"
+// Social media / tips sources
+const TIPS_SOURCES = [
+    {
+        name: "LinkedIn Bid Writing Tips",
+        searchTerms: ["bid writing tips", "tender success", "win government contracts"],
+        category: "Tips"
+    },
+    {
+        name: "Reddit Procurement",
+        url: "https://www.reddit.com/r/procurement/top/?t=month",
+        category: "Tips"
+    }
 ]
 
-interface RawNewsItem {
+interface ScrapedItem {
     title: string
+    excerpt: string
+    url: string
     source: string
-    url?: string
-    date?: string
-    snippet?: string
+    category: string
+    raw_content?: string
 }
 
 interface BlogPost {
@@ -72,150 +101,206 @@ interface BlogPost {
     created_at: string
 }
 
-// Initialize clients
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-const genAI = new GoogleGenerativeAI(GEMINI_KEY)
+interface KnowledgeItem {
+    type: string
+    content: string
+    source: string
+    tags: string[]
+    embedding?: number[]
+    created_at: string
+}
+
+// SEO keywords to target
+const SEO_KEYWORDS = [
+    "government bids", "bid writing", "tender opportunities",
+    "public sector contracts", "NHS tenders", "MOD contracts",
+    "procurement UK", "how to win bids", "AI bid writing",
+    "tender response", "bid proposal", "public procurement"
+]
 
 /**
- * Scrape news from tender data already in the database
+ * Scrape news articles from a source
  */
-async function scrapeNewsFromTenders(): Promise<RawNewsItem[]> {
-    console.log("📰 Fetching recent tender data for news generation...")
+async function scrapeNewsSource(
+    browser: puppeteer.Browser,
+    source: typeof NEWS_SOURCES[0]
+): Promise<ScrapedItem[]> {
+    console.log(`📰 Scraping: ${source.name}`)
+    const page = await browser.newPage()
+    const items: ScrapedItem[] = []
 
-    const { data: tenders, error } = await supabase
-        .from("tenders")
-        .select("title, buyer, description, value, sector, source_url, fetched_at")
-        .order("fetched_at", { ascending: false })
-        .limit(10)
+    try {
+        await page.goto(source.url, { waitUntil: "networkidle2", timeout: 30000 })
+        await page.waitForSelector(source.selectors.items, { timeout: 10000 }).catch(() => null)
 
-    if (error || !tenders?.length) {
-        console.log("⚠️ No tender data found, using fallback topics")
-        return getFallbackNewsTopics()
+        const scraped = await page.evaluate((selectors) => {
+            const results: Array<{ title: string; excerpt: string; url: string }> = []
+            const elements = document.querySelectorAll(selectors.items)
+
+            elements.forEach((el, i) => {
+                if (i >= 10) return // Max 10 items per source
+
+                const titleEl = el.querySelector(selectors.title)
+                const excerptEl = el.querySelector(selectors.excerpt)
+                const linkEl = el.querySelector(selectors.link)
+
+                if (titleEl) {
+                    results.push({
+                        title: titleEl.textContent?.trim() || "",
+                        excerpt: excerptEl?.textContent?.trim() || "",
+                        url: (linkEl as HTMLAnchorElement)?.href || ""
+                    })
+                }
+            })
+
+            return results
+        }, source.selectors)
+
+        for (const item of scraped) {
+            if (item.title && item.title.length > 10) {
+                items.push({
+                    ...item,
+                    source: source.name,
+                    category: source.category
+                })
+            }
+        }
+
+        console.log(`  ✅ Found ${items.length} articles`)
+
+    } catch (error) {
+        console.error(`  ❌ Failed to scrape ${source.name}:`, (error as Error).message)
+    } finally {
+        await page.close()
     }
 
-    return tenders.map(tender => ({
-        title: tender.title,
-        source: tender.buyer || "UK Government",
-        url: tender.source_url,
-        date: tender.fetched_at,
-        snippet: `${tender.description} - Value: ${tender.value}`
-    }))
+    return items
 }
 
 /**
- * Fallback news topics when no tender data available
+ * Generate tips content using AI (simulating social media insights)
  */
-function getFallbackNewsTopics(): RawNewsItem[] {
-    return [
-        {
-            title: "UK Procurement Act 2023 Implementation Updates",
-            source: "GOV.UK",
-            snippet: "New regulations affecting how suppliers bid for public contracts"
-        },
-        {
-            title: "NHS Digital Transformation Tender Pipeline",
-            source: "NHS England",
-            snippet: "Major healthcare IT contracts expected in coming months"
-        },
-        {
-            title: "Defence Procurement Modernisation Programme",
-            source: "Ministry of Defence",
-            snippet: "MOD streamlines procurement for faster contract awards"
-        },
-        {
-            title: "Social Value Requirements in Public Sector Bids",
-            source: "Cabinet Office",
-            snippet: "How to demonstrate social value in government tender submissions"
-        },
-        {
-            title: "AI and Automation in Bid Writing",
-            source: "Industry Analysis",
-            snippet: "How technology is transforming the tender response process"
-        }
-    ]
-}
-
-/**
- * Humanize raw news into an engaging blog post using AI
- */
-async function humanizeNews(newsItem: RawNewsItem): Promise<BlogPost | null> {
-    console.log(`✍️ Humanizing: "${newsItem.title}"`)
+async function generateTipsContent(): Promise<ScrapedItem[]> {
+    console.log("💡 Generating bid writing tips content...")
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
 
-    // Select random SEO keywords
-    const selectedKeywords = SEO_KEYWORDS
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4)
+    const prompt = `You are an expert in UK government procurement and bid writing.
+    
+Generate 3 unique, practical tips for winning government tenders. Each tip should be something that could be shared on LinkedIn or a procurement blog.
 
-    const prompt = `You are a procurement industry journalist writing for BidSwipe, an AI-powered bid writing platform.
+For each tip, provide:
+- A catchy headline (max 60 chars)
+- A brief summary (max 150 chars)
+- The full tip content (200-300 words)
 
-Write a 500-700 word news article based on this information:
-- Topic: ${newsItem.title}
-- Source: ${newsItem.source}
-- Details: ${newsItem.snippet || "Latest update on UK public sector procurement"}
+Return as JSON array:
+[
+    {
+        "title": "headline",
+        "excerpt": "summary",
+        "content": "full tip content in markdown"
+    }
+]
 
-Requirements:
-1. Write in an engaging, professional but accessible tone
-2. Explain why this matters for companies bidding on government contracts
-3. Include practical insights for bid writers
-4. Naturally incorporate these SEO keywords where relevant: ${selectedKeywords.join(", ")}
-5. End with a brief mention that AI tools like BidSwipe can help with bid writing
+Make tips specific and actionable. Include real-world examples where possible.
+Focus on: social value, compliance, evaluation criteria, evidence presentation.
 
-IMPORTANT: Return ONLY a JSON object with these exact fields:
-{
-    "title": "Catchy headline (max 70 chars)",
-    "excerpt": "Compelling summary (max 160 chars)", 
-    "content": "Full markdown article",
-    "category": "News|Strategy|Tips|Compliance"
-}
-
-Return valid JSON only, no markdown code blocks or other text.`
+Return ONLY valid JSON, no code blocks.`
 
     try {
         const result = await model.generateContent(prompt)
         let text = result.response.text().trim()
 
-        // Clean up response - remove markdown code blocks if present
-        if (text.startsWith("```json")) {
-            text = text.slice(7)
-        }
+        // Clean up response
         if (text.startsWith("```")) {
-            text = text.slice(3)
+            text = text.replace(/```json\n?/g, "").replace(/```\n?/g, "")
         }
-        if (text.endsWith("```")) {
-            text = text.slice(0, -3)
+
+        const tips = JSON.parse(text)
+
+        return tips.map((tip: any) => ({
+            title: tip.title,
+            excerpt: tip.excerpt,
+            url: "",
+            source: "BidSwipe Expert Tips",
+            category: "Tips",
+            raw_content: tip.content
+        }))
+
+    } catch (error) {
+        console.error("❌ Failed to generate tips:", error)
+        return []
+    }
+}
+
+/**
+ * Humanize scraped content into a blog post
+ */
+async function humanizeToPost(item: ScrapedItem): Promise<BlogPost | null> {
+    console.log(`✍️ Creating post: "${item.title.slice(0, 50)}..."`)
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+
+    const keywords = SEO_KEYWORDS.sort(() => Math.random() - 0.5).slice(0, 4)
+
+    const prompt = `You are a procurement journalist for BidSwipe, an AI bid writing platform.
+
+Write a 400-600 word blog article based on this news/tip:
+
+Title: ${item.title}
+Summary: ${item.excerpt}
+${item.raw_content ? `Content: ${item.raw_content}` : ""}
+Source: ${item.source}
+Category: ${item.category}
+
+Requirements:
+1. Write in professional but accessible tone
+2. Explain why this matters for companies bidding on government contracts
+3. Include actionable takeaways
+4. Naturally use these SEO keywords: ${keywords.join(", ")}
+5. End with brief mention that BidSwipe AI can help with bid writing
+
+Return JSON with these fields only:
+{
+    "title": "Catchy SEO-friendly headline (max 70 chars)",
+    "excerpt": "Meta description (max 155 chars)",
+    "content": "Full markdown article"
+}
+
+Return ONLY valid JSON.`
+
+    try {
+        const result = await model.generateContent(prompt)
+        let text = result.response.text().trim()
+
+        if (text.startsWith("```")) {
+            text = text.replace(/```json\n?/g, "").replace(/```\n?/g, "")
         }
-        text = text.trim()
 
         const parsed = JSON.parse(text)
 
-        // Calculate read time
         const wordCount = parsed.content.split(/\s+/).length
         const readTime = Math.max(2, Math.ceil(wordCount / 200))
 
-        // Generate slug
         const slug = parsed.title
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-|-$/g, "")
             .slice(0, 60)
 
-        const blogPost: BlogPost = {
+        return {
             title: parsed.title,
             slug,
             excerpt: parsed.excerpt,
             content: parsed.content,
-            category: parsed.category || "News",
-            featured: false,
-            seo_keywords: selectedKeywords,
+            category: item.category,
+            featured: item.category === "News",
+            seo_keywords: keywords,
             read_time: `${readTime} min`,
             published: true,
             created_at: new Date().toISOString()
         }
-
-        console.log(`✅ Created: "${blogPost.title}"`)
-        return blogPost
 
     } catch (error) {
         console.error(`❌ Failed to humanize:`, error)
@@ -224,12 +309,34 @@ Return valid JSON only, no markdown code blocks or other text.`
 }
 
 /**
+ * Save to knowledge base for agent training
+ */
+async function saveToKnowledgeBase(item: ScrapedItem): Promise<void> {
+    const knowledge: KnowledgeItem = {
+        type: item.category.toLowerCase(),
+        content: `${item.title}\n\n${item.excerpt}\n\n${item.raw_content || ""}`,
+        source: item.source,
+        tags: item.category === "Tips"
+            ? ["bid writing", "tips", "best practices"]
+            : ["news", "procurement", "updates"],
+        created_at: new Date().toISOString()
+    }
+
+    // Save to knowledge_base table (create if needed)
+    const { error } = await supabase
+        .from("knowledge_base")
+        .insert(knowledge)
+
+    if (error && !error.message.includes("does not exist")) {
+        console.log(`  ⚠️ Knowledge base save skipped: ${error.message}`)
+    }
+}
+
+/**
  * Save blog post to database
  */
 async function savePost(post: BlogPost): Promise<boolean> {
-    console.log(`💾 Saving: ${post.title}`)
-
-    // Check if slug already exists
+    // Check if exists
     const { data: existing } = await supabase
         .from("blog_posts")
         .select("id")
@@ -237,7 +344,7 @@ async function savePost(post: BlogPost): Promise<boolean> {
         .single()
 
     if (existing) {
-        console.log(`⏭️ Skipped (already exists): ${post.slug}`)
+        console.log(`  ⏭️ Already exists: ${post.slug}`)
         return false
     }
 
@@ -249,11 +356,11 @@ async function savePost(post: BlogPost): Promise<boolean> {
         })
 
     if (error) {
-        console.error(`❌ Failed to save:`, error.message)
+        console.error(`  ❌ Save failed:`, error.message)
         return false
     }
 
-    console.log(`✅ Saved to /news`)
+    console.log(`  ✅ Published to /news`)
     return true
 }
 
@@ -261,7 +368,7 @@ async function savePost(post: BlogPost): Promise<boolean> {
  * Main execution
  */
 async function run() {
-    console.log("🚀 News Content Agent Starting...")
+    console.log("🚀 Tender News & Tips Scraper Starting...")
     console.log("=".repeat(50))
 
     if (!GEMINI_KEY) {
@@ -269,33 +376,57 @@ async function run() {
         process.exit(1)
     }
 
-    // 1. Get news items (from tenders or fallback)
-    const newsItems = await scrapeNewsFromTenders()
-    console.log(`📋 Found ${newsItems.length} news topics to process\n`)
+    const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    })
 
+    const allItems: ScrapedItem[] = []
+
+    // 1. Scrape news sources
+    console.log("\n📰 SCRAPING NEWS SOURCES\n")
+    for (const source of NEWS_SOURCES) {
+        const items = await scrapeNewsSource(browser, source)
+        allItems.push(...items)
+        await new Promise(r => setTimeout(r, 2000)) // Rate limit
+    }
+
+    // 2. Generate tips content
+    console.log("\n💡 GENERATING TIPS CONTENT\n")
+    const tips = await generateTipsContent()
+    allItems.push(...tips)
+
+    await browser.close()
+
+    console.log(`\n📋 Total items collected: ${allItems.length}\n`)
+
+    // 3. Process items into blog posts
+    console.log("✍️ CREATING BLOG POSTS\n")
     let successCount = 0
 
-    // 2. Process each news item
-    for (const item of newsItems.slice(0, 5)) { // Process max 5 at a time
-        const post = await humanizeNews(item)
+    for (const item of allItems.slice(0, 6)) { // Process max 6 items
+        const post = await humanizeToPost(item)
 
         if (post) {
             const saved = await savePost(post)
             if (saved) successCount++
+
+            // Also save to knowledge base
+            await saveToKnowledgeBase(item)
         }
 
-        // Rate limit - wait 2s between API calls
-        await new Promise(r => setTimeout(r, 2000))
+        await new Promise(r => setTimeout(r, 2000)) // Rate limit API calls
     }
 
     console.log("\n" + "=".repeat(50))
-    console.log(`🏁 News Content Agent Complete!`)
+    console.log(`🏁 Scraper Complete!`)
+    console.log(`📰 Scraped ${allItems.length} items from news + tips sources`)
     console.log(`✅ Published ${successCount} new articles to /news`)
-    console.log(`📈 SEO keywords targeted: ${SEO_KEYWORDS.slice(0, 4).join(", ")}`)
+    console.log(`📊 Knowledge base updated for agent training`)
 }
 
 // Export for module use
-export { scrapeNewsFromTenders, humanizeNews, savePost, run }
+export { scrapeNewsSource, generateTipsContent, humanizeToPost, run }
 
 // Run if executed directly
 if (require.main === module) {
