@@ -30,39 +30,198 @@ const SEO_KEYWORDS = [
     "procurement UK", "how to win bids", "AI bid writing"
 ]
 
-// Fallback news topics when scraping fails
+// News topics with full fallback content
 const NEWS_TOPICS = [
     {
-        title: "UK Procurement Act Implementation: What Suppliers Need to Know",
-        excerpt: "New regulations are changing how public sector contracts are awarded",
-        category: "News"
+        title: "UK Procurement Act 2023: Essential Guide for Suppliers",
+        excerpt: "New regulations are transforming how public sector contracts are awarded in the UK",
+        category: "News",
+        content: `# UK Procurement Act 2023: What Every Supplier Needs to Know
+
+The UK Procurement Act 2023 represents the most significant reform to public procurement in decades. Coming into effect in 2024, these changes will fundamentally alter how £300 billion in annual public spending is managed.
+
+## Key Changes for Suppliers
+
+**1. Simplified Procedures**
+The new Act reduces complexity by moving from seven EU-derived procedures to just three: open procedure, competitive flexible procedure, and limited tendering.
+
+**2. Greater Transparency**
+A new central digital platform will provide unprecedented visibility into government contracts, upcoming opportunities, and supplier performance data.
+
+**3. SME-Friendly Provisions**
+The Act introduces measures specifically designed to level the playing field for small and medium enterprises, including prompt payment requirements.
+
+## What This Means for Your Bid Writing
+
+Successful bidders will need to adapt their approach:
+- Focus on demonstrating value beyond just price
+- Prepare stronger social value propositions
+- Maintain clean supplier records
+
+**BidSwipe AI can help streamline your bid writing process** by ensuring your proposals meet all the new requirements while maximizing your scoring potential.`
     },
     {
-        title: "NHS Digital Transformation Creates Major Contract Opportunities",
-        excerpt: "Healthcare IT spending set to increase significantly in 2026",
-        category: "News"
+        title: "NHS Digital Transformation: £2 Billion Contract Opportunities",
+        excerpt: "Healthcare IT spending set to increase significantly - how suppliers can position themselves",
+        category: "News",
+        content: `# NHS Digital Transformation Creates Major Contract Opportunities
+
+The NHS is investing heavily in digital transformation, with over £2 billion allocated for technology contracts in the coming years. This represents a significant opportunity for IT suppliers and consultancies.
+
+## Priority Areas for Investment
+
+**Electronic Health Records (EHR)**
+The push for unified patient records across trusts is driving major procurement activity.
+
+**Cybersecurity**
+Following high-profile attacks, NHS organizations are prioritizing security infrastructure.
+
+**AI and Analytics**
+Predictive analytics and AI-powered diagnostics are seeing increased adoption.
+
+## How to Win NHS Contracts
+
+Winning NHS contracts requires understanding their unique evaluation criteria:
+
+1. **Clinical Safety** - Demonstrate robust safety credentials
+2. **Interoperability** - Show how your solution integrates with existing systems
+3. **User Experience** - Clinical staff adoption is critical
+
+**BidSwipe AI can help streamline your bid writing process**, ensuring your NHS proposals address all key evaluation criteria effectively.`
     },
     {
-        title: "Social Value in Government Bids: Maximizing Your Score",
-        excerpt: "How to demonstrate social value effectively in tender responses",
-        category: "Strategy"
+        title: "Social Value in Bids: Boost Your Scores by 20%",
+        excerpt: "Social value now accounts for significant evaluation weight - here's how to maximize your scores",
+        category: "Strategy",
+        content: `# Social Value in Government Bids: Maximizing Your Score
+
+Social value requirements now account for 10-30% of evaluation scores in most public sector tenders. Getting this right can be the difference between winning and losing.
+
+## Understanding the Social Value Model
+
+The government's Social Value Model focuses on five themes:
+
+1. **COVID-19 Recovery** - Supporting communities affected by the pandemic
+2. **Tackling Economic Inequality** - Creating opportunities in disadvantaged areas
+3. **Fighting Climate Change** - Net zero commitments and sustainable practices
+4. **Equal Opportunity** - Diversity in the workforce and supply chain
+5. **Wellbeing** - Improving health and quality of life
+
+## Practical Tips for Better Scores
+
+**Be Specific**
+Generic commitments score poorly. Provide measurable targets with clear timelines.
+
+**Local Impact**
+Focus on the specific geography where the contract will be delivered.
+
+**Evidence Your Track Record**
+Case studies and metrics from previous contracts strengthen your case.
+
+**BidSwipe AI can help streamline your bid writing process** by generating compelling social value responses tailored to each opportunity.`
     },
     {
-        title: "5 Common Bid Writing Mistakes That Cost You Contracts",
-        excerpt: "Avoid these pitfalls to improve your win rate",
-        category: "Tips"
+        title: "5 Bid Writing Mistakes That Cost You Contracts",
+        excerpt: "Avoid these common pitfalls to dramatically improve your win rate",
+        category: "Tips",
+        content: `# 5 Common Bid Writing Mistakes That Cost You Contracts
+
+After reviewing thousands of bid submissions, patterns emerge in why proposals fail. Avoiding these common mistakes can significantly improve your success rate.
+
+## Mistake 1: Not Answering the Question
+
+It sounds obvious, but many bids fail to directly address what evaluators are asking. Read questions carefully and structure responses to match.
+
+## Mistake 2: Generic Content
+
+Copy-paste responses are immediately obvious. Tailor every section to the specific buyer and their stated requirements.
+
+## Mistake 3: Missing Evidence
+
+Claims without proof score poorly. Back up every statement with:
+- Case studies
+- Performance data
+- Client testimonials
+- Certifications
+
+## Mistake 4: Ignoring Word Limits
+
+Going over limits can result in disqualification. Going significantly under suggests you haven't provided enough detail.
+
+## Mistake 5: Last-Minute Submissions
+
+Rushed bids contain errors. Start early and build in time for review.
+
+**BidSwipe AI can help streamline your bid writing process**, catching these common mistakes before submission.`
     },
     {
-        title: "AI-Powered Bid Writing: The Competitive Advantage",
-        excerpt: "How smart contractors are using technology to win more tenders",
-        category: "Strategy"
+        title: "AI-Powered Bid Writing: Your Competitive Edge",
+        excerpt: "Smart contractors are using AI to win more tenders - here's how",
+        category: "Strategy",
+        content: `# AI-Powered Bid Writing: The Competitive Advantage
+
+The most successful contractors are embracing AI to transform their bid writing process. Here's how technology is changing the game.
+
+## How AI Improves Win Rates
+
+**Speed**
+AI can generate first drafts in hours rather than days, giving you more time for refinement.
+
+**Consistency**
+Automated quality checks ensure every response meets required standards.
+
+**Learning from Data**
+AI systems improve over time by analyzing successful submissions.
+
+## Practical Applications
+
+1. **Research Automation** - Quickly gather competitor and buyer intelligence
+2. **Content Generation** - Create tailored responses based on requirements
+3. **Compliance Checking** - Ensure all mandatory elements are addressed
+4. **Scoring Optimization** - Structure responses to maximize evaluation scores
+
+## Getting Started
+
+The key is choosing tools that understand procurement specifically. Generic AI tools lack the domain expertise needed for effective bid writing.
+
+**BidSwipe AI can help streamline your bid writing process** with purpose-built tools for public sector procurement.`
     },
     {
-        title: "Carbon Reduction Plans in Public Sector Tenders",
-        excerpt: "Meeting PPN 06/21 requirements for government contracts",
-        category: "Compliance"
+        title: "PPN 06/21 Compliance: Carbon Reduction Plans Explained",
+        excerpt: "Government contracts over £5m require Carbon Reduction Plans - here's what you need",
+        category: "Compliance",
+        content: `# Carbon Reduction Plans in Public Sector Tenders
+
+Since September 2021, PPN 06/21 requires suppliers bidding for government contracts over £5 million to provide a Carbon Reduction Plan. Here's how to comply.
+
+## What Must Your Plan Include?
+
+A compliant Carbon Reduction Plan needs:
+
+1. **Current Emissions** - Your organization's carbon footprint baseline
+2. **Reduction Targets** - Commitment to achieving Net Zero by 2050
+3. **Actions** - Specific measures to reduce emissions
+4. **Progress Reporting** - How you'll track and report progress
+
+## Key Requirements
+
+**Scope Coverage**
+Plans must address Scope 1 and 2 emissions at minimum. Scope 3 is encouraged.
+
+**Publication**
+Your plan must be published on your corporate website.
+
+**Annual Review**
+Demonstrate ongoing commitment through regular updates.
+
+## Exemptions
+
+The requirement applies to contracts above the threshold where the supplier is a large organization. SMEs may have simplified requirements.
+
+**BidSwipe AI can help streamline your bid writing process**, including generating compliant environmental sections for your proposals.`
     }
 ]
+
 
 interface BlogPost {
     title: string
@@ -179,6 +338,31 @@ Respond with ONLY this JSON structure (no other text):
             if (attempt < retries) {
                 await new Promise(r => setTimeout(r, 1000))
             }
+        }
+    }
+
+    // Fallback: use pre-written content from the topic
+    if (topic.content) {
+        console.log(`[News Agent] Using fallback content for: ${topic.title}`)
+        const wordCount = topic.content.split(/\s+/).length
+        const readTime = Math.max(2, Math.ceil(wordCount / 200))
+        const slug = topic.title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 60)
+
+        return {
+            title: topic.title.slice(0, 70),
+            slug,
+            excerpt: topic.excerpt.slice(0, 155),
+            content: topic.content,
+            category: topic.category,
+            featured: topic.category === "News",
+            seo_keywords: keywords,
+            read_time: `${readTime} min`,
+            published: true,
+            created_at: new Date().toISOString()
         }
     }
 
