@@ -96,12 +96,19 @@ export default function TendersPage() {
     // Load User ID & Tenders on mount
     useEffect(() => {
         const init = async () => {
-            // 1. Auth check
-            if (supabase) {
+            // Initiate both fetches in PARALLEL
+            const fetchTendersPromise = import("./actions")
+                .then(mod => mod.fetchTendersAction())
+                .catch(err => {
+                    console.error("Failed to load tenders", err)
+                    return MOCK_TENDERS
+                })
+
+            const authCheckPromise = (async () => {
+                if (!supabase) return
                 const { data: { user } } = await supabase.auth.getUser()
                 if (user) {
                     setUserId(user.id)
-
                     // Check if company details are filled
                     const { data: profile } = await supabase
                         .from('profiles')
@@ -117,20 +124,14 @@ export default function TendersPage() {
                         setProfileComplete(true)
                     }
                 }
-            }
+            })()
 
-            // 2. Data Fetch (Live or Mock fallback)
-            try {
-                const data = await import("./actions").then(mod => mod.fetchTendersAction())
-                setAllTenders(data)
-                setTenders(data)
-            } catch (err) {
-                console.error("Failed to load tenders", err)
-                setAllTenders(MOCK_TENDERS)
-                setTenders(MOCK_TENDERS)
-            } finally {
-                setLoading(false)
-            }
+            // Wait for both
+            const [data] = await Promise.all([fetchTendersPromise, authCheckPromise])
+
+            setAllTenders(data)
+            setTenders(data)
+            setLoading(false)
         }
         init()
     }, [])
