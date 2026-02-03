@@ -20,69 +20,7 @@ interface BlogPost {
     created_at: string
 }
 
-// Fallback static data for when DB is empty
-const fallbackPosts: BlogPost[] = [
-    {
-        id: "1",
-        slug: "how-to-win-nhs-tenders",
-        category: "Strategy",
-        title: "How to Win NHS Tenders: 5 Key Strategies",
-        excerpt: "Social value and evidence-based responses are critical. Learn what evaluators actually look for in healthcare bids.",
-        created_at: "2026-01-30",
-        read_time: "4 min",
-        featured: true,
-    },
-    {
-        id: "2",
-        slug: "ppn-06-21-carbon-reduction-plans",
-        category: "Compliance",
-        title: "PPN 06/21: Carbon Reduction Plans Explained",
-        excerpt: "All UK government contracts over £5m now require Carbon Reduction Plans. Here's what you need to include.",
-        created_at: "2026-01-28",
-        read_time: "6 min",
-        featured: true,
-    },
-    {
-        id: "3",
-        slug: "avoiding-common-bid-mistakes",
-        category: "Tips",
-        title: "Avoiding Common Bid Mistakes",
-        excerpt: "From vague claims to missing evidence - the top 10 reasons bids get rejected and how to avoid them.",
-        created_at: "2026-01-25",
-        read_time: "5 min",
-        featured: false,
-    },
-    {
-        id: "4",
-        slug: "procurement-reform-update-2026",
-        category: "News",
-        title: "Procurement Reform Update 2026",
-        excerpt: "The Procurement Act brings major changes to public sector bidding. What contractors need to know.",
-        created_at: "2026-01-22",
-        read_time: "7 min",
-        featured: false,
-    },
-    {
-        id: "5",
-        slug: "writing-social-value-responses",
-        category: "Strategy",
-        title: "Writing Social Value Responses That Win",
-        excerpt: "Social value now accounts for 10-30% of most evaluations. Learn how to maximize your scores.",
-        created_at: "2026-01-20",
-        read_time: "5 min",
-        featured: false,
-    },
-    {
-        id: "6",
-        slug: "evidence-that-evaluators-love",
-        category: "Tips",
-        title: "Evidence That Evaluators Love",
-        excerpt: "Case studies, metrics, and testimonials - structuring evidence that proves your capability.",
-        created_at: "2026-01-18",
-        read_time: "4 min",
-        featured: false,
-    },
-]
+
 
 const categories = [
     { id: "all", label: "All", icon: Newspaper },
@@ -110,19 +48,9 @@ export default function NewsPage() {
             const res = await fetch(`/api/blog/posts?${params}`)
             const data = await res.json()
 
-            if (data.posts && data.posts.length > 0) {
-                setPosts(data.posts)
-            } else {
-                // Use fallback if database is empty
-                setPosts(fallbackPosts.filter(p =>
-                    activeCategory === "all" || p.category === activeCategory
-                ))
-            }
+            setPosts(data.posts || [])
         } catch {
-            // Use fallback on error
-            setPosts(fallbackPosts.filter(p =>
-                activeCategory === "all" || p.category === activeCategory
-            ))
+            setPosts([])
         } finally {
             setLoading(false)
         }
