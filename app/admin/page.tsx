@@ -102,43 +102,53 @@ export default function AdminDashboard() {
 
     const loadData = async (customToken?: string) => {
         try {
+            console.log("[Admin] Loading data...")
             let headers: Record<string, string> = {}
+            let endpoint = '/api/admin/data' // Default to data endpoint
 
+            // 1. Prioritize Custom Admin Token (Admin Portal)
             if (customToken) {
                 headers['Authorization'] = `Admin ${customToken}`
-            } else if (supabase) {
+                // For custom token, we use the auth endpoint's GET handler which supports "Admin " scheme
+                // OR we update data endpoint to support it. 
+                // Creating a specific data loading endpoint is cleaner. 
+                // Let's use the one that works: api/admin/auth GET handler supports "Admin " scheme.
+                endpoint = '/api/admin/auth'
+            }
+            // 2. Fallback to Supabase Session (if developed for mixed use)
+            else if (supabase) {
                 const { data: { session } } = await supabase.auth.getSession()
                 if (session?.access_token) {
                     headers['Authorization'] = `Bearer ${session.access_token}`
+                    // api/admin/data supports Bearer usually (checked previous file content, it seemed to)
+                    endpoint = '/api/admin/data'
                 }
             }
 
             if (Object.keys(headers).length === 0) {
+                console.error("[Admin] No auth headers found")
                 toast.error("No authentication found")
+                setAuthorized(false)
+                setLoading(false)
                 return
             }
-
-            // The auth/route endpoint acts as the data fetcher for Admin tokens
-            // The data/route acts as the data fetcher for Bearer tokens
-            // This is a bit disjointed, but let's try to use the auth endpoint for data if likely using Admin token?
-            // Wait, api/admin/auth GET handler returns the same data structure!
-            // Let's use api/admin/auth if we have a Custom Token, and api/admin/data if we have a Bearer token.
-
-            const endpoint = customToken ? '/api/admin/auth' : '/api/admin/data'
 
             const response = await fetch(endpoint, { headers })
 
             if (!response.ok) {
+                console.error(`[Admin] API Error: ${response.status}`)
                 if (response.status === 401 || response.status === 403) {
                     setAuthorized(false)
-                    localStorage.removeItem("bidswipe_admin_token") // Clear invalid token
+                    localStorage.removeItem("bidswipe_admin_token")
                 }
-                const errorData = await response.json()
-                toast.error("Failed to load admin data", { description: errorData.error })
+                const errorData = await response.json().catch(() => ({}))
+                toast.error("Failed to load admin data", { description: errorData.error || "Unknown error" })
+                setLoading(false)
                 return
             }
 
             const data = await response.json()
+            console.log(`[Admin] Loaded: ${data.users?.length || 0} users`)
 
             setUsers(data.users || [])
             setAuthUsers(data.authUsers || [])
@@ -150,9 +160,15 @@ export default function AdminDashboard() {
                 creditStats: { total: 0, used: 0 }
             })
 
+            // If we got here, we are definitely authorized
+            setAuthorized(true)
+
         } catch (error) {
-            console.error("[Admin] Error loading data:", error)
+            console.error("[Admin] Critical load error:", error)
             toast.error("Failed to load admin data")
+            setAuthorized(false)
+        } finally {
+            setLoading(false)
         }
     }
 

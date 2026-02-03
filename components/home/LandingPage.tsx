@@ -96,7 +96,10 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                     >
                         {/* PRIMARY BUTTON - Apple Style */}
-                        <Link href="/tenders">
+                        <Link href="/tenders" prefetch={true} onMouseEnter={() => {
+                            // Aggressively prefetch the route on hover
+                            // Note: Next.js Link handles viewport prefetching, but hover adds intent signal
+                        }}>
                             <button className="group relative h-14 px-8 rounded-full bg-gradient-to-b from-white to-gray-200 text-black text-sm font-semibold tracking-wide flex items-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
                                 Find Tenders
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -212,7 +215,7 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                                 </li>
                             </ul>
 
-                            <Link href="/tenders">
+                            <Link href="/tenders" prefetch={true}>
                                 <button className="h-12 px-6 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
                                     Browse Tenders →
                                 </button>
