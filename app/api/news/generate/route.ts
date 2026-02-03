@@ -78,70 +78,111 @@ interface BlogPost {
 }
 
 /**
- * Generate blog post from a topic using AI
+ * Extract JSON from a response that might have extra text
  */
-async function generatePost(topic: typeof NEWS_TOPICS[0]): Promise<BlogPost | null> {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" })
+function extractJSON(text: string): object | null {
+    // Try direct parse first
+    try {
+        return JSON.parse(text)
+    } catch {
+        // Try to find JSON object in the text
+        const jsonMatch = text.match(/\{[\s\S]*"title"[\s\S]*"excerpt"[\s\S]*"content"[\s\S]*\}/)
+        if (jsonMatch) {
+            try {
+                return JSON.parse(jsonMatch[0])
+            } catch {
+                // Continue to next attempt
+            }
+        }
+
+        // Try cleaning markdown code blocks
+        let cleaned = text
+            .replace(/```json\s*/gi, "")
+            .replace(/```\s*/g, "")
+            .replace(/^\s*[\r\n]+/, "")
+            .trim()
+
+        try {
+            return JSON.parse(cleaned)
+        } catch {
+            return null
+        }
+    }
+}
+
+/**
+ * Generate blog post from a topic using AI with retries
+ */
+async function generatePost(topic: typeof NEWS_TOPICS[0], retries = 2): Promise<BlogPost | null> {
+    const model = getGenAI().getGenerativeModel({
+        model: "gemini-1.5-flash",
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+        }
+    })
 
     const keywords = SEO_KEYWORDS.sort(() => Math.random() - 0.5).slice(0, 4)
 
-    const prompt = `You are a procurement expert writing for BidSwipe, an AI bid writing platform.
+    // Simpler, more structured prompt for reliable JSON
+    const prompt = `Write a blog article about: "${topic.title}"
 
-Write a 500-700 word blog article on this topic:
-- Title: ${topic.title}
-- Summary: ${topic.excerpt}
-- Category: ${topic.category}
+Context: ${topic.excerpt}
+Category: ${topic.category}
+Include keywords: ${keywords.join(", ")}
 
-Requirements:
-1. Professional but accessible tone
-2. Include practical, actionable advice
-3. Naturally use these SEO keywords: ${keywords.join(", ")}
-4. End with brief mention that BidSwipe AI can help with bid writing
+Write 500 words. End with "BidSwipe AI can help streamline your bid writing process."
 
-Return ONLY valid JSON:
-{
-    "title": "SEO headline (max 70 chars)",
-    "excerpt": "Meta description (max 155 chars)",
-    "content": "Full markdown article"
-}
+Respond with ONLY this JSON structure (no other text):
+{"title":"catchy headline under 70 chars","excerpt":"meta description under 155 chars","content":"full markdown article here"}`
 
-No code blocks, just JSON.`
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            const result = await model.generateContent(prompt)
+            const text = result.response.text().trim()
 
-    try {
-        const result = await model.generateContent(prompt)
-        let text = result.response.text().trim()
+            const parsed = extractJSON(text) as { title: string; excerpt: string; content: string } | null
 
-        // Clean markdown code blocks if present
-        text = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
+            if (!parsed || !parsed.title || !parsed.content) {
+                console.error(`[News Agent] Invalid response structure, attempt ${attempt + 1}`)
+                if (attempt < retries) {
+                    await new Promise(r => setTimeout(r, 1000))
+                    continue
+                }
+                return null
+            }
 
-        const parsed = JSON.parse(text)
+            const wordCount = parsed.content.split(/\s+/).length
+            const readTime = Math.max(2, Math.ceil(wordCount / 200))
 
-        const wordCount = parsed.content.split(/\s+/).length
-        const readTime = Math.max(2, Math.ceil(wordCount / 200))
+            const slug = parsed.title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "")
+                .slice(0, 60)
 
-        const slug = parsed.title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "")
-            .slice(0, 60)
+            return {
+                title: parsed.title.slice(0, 70),
+                slug,
+                excerpt: (parsed.excerpt || topic.excerpt).slice(0, 155),
+                content: parsed.content,
+                category: topic.category,
+                featured: topic.category === "News",
+                seo_keywords: keywords,
+                read_time: `${readTime} min`,
+                published: true,
+                created_at: new Date().toISOString()
+            }
 
-        return {
-            title: parsed.title,
-            slug,
-            excerpt: parsed.excerpt,
-            content: parsed.content,
-            category: topic.category,
-            featured: topic.category === "News",
-            seo_keywords: keywords,
-            read_time: `${readTime} min`,
-            published: true,
-            created_at: new Date().toISOString()
+        } catch (error) {
+            console.error(`[News Agent] Attempt ${attempt + 1} failed:`, error)
+            if (attempt < retries) {
+                await new Promise(r => setTimeout(r, 1000))
+            }
         }
-
-    } catch (error) {
-        console.error("[News Agent] AI error:", error)
-        return null
     }
+
+    return null
 }
 
 /**
