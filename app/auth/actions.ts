@@ -1,5 +1,6 @@
 'use server';
 
+import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendVerificationEmail } from "@/lib/email";
 
@@ -7,6 +8,7 @@ export async function signupWithCustomEmail(formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
+    const deviceId = formData.get('deviceId') as string; // Capture device ID if sent
 
     if (!email || !password || !fullName) {
         return { error: "Missing fields" };
@@ -17,24 +19,22 @@ export async function signupWithCustomEmail(formData: FormData) {
     }
 
     try {
-        console.log(`[AUTH] Attempting custom signup for ${email}`);
-
-        // 1. Create User (Admin execution to bypass default email trigger if possible, 
-        // OR we just rely on Supabase returning the user and we handle the link generation)
-
-        // Note: createUser usually auto-confirms if email_confirm is off. 
-        // If on, it sends an email unless we suppress it? 
-        // Actually, the best way to get a link is generateLink.
-        // But we need the user to exist first?
-        // generateLink type 'signup' creates the user if they don't exist? Check docs.
-        // Docs: "Generates a link for a user... type='signup' requires email and password and creates a user."
+        const headerList = headers();
+        const ip = (await headerList).get("x-forwarded-for") || (await headerList).get("x-real-ip") || "unknown";
+        console.log(`[AUTH] Attempting custom signup for ${email} from IP: ${ip}`);
 
         const { data, error } = await supabaseAdmin.auth.admin.generateLink({
             type: 'signup',
             email,
             password,
             options: {
-                data: { full_name: fullName }
+                data: {
+                    full_name: fullName,
+                    signup_ip: ip,
+                    device_id: deviceId || "unknown",
+                    signup_country: (await headerList).get("x-vercel-ip-country") || "unknown"
+                },
+                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
             }
         });
 

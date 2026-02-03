@@ -8,6 +8,8 @@ import { Eye, EyeOff, Lock, Mail, ArrowRight, Loader2, UserCircle } from 'lucide
 import Link from 'next/link'
 import { Toaster, toast } from 'sonner'
 
+import { DeviceFingerprint } from "@/components/DeviceFingerprint"
+
 export default function RegisterPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
@@ -17,6 +19,7 @@ export default function RegisterPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [fullName, setFullName] = useState('')
+    const [deviceId, setDeviceId] = useState('')
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -28,6 +31,7 @@ export default function RegisterPage() {
             formData.append('email', email)
             formData.append('password', password)
             formData.append('fullName', fullName)
+            formData.append('deviceId', deviceId)
 
             // Dynamic import to avoid server-action-in-client-component build issues if any
             const { signupWithCustomEmail } = await import('@/app/auth/actions')
@@ -61,7 +65,9 @@ export default function RegisterPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-black">
+            <DeviceFingerprint setDeviceId={setDeviceId} />
             <Toaster position="top-center" theme="dark" closeButton richColors />
+
 
             {/* Background */}
             <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] animate-pulse" />

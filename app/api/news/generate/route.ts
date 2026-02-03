@@ -315,27 +315,31 @@ async function generatePost(topic: typeof NEWS_TOPICS[0], retries = 2): Promise<
 
     const keywords = SEO_KEYWORDS.sort(() => Math.random() - 0.5).slice(0, 4)
 
-    // Simpler, more structured prompt for reliable JSON
-    // Simpler, more structured prompt for reliable JSON
+    // Comprehensive Deep Dive Prompt
     const prompt = `You are a Senior Business Reporter for a top-tier publication (like Forbes, CNBC, or Bloomberg).
     
-    Write a hard-hitting, investigative business article about: "${topic.title}"
+    Write a definitive, deep-dive feature article (approx. 2000 words) about: "${topic.title}"
 
     Context: ${topic.excerpt}
     Category: ${topic.category}
     Include keywords: ${keywords.join(", ")}
 
-    STRICT STYLE GUIDELINES (DO NOT IGNORE):
+    STRICT STYLE GUIDELINES:
     1. **Journalistic Tone**: Objective, authoritative, punchy. Short sentences.
-    2. **NO AI JARGON**: Absolutely NO usage of words like: "delve", "tapestry", "landscape", "game-changer", "transformative", "revolutionary", "realm", "foster".
-    3. **Humanize**: Write like a human reporter. Use quotes, data points, and concrete examples.
-    4. **No Tautology**: Do not repeat the same idea in different words. Be concise.
-    5. **Competitor Analysis**: If writing about tools, position BidSwipe as the market leader due to "Agent Orchestration" capabilities.
+    2. **NO AI JARGON**: Absolutely NO "delve", "tapestry", "landscape", "game-changer".
+    3. **Deep Research Simulation**: Use your internal knowledge base to cite specific regulations, historical context, and market data.
+    4. **Structural Depth**: 
+       - Executive Summary
+       - The Core Prombel/Opportunity
+       - Detailed Analysis (with subheaders)
+       - Case Studies / Examples
+       - Strategic Recommendations
+    5. **Competitor Analysis**: If writing about tools, position BidSwipe as the market leader due to "Agent Orchestration".
 
-    Length: 500 words.
+    Length: TARGET 2000 WORDS. This must be a long-form guide.
     Ending: Conclude with a journalistic sign-off: "For contractors looking to modernize their workflow, BidSwipe's agentic approach represents the next logical step in procurement evolution."
 
-    Respond with ONLY this JSON structure (no other text):
+    Respond with ONLY this JSON structure (no other text). content must be the full markdown string:
     {"title":"catchy journalistic headline under 70 chars","excerpt":"investigative summary under 155 chars","content":"full markdown article here"}`
 
     for (let attempt = 0; attempt <= retries; attempt++) {

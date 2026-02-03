@@ -1,0 +1,545 @@
+"use client"
+
+import Link from "next/link"
+import { motion } from "framer-motion"
+import { ArrowRight, CheckCircle, Building2, FileSearch, ShieldAlert, PenTool, Sparkles, ArrowLeftRight, Filter, Clock, Edit, Star, Download, Undo2, ChevronRight } from "lucide-react"
+import { GlobalHeader } from "@/components/GlobalHeader"
+import { AnimatedBackground } from "@/components/AnimatedBackground"
+
+// Agent Workflow Steps Data - Using consistent primary blue (#007AFF)
+const agentSteps = [
+    {
+        id: 1,
+        title: "Company Research",
+        description: "We ingest your case studies, certifications, and unique value propositions to build your bidding DNA.",
+        icon: Building2,
+    },
+    {
+        id: 2,
+        title: "RFP Intelligence",
+        description: "Our agents deconstruct the requirements document, identifying compliance traps and scoring criteria.",
+        icon: FileSearch,
+    },
+    {
+        id: 3,
+        title: "Red Team Critique",
+        description: "An adversarial AI simulates evaluator scoring, flagging weaknesses before submission.",
+        icon: ShieldAlert,
+    },
+    {
+        id: 4,
+        title: "Autonomous Drafting",
+        description: "The final proposal is generated in your exact tone, grounded only in your real evidence.",
+        icon: PenTool,
+    },
+]
+
+// Feature highlights data
+const featureHighlights = [
+    { icon: Edit, title: "Edit Proposals", description: "Refine AI-generated content to match your voice" },
+    { icon: Star, title: "Rate Quality", description: "Train the system with your feedback" },
+    { icon: Download, title: "Download PDF", description: "Export submission-ready documents" },
+    { icon: Sparkles, title: "AI Match Scoring", description: "See how well you fit each tender" },
+]
+
+interface LandingPageProps {
+    newsSection: React.ReactNode
+}
+
+export function LandingPage({ newsSection }: LandingPageProps) {
+    return (
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-primary/30">
+
+            {/* HERO SECTION */}
+            <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-24 pb-16 overflow-hidden">
+
+                {/* Premium Animated Background */}
+                <AnimatedBackground />
+
+                <div className="container relative z-10 px-6 text-center max-w-5xl mx-auto">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-lg mb-10"
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span className="text-xs font-medium uppercase tracking-widest text-white/60">Tenders Are Live!</span>
+                    </motion.div>
+
+                    <motion.h1
+                        initial={{ y: 30, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.7, delay: 0.1 }}
+                        className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-[1.1]"
+                    >
+                        Win Government Contracts <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-primary">On Autopilot.</span>
+                    </motion.h1>
+
+                    <motion.p
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.7, delay: 0.25 }}
+                        className="text-base md:text-lg text-white/50 max-w-xl mx-auto leading-relaxed mb-12"
+                    >
+                        Deploy autonomous <strong className="text-white/70">Bid Agents</strong> to monitor live tenders, analyze requirements, and generate winning proposals — in minutes.
+                    </motion.p>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.7, delay: 0.4 }}
+                        className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                    >
+                        {/* PRIMARY BUTTON - Apple Style */}
+                        <Link href="/tenders">
+                            <button className="group relative h-14 px-8 rounded-full bg-gradient-to-b from-white to-gray-200 text-black text-sm font-semibold tracking-wide flex items-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                                Find Tenders
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                            </button>
+                        </Link>
+
+                        {/* SECONDARY BUTTON - Glass Style */}
+                        <Link href="/register">
+                            <button className="h-14 px-8 rounded-full bg-white/5 text-white text-sm font-medium tracking-wide border border-white/10 backdrop-blur-lg hover:bg-white/10 hover:border-white/20 transition-all duration-200">
+                                Start Free Trial
+                            </button>
+                        </Link>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* SWIPE FEATURE SHOWCASE */}
+            <section className="py-24 bg-black relative overflow-hidden">
+                <div className="container mx-auto px-6 max-w-6xl">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+                        {/* Left: Animated Card Stack */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="relative h-[400px] flex items-center justify-center"
+                        >
+                            {/* Stacked Cards Animation */}
+                            <div className="relative w-full max-w-[300px]">
+                                {/* Background Cards */}
+                                <motion.div
+                                    animate={{ rotate: -6, x: -20 }}
+                                    className="absolute inset-0 bg-white/[0.02] border border-white/10 rounded-3xl"
+                                />
+                                <motion.div
+                                    animate={{ rotate: 3, x: 10 }}
+                                    className="absolute inset-0 bg-white/[0.04] border border-white/10 rounded-3xl"
+                                />
+
+                                {/* Main Card */}
+                                <motion.div
+                                    animate={{ y: [0, -8, 0] }}
+                                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                    className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-2xl"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-medium text-primary uppercase tracking-wide">Healthcare</span>
+                                        <span className="text-xs text-white/40">£2.5M</span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white mb-2">NHS Digital Transformation</h3>
+                                    <p className="text-sm text-white/50 mb-4">End-to-end digital infrastructure modernization...</p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-white/30">Deadline: 14 days</span>
+                                        <div className="flex gap-2">
+                                            <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                                                <span className="text-red-400 text-lg">✕</span>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                                                <span className="text-green-400 text-lg">✓</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+
+                                {/* Swipe Indicators */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: [0, 1, 0], x: [-50, 0, 50] }}
+                                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                >
+                                    <ArrowLeftRight className="w-12 h-12 text-primary/50" />
+                                </motion.div>
+                            </div>
+                        </motion.div>
+
+                        {/* Right: Copy */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="space-y-8"
+                        >
+                            <div>
+                                <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">Smart Contract Matching</span>
+                                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-4">
+                                    Swipe Through <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Opportunities</span>
+                                </h2>
+                                <p className="text-white/50 leading-relaxed">
+                                    Browse live government contracts with a swipe. Filter by your industry, see match scores instantly, and get proposals generated before your competitors even know the tender exists.
+                                </p>
+                            </div>
+
+                            <ul className="space-y-4">
+                                <li className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                                        <Filter className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <span className="text-white/80">Filter by your industry</span>
+                                </li>
+                                <li className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                                        <Clock className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <span className="text-white/80">See opportunities first</span>
+                                </li>
+                                <li className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
+                                        <Sparkles className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <span className="text-white/80">AI match scoring</span>
+                                </li>
+                            </ul>
+
+                            <Link href="/tenders">
+                                <button className="h-12 px-6 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
+                                    Browse Tenders →
+                                </button>
+                            </Link>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* FEATURE HIGHLIGHTS */}
+            <section className="py-16 bg-[#030303] border-y border-white/5">
+                <div className="container mx-auto px-6 max-w-5xl">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {featureHighlights.map((feature, index) => (
+                            <motion.div
+                                key={feature.title}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.1 }}
+                                className="text-center p-6"
+                            >
+                                <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+                                    <feature.icon className="w-6 h-6 text-primary" />
+                                </div>
+                                <h4 className="text-sm font-bold text-white mb-1">{feature.title}</h4>
+                                <p className="text-xs text-white/40">{feature.description}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* AGENT WORKFLOW VISUALIZATION */}
+            <section className="py-24 md:py-32 bg-[#030303] relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,122,255,0.05),transparent_70%)]" />
+
+                <div className="container mx-auto px-6 max-w-6xl relative z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-20"
+                    >
+                        <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">How It Works</span>
+                        <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">
+                            From Chaos to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Contract</span>.
+                        </h2>
+                    </motion.div>
+
+                    {/* Steps Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                        {agentSteps.map((step, index) => (
+                            <motion.div
+                                key={step.id}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.15 }}
+                                className="group relative"
+                            >
+                                {/* Card */}
+                                <div className="relative h-full bg-white/[0.03] border border-white/10 rounded-3xl p-8 backdrop-blur-sm overflow-hidden hover:border-primary/30 hover:bg-white/[0.05] transition-all duration-500">
+
+                                    {/* Step Number */}
+                                    <div className="absolute top-6 right-6 text-5xl font-black text-white/5 group-hover:text-white/10 transition-colors">
+                                        {String(step.id).padStart(2, '0')}
+                                    </div>
+
+                                    {/* Icon - Using Primary Blue */}
+                                    <div className="w-14 h-14 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center mb-6">
+                                        <step.icon className="w-7 h-7 text-primary" strokeWidth={1.5} />
+                                    </div>
+
+                                    {/* Content */}
+                                    <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{step.title}</h3>
+                                    <p className="text-sm text-white/50 leading-relaxed">{step.description}</p>
+
+                                    {/* Hover Glow - Primary Blue */}
+                                    <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-primary rounded-full blur-[80px] opacity-0 group-hover:opacity-20 transition-opacity duration-700" />
+                                </div>
+
+                                {/* Connector Line (Desktop) */}
+                                {index < agentSteps.length - 1 && (
+                                    <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-px bg-gradient-to-r from-white/20 to-transparent" />
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* COMPARISON SECTION */}
+            <section className="py-24 border-t border-white/5 bg-black">
+                <div className="container mx-auto px-6 max-w-4xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="space-y-6"
+                        >
+                            <h3 className="text-2xl font-bold text-white/30">The Old Way</h3>
+                            <ul className="space-y-4">
+                                {["Manually searching portals daily", "Generic, hallucinated AI copy", "Missed deadlines & formatting errors"].map((item, i) => (
+                                    <li key={i} className="flex items-center gap-4 text-white/40 text-sm">
+                                        <div className="w-6 h-6 rounded-full border border-white/10 flex items-center justify-center text-xs">✕</div>
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="space-y-6"
+                        >
+                            <h3 className="text-2xl font-bold text-white">The BidSwipe Way</h3>
+                            <ul className="space-y-4">
+                                {[
+                                    { text: "Super Agents scout & qualify 24/7", bold: "Super Agents" },
+                                    { text: "Contextual RAG uses your exact data", bold: "Contextual RAG" },
+                                    { text: "Auto-Apply workflows save hours", bold: "Auto-Apply" }
+                                ].map((item, i) => (
+                                    <li key={i} className="flex items-center gap-4 text-white/80 text-sm">
+                                        <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" />
+                                        <span><strong className="text-white">{item.bold}</strong> {item.text.replace(item.bold, '').trim()}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* LATEST NEWS SLOT */}
+            {newsSection}
+
+            {/* FAQ SECTION */}
+            <section className="py-24 relative" id="faq">
+                <div className="container mx-auto px-6 max-w-4xl">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="text-center mb-16"
+                    >
+                        <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-4">
+                            Frequently Asked Questions
+                        </h2>
+                        <p className="text-white/50 text-lg">Everything you need to know about BidSwipe AI</p>
+                    </motion.div>
+
+                    <div className="space-y-4">
+                        {/* FAQ Item 1 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">How does the AI proposal generation work?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p className="mb-3">Our AI uses <strong className="text-primary">RAG (Retrieval-Augmented Generation)</strong> to create winning proposals:</p>
+                                <ol className="list-decimal list-inside space-y-2 ml-2">
+                                    <li><strong>Research Phase:</strong> The AI searches the web for the buyer&apos;s history, past contracts, and procurement patterns</li>
+                                    <li><strong>Company Context:</strong> Your company profile (services, experience, sectors) is used to tailor the proposal to YOUR strengths</li>
+                                    <li><strong>Tender Analysis:</strong> The AI deeply understands the tender requirements, evaluation criteria, and what buyers look for</li>
+                                    <li><strong>Proposal Generation:</strong> Using all this context, it writes a professional, persuasive proposal that positions you as the ideal supplier</li>
+                                </ol>
+                                <p className="mt-3 text-sm text-white/40">The more complete your company profile, the better tailored your proposals will be.</p>
+                            </div>
+                        </motion.details>
+
+                        {/* FAQ Item 2 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">Why do you need my company information?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p className="mb-3">Your company profile is <strong className="text-white">essential</strong> for generating relevant proposals:</p>
+                                <ul className="list-disc list-inside space-y-2 ml-2">
+                                    <li><strong>Company Name & Description:</strong> Used in proposal headers and to establish credibility</li>
+                                    <li><strong>Sectors & Industries:</strong> Helps the AI highlight relevant experience and certifications</li>
+                                    <li><strong>Past Projects:</strong> The AI references your track record to demonstrate capability</li>
+                                    <li><strong>Company Size:</strong> Ensures proposals are appropriate for your scale of operations</li>
+                                </ul>
+                                <p className="mt-3 text-sm text-white/40">Your data is encrypted and never shared. It&apos;s only used to personalize YOUR proposals.</p>
+                            </div>
+                        </motion.details>
+
+                        {/* FAQ Item 3 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">How long does proposal generation take?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p>Most proposals are generated in <strong className="text-primary">2-5 minutes</strong>. The AI performs deep research on the buyer, analyzes the tender, and crafts a comprehensive proposal. Complex tenders with extensive requirements may take slightly longer.</p>
+                                <p className="mt-3">You&apos;ll receive a notification when your proposal is ready, and you can track progress in real-time from your dashboard.</p>
+                            </div>
+                        </motion.details>
+
+                        {/* FAQ Item 4 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.3 }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">What are credits and how do they work?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p className="mb-3">Credits are the currency for generating proposals:</p>
+                                <ul className="list-disc list-inside space-y-2 ml-2">
+                                    <li><strong>1 Credit = 1 Proposal:</strong> Each proposal generation costs 1 credit</li>
+                                    <li><strong>Free Tier:</strong> New users get 3 free credits to try the platform</li>
+                                    <li><strong>Pro Plan:</strong> Unlimited proposals for a monthly subscription</li>
+                                </ul>
+                                <p className="mt-3 text-sm text-white/40">Credits are only consumed when a proposal is successfully generated. Failed attempts don&apos;t cost credits.</p>
+                            </div>
+                        </motion.details>
+
+                        {/* FAQ Item 5 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.4 }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">Can I edit proposals after they&apos;re generated?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p>Absolutely! Generated proposals are just the starting point. You can:</p>
+                                <ul className="list-disc list-inside space-y-2 ml-2 mt-3">
+                                    <li>Edit any section directly in our rich text editor</li>
+                                    <li>Add your own case studies and references</li>
+                                    <li>Adjust pricing and delivery timelines</li>
+                                    <li>Export to Word or PDF for final submission</li>
+                                </ul>
+                            </div>
+                        </motion.details>
+
+                        {/* FAQ Item 6 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.5 }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">Where do the tenders come from?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p>We aggregate tenders from UK government procurement portals including:</p>
+                                <ul className="list-disc list-inside space-y-2 ml-2 mt-3">
+                                    <li><strong>Contracts Finder:</strong> Central UK government contracts</li>
+                                    <li><strong>Find a Tender:</strong> Higher-value public contracts</li>
+                                    <li><strong>NHS Supply Chain:</strong> Healthcare sector opportunities</li>
+                                    <li><strong>Local Authority portals:</strong> Council and regional contracts</li>
+                                </ul>
+                                <p className="mt-3 text-sm text-white/40">New tenders are added daily and filtered to show only active opportunities.</p>
+                            </div>
+                        </motion.details>
+
+                        {/* FAQ Item 7 */}
+                        <motion.details
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.6 }}
+                            className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
+                        >
+                            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                                <span className="text-white font-semibold text-lg">Is my data secure?</span>
+                                <ChevronRight className="w-5 h-5 text-white/40 group-open:rotate-90 transition-transform" />
+                            </summary>
+                            <div className="px-6 pb-6 text-white/60 leading-relaxed">
+                                <p>Security is our top priority:</p>
+                                <ul className="list-disc list-inside space-y-2 ml-2 mt-3">
+                                    <li><strong>Encryption:</strong> All data encrypted at rest and in transit (AES-256)</li>
+                                    <li><strong>Authentication:</strong> Secure login with email verification</li>
+                                    <li><strong>GDPR Compliant:</strong> We follow UK data protection regulations</li>
+                                    <li><strong>No Data Sharing:</strong> Your company info and proposals are never shared or used for training</li>
+                                </ul>
+                            </div>
+                        </motion.details>
+                    </div>
+                </div>
+            </section>
+
+            {/* FOOTER */}
+            <footer className="border-t border-white/5 py-12 bg-[#020202]">
+                <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-white/40 text-xs">
+                    <p>© 2026 BidSwipe AI. All rights reserved.</p>
+                    <div className="flex gap-8">
+                        <Link href="/privacy" className="hover:text-white/60 transition-colors">Privacy</Link>
+                        <Link href="/terms" className="hover:text-white/60 transition-colors">Terms</Link>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    )
+}
