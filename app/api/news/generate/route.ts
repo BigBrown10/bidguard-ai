@@ -81,7 +81,7 @@ interface BlogPost {
  * Generate blog post from a topic using AI
  */
 async function generatePost(topic: typeof NEWS_TOPICS[0]): Promise<BlogPost | null> {
-    const model = getGenAI().getGenerativeModel({ model: "gemini-2.0-flash" })
+    const model = getGenAI().getGenerativeModel({ model: "gemini-1.5-flash" })
 
     const keywords = SEO_KEYWORDS.sort(() => Math.random() - 0.5).slice(0, 4)
 
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         // Check if this is a cron call
         const url = new URL(req.url)
         const isCron = url.searchParams.get("cron") === "true"
-        
+
         // Auth check (skip for cron)
         if (!isCron) {
             const authHeader = req.headers.get("authorization")
