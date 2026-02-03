@@ -64,32 +64,37 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Access denied - not an admin" }, { status: 403 })
         }
 
-        // Fetch ALL users using admin client (bypasses RLS)
+        // Parallelize fetching ALL data using admin client
         const adminClient = getSupabaseAdmin()
-        const { data: users, error: usersError } = await adminClient
-            .from("profiles")
-            .select("*")
-            .order("created_at", { ascending: false })
+
+        const [usersResult, proposalsResult, authUsersResult] = await Promise.all([
+            adminClient
+                .from("profiles")
+                .select("*")
+                .order("created_at", { ascending: false }),
+
+            adminClient
+                .from("proposals")
+                .select("*, profiles(company_name)")
+                .order("created_at", { ascending: false })
+                .limit(500),
+
+            adminClient.auth.admin.listUsers()
+        ])
+
+        const { data: users, error: usersError } = usersResult
+        const { data: proposals, error: proposalsError } = proposalsResult
+        const { data: authUsers } = authUsersResult
 
         if (usersError) {
             console.error("[Admin API] Error fetching users:", usersError)
             return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
         }
 
-        // Fetch ALL proposals using admin client
-        const { data: proposals, error: proposalsError } = await adminClient
-            .from("proposals")
-            .select("*, profiles(company_name)")
-            .order("created_at", { ascending: false })
-            .limit(500)
-
         if (proposalsError) {
             console.error("[Admin API] Error fetching proposals:", proposalsError)
             return NextResponse.json({ error: "Failed to fetch proposals" }, { status: 500 })
         }
-
-        // Also get auth users count from Supabase auth
-        const { data: authUsers } = await adminClient.auth.admin.listUsers()
 
         // Calculate stats
         const userCount = users?.length || 0

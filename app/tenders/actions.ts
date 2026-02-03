@@ -109,75 +109,72 @@ export async function rejectTenderAction(tender: Tender, _userId: string): Promi
 import { getCachedTenders } from "@/lib/gov-api"
 
 export async function fetchTendersAction(): Promise<Tender[]> {
-    console.log("[TENDERS ACTION] Fetching tenders from cache...")
-    let tenders: Tender[] = []
+    console.log("[TENDERS ACTION] Fetching tenders...")
 
-    // 1. Fetch from Supabase cache (or fallback to live API internally)
-    const cachedData = await getCachedTenders()
-    if (cachedData && cachedData.length > 0) {
-        tenders = cachedData
-        console.log(`[TENDERS ACTION] Got ${tenders.length} tenders from cache`)
-    } else {
-        console.log("[TENDERS ACTION] Cache empty, using Mock Data")
-        const { MOCK_TENDERS } = await import("@/lib/mock-tenders")
-        tenders = MOCK_TENDERS
-    }
-
-    // 2. Filter out "Handled" tenders (Saved or Discarded) AND Personalize
-    try {
-        const cookieStore = await cookies()
-        const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            {
-                cookies: {
-                    getAll() { return cookieStore.getAll() },
-                    setAll(cookiesToSet) { try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } catch { } }
+    // 1. Parallelize Initial Fetches: Cache + Auth
+    // getCachedTenders is now cached via unstable_cache, so it's fast
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return cookies().then(c => c.getAll()) // Async cookies access fix
+                },
+                setAll(cookiesToSet) {
+                    try {
+                        cookies().then(c => {
+                            cookiesToSet.forEach(({ name, value, options }) =>
+                                c.set(name, value, options)
+                            )
+                        })
+                    } catch { }
                 }
             }
-        )
-        const { data: { user } } = await supabase.auth.getUser()
+        }
+    )
 
-        if (user) {
-            // Get IDs of tenders this user has touched
-            const { data: handledTenders } = await supabase
-                .from('saved_tenders')
-                .select('tender_data')
-                .eq('user_id', user.id)
+    const [tenders, authResult] = await Promise.all([
+        getCachedTenders().then(data => data && data.length > 0 ? data : import("@/lib/mock-tenders").then(m => m.MOCK_TENDERS)),
+        supabase.auth.getUser()
+    ])
 
-            if (handledTenders && handledTenders.length > 0) {
-                const handledIds = new Set(handledTenders.map((row: any) => row.tender_data.id))
-                tenders = tenders.filter(t => !handledIds.has(t.id))
+    const user = authResult.data.user
+    let finalTenders = tenders
+
+    // 2. If User Exists, Parallelize Profile & Saved Tenders Fetches
+    if (user) {
+        try {
+            const [handledResult, profileResult] = await Promise.all([
+                supabase.from('saved_tenders').select('tender_data').eq('user_id', user.id),
+                supabase.from('profiles').select('sectors, business_description').eq('id', user.id).single()
+            ])
+
+            // Filter Handled
+            if (handledResult.data && handledResult.data.length > 0) {
+                const handledIds = new Set(handledResult.data.map((row: any) => row.tender_data.id))
+                finalTenders = finalTenders.filter((t: Tender) => !handledIds.has(t.id))
             }
 
-            // --- PERSONALIZATION SCORING ---
-            // Fetch user profile for personalization
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('sectors, business_description')
-                .eq('id', user.id)
-                .single()
-
-            if (profile) {
+            // Personalize (Score)
+            if (profileResult.data) {
+                const profile = profileResult.data
                 const userSectors = (profile.sectors || []).map((s: string) => s.toLowerCase())
                 const descriptionKeywords = (profile.business_description || '')
                     .toLowerCase()
                     .split(/\s+/)
-                    .filter((w: string) => w.length > 4) // Filter short words
+                    .filter((w: string) => w.length > 4)
 
-                // Score each tender
-                const scoredTenders = tenders.map(tender => {
+                const scoredTenders = finalTenders.map((tender: Tender) => {
                     let score = 0
                     const tenderSector = tender.sector?.toLowerCase() || ''
                     const tenderDesc = tender.description?.toLowerCase() || ''
                     const tenderTitle = tender.title?.toLowerCase() || ''
 
-                    // Sector match = +50
                     if (userSectors.some((s: string) => tenderSector.includes(s) || s.includes(tenderSector))) {
                         score += 50
                     }
 
-                    // Keyword matches in description/title = +5 each
                     descriptionKeywords.forEach((kw: string) => {
                         if (tenderDesc.includes(kw) || tenderTitle.includes(kw)) {
                             score += 5
@@ -187,18 +184,14 @@ export async function fetchTendersAction(): Promise<Tender[]> {
                     return { ...tender, _score: score }
                 })
 
-                // Sort by score descending
-                scoredTenders.sort((a, b) => (b._score || 0) - (a._score || 0))
-
-                // Remove the internal score field before returning
-                tenders = scoredTenders.map(({ _score, ...rest }) => rest as Tender)
-
-                console.log(`[TENDERS ACTION] Personalized ${tenders.length} tenders for user`)
+                scoredTenders.sort((a: any, b: any) => (b._score || 0) - (a._score || 0))
+                finalTenders = scoredTenders.map(({ _score, ...rest }: any) => rest as Tender)
+                console.log(`[TENDERS ACTION] Personalized ${finalTenders.length} tenders for user`)
             }
+        } catch (err) {
+            console.warn("Personalization failed:", err)
         }
-    } catch (err) {
-        console.warn("Could not filter/personalize tenders (Auth/DB error):", err)
     }
 
-    return tenders
+    return finalTenders
 }

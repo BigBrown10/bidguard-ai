@@ -1,6 +1,8 @@
 import { Tender } from "./mock-tenders";
 import { createClient } from "@supabase/supabase-js";
 
+import { unstable_cache } from "next/cache";
+
 const BASE_URL = "https://www.contractsfinder.service.gov.uk/Published/Notices/OCDS/Search";
 
 // Use service role for backend cron jobs
@@ -100,32 +102,36 @@ export async function syncTendersToSupabase(): Promise<{ synced: number; errors:
 }
 
 // Fetch tenders from Supabase cache (for user-facing feed)
-export async function getCachedTenders(sector?: string): Promise<Tender[]> {
-    if (!supabaseAdmin) {
-        console.log("[CACHE] No Supabase, falling back to live API");
-        return fetchGovTenders(100);
-    }
+export const getCachedTenders = unstable_cache(
+    async (sector?: string): Promise<Tender[]> => {
+        if (!supabaseAdmin) {
+            console.log("[CACHE] No Supabase, falling back to live API");
+            return fetchGovTenders(100);
+        }
 
-    let query = supabaseAdmin
-        .from('tenders')
-        .select('*')
-        .order('fetched_at', { ascending: false })
-        .limit(500);
+        let query = supabaseAdmin
+            .from('tenders')
+            .select('*')
+            .order('fetched_at', { ascending: false })
+            .limit(500);
 
-    if (sector && sector !== 'all') {
-        query = query.ilike('sector', `%${sector}%`);
-    }
+        if (sector && sector !== 'all') {
+            query = query.ilike('sector', `%${sector}%`);
+        }
 
-    const { data, error } = await query;
+        const { data, error } = await query;
 
-    if (error || !data || data.length === 0) {
-        console.log("[CACHE] Cache miss, fetching from live API");
-        return fetchGovTenders(100);
-    }
+        if (error || !data || data.length === 0) {
+            console.log("[CACHE] Cache miss, fetching from live API");
+            return fetchGovTenders(100);
+        }
 
-    console.log(`[CACHE] Serving ${data.length} tenders from cache`);
-    return data as Tender[];
-}
+        console.log(`[CACHE] Serving ${data.length} tenders from cache`);
+        return data as Tender[];
+    },
+    ['tenders-feed-cache'],
+    { revalidate: 60, tags: ['tenders'] } // Cache for 60 seconds
+);
 
 function formatValue(amount: number): string {
     if (!amount) return "TBC";
