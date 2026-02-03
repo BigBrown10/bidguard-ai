@@ -70,46 +70,69 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         const checkAdmin = async () => {
-            if (!supabase) {
+            // Check for custom admin token first
+            const adminToken = localStorage.getItem("bidswipe_admin_token")
+
+            if (adminToken) {
+                // Determine authorization by trying to load data
+                setAuthorized(true) // Optimistic, will fail in loadData if invalid
+                await loadData(adminToken)
                 setLoading(false)
                 return
             }
 
-            const { data: { user } } = await supabase.auth.getUser()
-
-            if (!user || !ADMIN_EMAILS.includes((user.email || "").toLowerCase())) {
-                toast.error("Access Denied", { description: "You are not authorized to view this page." })
-                router.push("/")
-                return
+            // Fallback to Supabase Session (if logged in via Supabase)
+            if (supabase) {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user && ADMIN_EMAILS.includes((user.email || "").toLowerCase())) {
+                    setAuthorized(true)
+                    await loadData()
+                    setLoading(false)
+                    return
+                }
             }
 
-            setAuthorized(true)
-            await loadData()
+            toast.error("Access Denied", { description: "You are not authorized to view this page." })
+            router.push("/admin/login")
             setLoading(false)
         }
 
         checkAdmin()
     }, [router])
 
-    const loadData = async () => {
-        if (!supabase) return
-
+    const loadData = async (customToken?: string) => {
         try {
-            // Get current session token
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session?.access_token) {
-                toast.error("No session found")
+            let headers: Record<string, string> = {}
+
+            if (customToken) {
+                headers['Authorization'] = `Admin ${customToken}`
+            } else if (supabase) {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (session?.access_token) {
+                    headers['Authorization'] = `Bearer ${session.access_token}`
+                }
+            }
+
+            if (Object.keys(headers).length === 0) {
+                toast.error("No authentication found")
                 return
             }
 
-            // Fetch data from admin API (bypasses RLS)
-            const response = await fetch('/api/admin/data', {
-                headers: {
-                    'Authorization': `Bearer ${session.access_token}`
-                }
-            })
+            // The auth/route endpoint acts as the data fetcher for Admin tokens
+            // The data/route acts as the data fetcher for Bearer tokens
+            // This is a bit disjointed, but let's try to use the auth endpoint for data if likely using Admin token?
+            // Wait, api/admin/auth GET handler returns the same data structure!
+            // Let's use api/admin/auth if we have a Custom Token, and api/admin/data if we have a Bearer token.
+
+            const endpoint = customToken ? '/api/admin/auth' : '/api/admin/data'
+
+            const response = await fetch(endpoint, { headers })
 
             if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    setAuthorized(false)
+                    localStorage.removeItem("bidswipe_admin_token") // Clear invalid token
+                }
                 const errorData = await response.json()
                 toast.error("Failed to load admin data", { description: errorData.error })
                 return
@@ -126,9 +149,6 @@ export default function AdminDashboard() {
                 proposalStats: { total: 0, completed: 0, failed: 0, queued: 0 },
                 creditStats: { total: 0, used: 0 }
             })
-
-            // Log auth users vs profile users for debugging
-            console.log(`[Admin] Auth users: ${data.authUsers?.length}, Profile users: ${data.users?.length}`)
 
         } catch (error) {
             console.error("[Admin] Error loading data:", error)
