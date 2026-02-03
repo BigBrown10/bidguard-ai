@@ -14,11 +14,11 @@ export function AnimatedBackground() {
                 className="absolute inset-0"
                 animate={{
                     background: [
-                        "radial-gradient(600px circle at 0% 0%, rgba(0, 122, 255, 0.08), transparent 50%)",
-                        "radial-gradient(600px circle at 100% 0%, rgba(0, 122, 255, 0.08), transparent 50%)",
-                        "radial-gradient(600px circle at 100% 100%, rgba(56, 189, 248, 0.06), transparent 50%)",
-                        "radial-gradient(600px circle at 0% 100%, rgba(139, 92, 246, 0.06), transparent 50%)",
-                        "radial-gradient(600px circle at 0% 0%, rgba(0, 122, 255, 0.08), transparent 50%)",
+                        "radial-gradient(600px circle at 0% 0%, rgba(0, 122, 255, 0.15), transparent 50%)",
+                        "radial-gradient(600px circle at 100% 0%, rgba(0, 122, 255, 0.15), transparent 50%)",
+                        "radial-gradient(600px circle at 100% 100%, rgba(56, 189, 248, 0.12), transparent 50%)",
+                        "radial-gradient(600px circle at 0% 100%, rgba(139, 92, 246, 0.12), transparent 50%)",
+                        "radial-gradient(600px circle at 0% 0%, rgba(0, 122, 255, 0.15), transparent 50%)",
                     ],
                 }}
                 transition={{
@@ -32,7 +32,7 @@ export function AnimatedBackground() {
             <motion.div
                 className="absolute w-[500px] h-[500px] rounded-full"
                 style={{
-                    background: "radial-gradient(circle, rgba(0, 122, 255, 0.12) 0%, transparent 70%)",
+                    background: "radial-gradient(circle, rgba(0, 122, 255, 0.20) 0%, transparent 70%)",
                     filter: "blur(80px)",
                 }}
                 animate={{
@@ -52,7 +52,7 @@ export function AnimatedBackground() {
             <motion.div
                 className="absolute w-[400px] h-[400px] rounded-full"
                 style={{
-                    background: "radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 70%)",
+                    background: "radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%)",
                     filter: "blur(100px)",
                 }}
                 animate={{
@@ -72,7 +72,7 @@ export function AnimatedBackground() {
             <motion.div
                 className="absolute w-[300px] h-[300px] rounded-full"
                 style={{
-                    background: "radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%)",
+                    background: "radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%)",
                     filter: "blur(80px)",
                 }}
                 animate={{
