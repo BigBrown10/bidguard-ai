@@ -148,7 +148,7 @@ No code blocks, just JSON.`
  * Save post to database
  */
 async function savePost(post: BlogPost): Promise<boolean> {
-    const db = getSupabase()
+    const db = getSupabase() as any
 
     // Check if exists
     const { data: existing } = await db
@@ -172,7 +172,7 @@ async function savePost(post: BlogPost): Promise<boolean> {
 // GET - Check status
 export async function GET() {
     try {
-        const db = getSupabase()
+        const db = getSupabase() as any
         const { count } = await db
             .from("blog_posts")
             .select("*", { count: "exact", head: true })
@@ -190,18 +190,21 @@ export async function GET() {
 // POST - Generate new posts
 export async function POST(req: NextRequest) {
     try {
-        // Simple auth check
-        const authHeader = req.headers.get("authorization")
-        const adminToken = authHeader?.replace("Bearer ", "")
+        // Check if this is a cron call
+        const url = new URL(req.url)
+        const isCron = url.searchParams.get("cron") === "true"
+        
+        // Auth check (skip for cron)
+        if (!isCron) {
+            const authHeader = req.headers.get("authorization")
+            const adminToken = authHeader?.replace("Bearer ", "")
+            const isAdmin = adminToken && adminToken.length > 10
 
-        // Allow if admin token or if called from admin UI
-        const isAdmin = adminToken && adminToken.length > 10
-
-        if (!isAdmin) {
-            // Check for secret key in body
-            const body = await req.json().catch(() => ({}))
-            if (body.secret !== process.env.ADMIN_SECRET && body.secret !== "bidswipe_generate") {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+            if (!isAdmin) {
+                const body = await req.json().catch(() => ({}))
+                if (body.secret !== process.env.ADMIN_SECRET && body.secret !== "bidswipe_generate") {
+                    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+                }
             }
         }
 

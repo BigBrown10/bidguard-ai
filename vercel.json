@@ -1,16 +1,8 @@
 {
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "http://localhost:3000"
+  "crons": [
+    {
+      "path": "/api/news/generate?cron=true",
+      "schedule": "0 9 * * 1,3,5"
     }
-  },
-  "installCommand": "npm install --legacy-peer-deps",
-  "functions": {
-    "app/draft/page.tsx": {
-      "maxDuration": 60
-    },
-    "app/actions.ts": {
-      "maxDuration": 60
-    }
-  }
+  ]
 }
