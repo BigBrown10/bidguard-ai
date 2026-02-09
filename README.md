@@ -1,10 +1,9 @@
 # Bidswipe: Autonomous Government Procurement Agent
 
-Bidswipe AI (formerly Gravitic Observatory) is a next-generation procurement intelligence platform that uses autonomous AI agents to find, analyze, and bid on government contracts.
+Bidswipe AI (formerly BITGUARD) is a next-generation procurement intelligence platform that uses autonomous AI agents to find, analyze, and bid on government contracts in the UK.
 
 Powered by **Gemini 3.0 Flash**, our agents don't just write text—they research buyers, formulate win strategies, and draft compliant, high-scoring proposals automatically.
-
-![Bidswipe Interface](public/og-image.png)
+Visit the platform:https://bidwsipe.xyz
 
 ## 🚀 Key Functionalities
 
