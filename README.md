@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BidGuard AI: Autonomous Government Procurement Agent
 
-## Getting Started
+BidGuard AI (formerly Gravitic Observatory) is a next-generation procurement intelligence platform that uses autonomous AI agents to find, analyze, and bid on government contracts.
 
-First, run the development server:
+Powered by **Gemini 3.0 Flash**, our agents don't just write text—they research buyers, formulate win strategies, and draft compliant, high-scoring proposals automatically.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+![BidGuard Interface](public/og-image.png)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Key Functionalities
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🧠 Autonomous Proposal Generation
+Unlike standard "AI writers" that just autocomplete text, BidGuard uses a multi-step agentic workflow:
+1.  **Ingestion Agent**: Reads and indexes 50+ page tender documents.
+2.  **Research Agent**: Scours the web for buyer context, strategic plans, and competitor data.
+3.  **Strategy Agent**: Formulates "Win Themes" and identifies key evaluation criteria.
+4.  **Drafting Agent**: Writes the full proposal, adhering to strict word counts and compliance matrices.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### ⚡ Powered by Gemini 3.0
+We are one of the first platforms to integrate Google's **Gemini 3.0 Flash** model (experimental) as our default reasoning engine.
+-   **1M+ Token Context**: Allows us to ingest entire history of buyer procurement.
+-   **Reasoning Speed**: Generates complex, multi-page proposals in under 60 seconds.
+-   **Accuracy**: Significantly reduced hallucinations compared to previous generation models.
 
-## Learn More
+users can toggle between **Gemini 3.0 Flash** and **Perplexity Sonar** in the `Settings` panel to compare output styles.
 
-To learn more about Next.js, take a look at the following resources:
+### 📱 "Tinder for Tenders" Interface
+-   **Swipe Logic**: Rapidly qualify or disqualify opportunities with a simple swipe left/right interface.
+-   **Smart Filters**: Auto-classification of tenders into sectors (Healthcare, Defence, IT, Construction) using NLP.
+-   **Match Scoring**: Immediate visual feedback on how well a tender matches your company profile.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 📰 Automated Market Intelligence
+-   **Daily Scraper**: The `Black Ops` scraper monitors public portals 24/7.
+-   **News Agent**: Automatically generates daily blog posts and strategic briefs on market trends using the same Gemini 3.0 backbone.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Tech Stack
 
-## Deploy on Vercel
+-   **Frontend**: Next.js 15 (App Router), TailwindCSS, Framer Motion
+-   **Backend**: Supabase (PostgreSQL + Auth), Inngest (Serverless Queues)
+-   **AI**: LangChain, Google Gemini 3.0 Flash, Perplexity Sonar
+-   **Infrastructure**: Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📦 Getting Started
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/BigBrown10/bidguard-ai.git
+    cd bidguard-ai
+    ```
+
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    # Note: We use legacy peer deps due to bleeding edge LangChain/Next.js versions
+    npm install --legacy-peer-deps
+    ```
+
+3.  **Set up environment variables**:
+    Create a `.env.local` file with:
+    ```bash
+    NEXT_PUBLIC_SUPABASE_URL=...
+    SUPABASE_SERVICE_ROLE_KEY=...
+    GEMINI_API_KEY=...
+    PERPLEXITY_API_KEY=...
+    ```
+
+4.  **Run the development server**:
+    ```bash
+    npm run dev
+    ```
+
+## 📄 License
+
+Proprietary software. All rights reserved.
