@@ -444,7 +444,7 @@ export const generateAutonomousProposal = inngest.createFunction(
             if (!supabase) return null;
             const { data } = await supabase
                 .from('profiles')
-                .select('company_name, business_description, website, sectors, iso_certs, achievements')
+                .select('company_name, business_description, website, sectors, iso_certs, achievements, ai_model')
                 .eq('id', userId)
                 .single();
             return data;
