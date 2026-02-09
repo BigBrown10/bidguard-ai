@@ -1,32 +1,32 @@
-# BidGuard AI: Autonomous Government Procurement Agent
+# Bidswipe: Autonomous Government Procurement Agent
 
-BidGuard AI (formerly Gravitic Observatory) is a next-generation procurement intelligence platform that uses autonomous AI agents to find, analyze, and bid on government contracts.
+Bidswipe AI (formerly Gravitic Observatory) is a next-generation procurement intelligence platform that uses autonomous AI agents to find, analyze, and bid on government contracts.
 
 Powered by **Gemini 3.0 Flash**, our agents don't just write text—they research buyers, formulate win strategies, and draft compliant, high-scoring proposals automatically.
 
-![BidGuard Interface](public/og-image.png)
+![Bidswipe Interface](public/og-image.png)
 
 ## 🚀 Key Functionalities
 
 ### 🧠 Autonomous Proposal Generation
-Unlike standard "AI writers" that just autocomplete text, BidGuard uses a multi-step agentic workflow:
+Unlike standard "AI writers" that just autocomplete text, Bidswipe uses a multi-step agentic workflow:
 1.  **Ingestion Agent**: Reads and indexes 50+ page tender documents.
 2.  **Research Agent**: Scours the web for buyer context, strategic plans, and competitor data.
 3.  **Strategy Agent**: Formulates "Win Themes" and identifies key evaluation criteria.
 4.  **Drafting Agent**: Writes the full proposal, adhering to strict word counts and compliance matrices.
+5.  **Critique Agent**: Brutally scores a report and rewrite corrections
 
 ### ⚡ Powered by Gemini 3.0
 We are one of the first platforms to integrate Google's **Gemini 3.0 Flash** model (experimental) as our default reasoning engine.
--   **1M+ Token Context**: Allows us to ingest entire history of buyer procurement.
+-   **1M+ Token Context**: Allows us to ingest the entire history of buyer procurement.
 -   **Reasoning Speed**: Generates complex, multi-page proposals in under 60 seconds.
 -   **Accuracy**: Significantly reduced hallucinations compared to previous generation models.
 
-users can toggle between **Gemini 3.0 Flash** and **Perplexity Sonar** in the `Settings` panel to compare output styles.
 
 ### 📱 "Tinder for Tenders" Interface
--   **Swipe Logic**: Rapidly qualify or disqualify opportunities with a simple swipe left/right interface.
+-   **Swipe Logic**: Rapidly qualify or disqualify opportunities with a simple swipe PASS/BID interface.
 -   **Smart Filters**: Auto-classification of tenders into sectors (Healthcare, Defence, IT, Construction) using NLP.
--   **Match Scoring**: Immediate visual feedback on how well a tender matches your company profile.
+-   **Context and Auto generation**: Users can give context for their proposal or let the agent generate ideas based on company profile.
 
 ### 📰 Automated Market Intelligence
 -   **Daily Scraper**: The `Black Ops` scraper monitors public portals 24/7.
