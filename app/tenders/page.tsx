@@ -777,16 +777,12 @@ export default function TendersPage() {
                 onComplete={() => {
                     setThinkingModalOpen(false)
                     setPendingTender(null)
-                    toast.success("Agent Deployed Successfully", {
-                        description: "Proposal is being generated in the background.",
-                        action: {
-                            label: 'View Status',
-                            onClick: () => router.push('/favourites')
-                        }
-                    })
+                    // Redirect to favourites/dashboard to see the proposal in progress
+                    router.push('/favourites')
                 }}
             />
         </div>
     )
 }
+
 
