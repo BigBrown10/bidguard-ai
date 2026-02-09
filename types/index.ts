@@ -25,3 +25,12 @@ export interface Tender {
     description: string;
     location: string;
 }
+
+export interface UserProfile {
+    id: string;
+    email: string;
+    company_name?: string;
+    business_description?: string;
+    website?: string;
+    ai_model?: 'perplexity' | 'gemini-flash';
+}

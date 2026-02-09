@@ -10,36 +10,36 @@ import { AnimatedBackground } from "@/components/AnimatedBackground"
 const agentSteps = [
     {
         id: 1,
-        title: "Company Research",
-        description: "We ingest your case studies, certifications, and unique value propositions to build your bidding DNA.",
+        title: "Knowledge Ingestion",
+        description: "We vectorize your past performance, case studies, and certifications to construct a proprietary knowledge base.",
         icon: Building2,
     },
     {
         id: 2,
-        title: "RFP Intelligence",
-        description: "Our agents deconstruct the requirements document, identifying compliance traps and scoring criteria.",
+        title: "Requirement Decomposition",
+        description: "Agents parse complex RFP documents, extracting mandatory criteria, KPIs, and compliance thresholds.",
         icon: FileSearch,
     },
     {
         id: 3,
-        title: "Red Team Critique",
-        description: "An adversarial AI simulates evaluator scoring, flagging weaknesses before submission.",
+        title: "Adversarial Review",
+        description: "A specialized 'Red Team' model simulates a procurement evaluator to flag weaknesses before submission.",
         icon: ShieldAlert,
     },
     {
         id: 4,
-        title: "Autonomous Drafting",
-        description: "The final proposal is generated in your exact tone, grounded only in your real evidence.",
+        title: "Generative Drafting",
+        description: "The final response is synthesized in your corporate voice, strictly grounded in your verified evidence.",
         icon: PenTool,
     },
 ]
 
 // Feature highlights data
 const featureHighlights = [
-    { icon: Edit, title: "Edit Proposals", description: "Refine AI-generated content to match your voice" },
-    { icon: Star, title: "Rate Quality", description: "Train the system with your feedback" },
-    { icon: Download, title: "Download PDF", description: "Export submission-ready documents" },
-    { icon: Sparkles, title: "AI Match Scoring", description: "See how well you fit each tender" },
+    { icon: Edit, title: "Tone Engineering", description: "Calibrate AI output to match your brand voice" },
+    { icon: Star, title: "RLHF Training", description: "System improves with every rating you provide" },
+    { icon: Download, title: "Submission Ready", description: "Export perfectly formatted PDF/Word docs" },
+    { icon: Sparkles, title: "Compliance Matrix", description: "Automated requirements mapping & scoring" },
 ]
 
 interface LandingPageProps {
@@ -64,10 +64,10 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                         className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-lg mb-10"
                     >
                         <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
-                        <span className="text-xs font-medium uppercase tracking-widest text-white/60">Tenders Are Live!</span>
+                        <span className="text-xs font-medium uppercase tracking-widest text-white/70">Procurement Intelligence Active</span>
                     </motion.div>
 
                     <motion.h1
@@ -76,8 +76,8 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                         transition={{ duration: 0.7, delay: 0.1 }}
                         className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-[1.1]"
                     >
-                        Win Government Contracts <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-400 to-primary">On Autopilot.</span>
+                        Secure Government Contracts <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-300 to-primary">With Autonomous Precision.</span>
                     </motion.h1>
 
                     <motion.p
@@ -86,7 +86,7 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                         transition={{ duration: 0.7, delay: 0.25 }}
                         className="text-base md:text-lg text-white/50 max-w-xl mx-auto leading-relaxed mb-12"
                     >
-                        Deploy autonomous <strong className="text-white/70">Bid Agents</strong> to monitor live tenders, analyze requirements, and generate winning proposals — in minutes.
+                        Deploy specialized <strong className="text-white/80">AI Agents</strong> to monitor requirements, analyze tenders, and engineer winning proposals. The infrastructure for modern contractors.
                     </motion.p>
 
                     <motion.div
@@ -95,21 +95,20 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                         transition={{ duration: 0.7, delay: 0.4 }}
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center"
                     >
-                        {/* PRIMARY BUTTON - Apple Style */}
+                        {/* PRIMARY BUTTON */}
                         <Link href="/tenders" prefetch={true} onMouseEnter={() => {
-                            // Aggressively prefetch the route on hover
-                            // Note: Next.js Link handles viewport prefetching, but hover adds intent signal
+                            // Preload tenders on hover intent
                         }}>
-                            <button className="group relative h-14 px-8 rounded-full bg-gradient-to-b from-white to-gray-200 text-black text-sm font-semibold tracking-wide flex items-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.8)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
-                                Find Tenders
+                            <button className="group relative h-14 px-8 rounded-full bg-white text-black text-sm font-semibold tracking-wide flex items-center gap-2 shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                                Access Intelligence Portal
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                             </button>
                         </Link>
 
-                        {/* SECONDARY BUTTON - Glass Style */}
+                        {/* SECONDARY BUTTON */}
                         <Link href="/register">
-                            <button className="h-14 px-8 rounded-full bg-white/5 text-white text-sm font-medium tracking-wide border border-white/10 backdrop-blur-lg hover:bg-white/10 hover:border-white/20 transition-all duration-200">
-                                Start Free Trial
+                            <button className="h-14 px-8 rounded-full bg-white/5 text-white/80 text-sm font-medium tracking-wide border border-white/10 backdrop-blur-lg hover:bg-white/10 hover:border-white/20 transition-all duration-200">
+                                Initialize System
                             </button>
                         </Link>
                     </motion.div>
@@ -147,19 +146,19 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                                     className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-6 shadow-2xl"
                                 >
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-xs font-medium text-primary uppercase tracking-wide">Healthcare</span>
-                                        <span className="text-xs text-white/40">£2.5M</span>
+                                        <span className="text-xs font-medium text-primary uppercase tracking-wide">Healthcare Operations</span>
+                                        <span className="text-xs text-white/40">£2.5M - £5M</span>
                                     </div>
-                                    <h3 className="text-lg font-bold text-white mb-2">NHS Digital Transformation</h3>
-                                    <p className="text-sm text-white/50 mb-4">End-to-end digital infrastructure modernization...</p>
+                                    <h3 className="text-lg font-bold text-white mb-2">NHS Digital Infrastructure</h3>
+                                    <p className="text-sm text-white/50 mb-4">Strategic procurement for end-to-end digital modernization and cloud migration...</p>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-white/30">Deadline: 14 days</span>
+                                        <span className="text-xs text-white/30">Contract Duration: 3 Years</span>
                                         <div className="flex gap-2">
-                                            <div className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center">
-                                                <span className="text-red-400 text-lg">✕</span>
+                                            <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                                                <span className="text-red-400/50 text-lg">✕</span>
                                             </div>
-                                            <div className="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center">
-                                                <span className="text-green-400 text-lg">✓</span>
+                                            <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                                <span className="text-emerald-400 text-lg">✓</span>
                                             </div>
                                         </div>
                                     </div>
@@ -172,7 +171,7 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                                     transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
                                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                                 >
-                                    <ArrowLeftRight className="w-12 h-12 text-primary/50" />
+                                    <ArrowLeftRight className="w-12 h-12 text-primary/30" />
                                 </motion.div>
                             </div>
                         </motion.div>
@@ -185,12 +184,12 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                             className="space-y-8"
                         >
                             <div>
-                                <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">Smart Contract Matching</span>
+                                <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-4 block">Strategic Alignment</span>
                                 <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-4">
-                                    Swipe Through <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Opportunities</span>
+                                    High-Velocity <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Tender Triaging</span>
                                 </h2>
                                 <p className="text-white/50 leading-relaxed">
-                                    Browse live government contracts with a swipe. Filter by your industry, see match scores instantly, and get proposals generated before your competitors even know the tender exists.
+                                    Identify high-value opportunities instantly. Our algorithms score every tender against your operational capabilities, removing the noise so you can focus on viable contracts.
                                 </p>
                             </div>
 
@@ -199,25 +198,25 @@ export function LandingPage({ newsSection }: LandingPageProps) {
                                     <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
                                         <Filter className="w-5 h-5 text-primary" />
                                     </div>
-                                    <span className="text-white/80">Filter by your industry</span>
+                                    <span className="text-white/80">Vector-based qualification</span>
                                 </li>
                                 <li className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
                                         <Clock className="w-5 h-5 text-primary" />
                                     </div>
-                                    <span className="text-white/80">See opportunities first</span>
+                                    <span className="text-white/80">Real-time procurement feed</span>
                                 </li>
                                 <li className="flex items-center gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
                                         <Sparkles className="w-5 h-5 text-primary" />
                                     </div>
-                                    <span className="text-white/80">AI match scoring</span>
+                                    <span className="text-white/80">Automated "Go / No-Go" Analysis</span>
                                 </li>
                             </ul>
 
                             <Link href="/tenders" prefetch={true}>
                                 <button className="h-12 px-6 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
-                                    Browse Tenders →
+                                    View Live Opportunities →
                                 </button>
                             </Link>
                         </motion.div>

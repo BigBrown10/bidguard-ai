@@ -16,6 +16,7 @@ import { IdeaInjectionModal } from "@/components/IdeaInjectionModal"
 import { CompanyDetailsGate } from "@/components/CompanyDetailsGate"
 import { QualificationModal } from "@/components/QualificationModal"
 import { qualifyTender, QualificationResult } from "@/app/tenders/qualify"
+import { AgentThinkingModal } from "@/components/AgentThinkingModal"
 
 export default function TendersPage() {
     const router = useRouter()
@@ -37,6 +38,7 @@ export default function TendersPage() {
     const [pendingTender, setPendingTender] = useState<Tender | null>(null)
     const [showOnboarding, setShowOnboarding] = useState(false)
     const [profileComplete, setProfileComplete] = useState(false)
+    const [thinkingModalOpen, setThinkingModalOpen] = useState(false)
 
     // Swipe history for undo functionality
     const [swipeHistory, setSwipeHistory] = useState<Tender[]>([])
@@ -349,50 +351,36 @@ export default function TendersPage() {
         }
     }
 
-    // V3: Handle autonomous proposal generation
     const handleStartProposal = async (ideas: string) => {
         if (!pendingTender || !userId) return
 
         setIdeaModalOpen(false)
+        setThinkingModalOpen(true) // Start the visualization
 
         // Save tender to favourites
         await saveTenderAction(pendingTender, userId)
 
         // Start autonomous proposal generation via Inngest
-        toast.promise(async () => {
-            const response = await fetch('/api/proposals/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tenderId: pendingTender.id,
-                    tenderTitle: pendingTender.title,
-                    tenderBuyer: pendingTender.buyer,
-                    ideaInjection: ideas
-                })
+        // We run this in background while visualization plays
+        fetch('/api/proposals/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tenderId: pendingTender.id,
+                tenderTitle: pendingTender.title,
+                tenderBuyer: pendingTender.buyer,
+                ideaInjection: ideas
             })
-
+        }).then(async (response) => {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}))
                 console.error('[Proposal] API Error:', response.status, errorData)
-                throw new Error(errorData.error || `Failed to start proposal (${response.status})`)
+                toast.error(errorData.error || "Failed to start proposal")
             }
-            return response.json()
-        }, {
-            loading: 'Queuing autonomous proposal...',
-            success: (data) => {
-                return {
-                    message: 'Superagent is preparing your Bid!',
-                    description: 'Track progress in My Tenders',
-                    action: {
-                        label: 'View My Tenders',
-                        onClick: () => router.push('/favourites')
-                    }
-                }
-            },
-            error: (err) => err.message || 'Failed to start proposal'
+        }).catch(err => {
+            console.error("Proposal start failed", err)
+            toast.error("Failed to start proposal agent")
         })
-
-        setPendingTender(null)
     }
 
     const handleSkipIdeas = () => {
@@ -780,6 +768,23 @@ export default function TendersPage() {
             <TenderDetailsModal
                 tender={selectedTender}
                 onClose={() => setSelectedTender(null)}
+            />
+
+            <AgentThinkingModal
+                isOpen={thinkingModalOpen}
+                tenderTitle={pendingTender?.title || "Tender"}
+                onClose={() => setThinkingModalOpen(false)}
+                onComplete={() => {
+                    setThinkingModalOpen(false)
+                    setPendingTender(null)
+                    toast.success("Agent Deployed Successfully", {
+                        description: "Proposal is being generated in the background.",
+                        action: {
+                            label: 'View Status',
+                            onClick: () => router.push('/favourites')
+                        }
+                    })
+                }}
             />
         </div>
     )

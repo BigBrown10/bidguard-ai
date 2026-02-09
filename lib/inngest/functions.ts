@@ -7,6 +7,7 @@ import { perplexitySonarPro } from "@/lib/perplexity";
 import { TENDER_MASTERY_GUIDE } from "@/lib/knowledge/tender-mastery";
 import { syncTendersToSupabase } from "@/lib/gov-api";
 import { sendProposalCompleteEmail, sendProposalFailedEmail, sendNewTenderAlertEmail } from "@/lib/email";
+import { geminiFlash, geminiPro } from "@/lib/ai/gemini";
 
 // =========================================
 // CRON: Hourly Tender Sync
@@ -449,13 +450,18 @@ export const generateAutonomousProposal = inngest.createFunction(
             return data;
         });
 
+        // 3. Determine Model to Use
+        const aiModel = profile?.ai_model === 'gemini-flash' ? geminiFlash : perplexitySonarReasoning;
+        const writerModel = profile?.ai_model === 'gemini-flash' ? geminiFlash : perplexitySonarPro;
+        console.log(`[MODEL] Using ${profile?.ai_model || 'perplexity'} for generation`);
+
         // =====================================================
         // CALL 0.5: RESEARCH AGENT (Buyer Intelligence)
         // =====================================================
         const buyerResearch = await step.run("research-buyer", async () => {
             console.log(`[RESEARCH] analyzing ${tenderBuyer}...`);
             const researchPrompt = PromptTemplate.fromTemplate(researchTemplate);
-            const chain = researchPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+            const chain = researchPrompt.pipe(aiModel).pipe(new StringOutputParser());
 
             try {
                 const result = await chain.invoke({
@@ -495,7 +501,7 @@ export const generateAutonomousProposal = inngest.createFunction(
                 - THEME 3: [Strategy Insight]
             `);
 
-            const chain = analystPrompt.pipe(perplexitySonarReasoning).pipe(new StringOutputParser());
+            const chain = analystPrompt.pipe(aiModel).pipe(new StringOutputParser());
             try {
                 return await chain.invoke({ tenderBuyer, tenderTitle });
             } catch (e) {
@@ -594,7 +600,7 @@ export const generateAutonomousProposal = inngest.createFunction(
                 OUTPUT ONLY THE FINAL PROPOSAL TEXT (no research notes, no strategy notes):
             `);
 
-            const chain = megaPrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+            const chain = megaPrompt.pipe(writerModel).pipe(new StringOutputParser());
             const result = await chain.invoke({
                 tenderTitle,
                 tenderBuyer,
@@ -674,7 +680,7 @@ export const generateAutonomousProposal = inngest.createFunction(
                 [Full improved proposal text here]
             `);
 
-            const chain = megaCritiquePrompt.pipe(perplexitySonarPro).pipe(new StringOutputParser());
+            const chain = megaCritiquePrompt.pipe(writerModel).pipe(new StringOutputParser());
             const result = await chain.invoke({
                 draft: draftContent,
                 wordLimit: targetWordCount,

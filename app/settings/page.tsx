@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { Loader2, User, Mail, Building2, Trash2, LogOut, ArrowLeft } from "lucide-react"
+import { Loader2, User, Mail, Building2, Trash2, LogOut, ArrowLeft, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { CompanyProfileForm } from "@/components/CompanyProfileForm"
 
@@ -157,6 +157,59 @@ export default function SettingsPage() {
                                         loadUser()
                                     }}
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* AI Model Preference */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-purple-400" /> AI Model Configuration
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <p className="text-white/60 text-sm">
+                                Select the underlying AI model used for generating your proposals.
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Gemini 3 (Flash) */}
+                                <div
+                                    onClick={async () => {
+                                        if (!supabase) return;
+                                        setLoading(true); // Re-use loading or add specific state
+                                        await supabase.from('profiles').update({ ai_model: 'gemini-flash' }).eq('id', user.id);
+                                        setProfile({ ...profile, ai_model: 'gemini-flash' });
+                                        setLoading(false);
+                                    }}
+                                    className={`cursor-pointer p-4 rounded-xl border transition-all ${profile?.ai_model === 'gemini-flash' ? 'bg-purple-500/10 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-white">Gemini 3.0 Flash</h4>
+                                        {profile?.ai_model === 'gemini-flash' && <div className="h-2 w-2 rounded-full bg-purple-500 shadow-[0_0_5px_#a855f7]" />}
+                                    </div>
+                                    <p className="text-xs text-white/50 mb-3">Google's latest high-speed reasoning model. Recommended for fast, accurate generation.</p>
+                                    <span className="text-[10px] font-mono bg-white/10 px-2 py-0.5 rounded text-white/70">DEFAULT</span>
+                                </div>
+
+                                {/* Perplexity (Legacy) */}
+                                <div
+                                    onClick={async () => {
+                                        if (!supabase) return;
+                                        setLoading(true);
+                                        await supabase.from('profiles').update({ ai_model: 'perplexity' }).eq('id', user.id);
+                                        setProfile({ ...profile, ai_model: 'perplexity' });
+                                        setLoading(false);
+                                    }}
+                                    className={`cursor-pointer p-4 rounded-xl border transition-all ${profile?.ai_model === 'perplexity' ? 'bg-blue-500/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'bg-white/5 border-white/10 hover:border-white/30'}`}
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h4 className="font-bold text-white">Perplexity Sonar</h4>
+                                        {profile?.ai_model === 'perplexity' && <div className="h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_5px_#3b82f6]" />}
+                                    </div>
+                                    <p className="text-xs text-white/50 mb-3">Legacy model with real-time web search capabilities.</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
