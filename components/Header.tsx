@@ -152,7 +152,7 @@ export function Header() {
                                             </Link>
 
                                             <Link
-                                                href="/onboarding"
+                                                href="/settings"
                                                 className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 transition-colors"
                                                 onClick={() => setMenuOpen(false)}
                                             >

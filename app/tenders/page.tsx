@@ -39,6 +39,7 @@ export default function TendersPage() {
     const [showOnboarding, setShowOnboarding] = useState(false)
     const [profileComplete, setProfileComplete] = useState(false)
     const [thinkingModalOpen, setThinkingModalOpen] = useState(false)
+    const [createdProposalId, setCreatedProposalId] = useState<string | null>(null)
 
     // Swipe history for undo functionality
     const [swipeHistory, setSwipeHistory] = useState<Tender[]>([])
@@ -356,6 +357,7 @@ export default function TendersPage() {
 
         setIdeaModalOpen(false)
         setThinkingModalOpen(true) // Start the visualization
+        setCreatedProposalId(null) // Reset
 
         // Save tender to favourites
         await saveTenderAction(pendingTender, userId)
@@ -372,14 +374,20 @@ export default function TendersPage() {
                 ideaInjection: ideas
             })
         }).then(async (response) => {
+            const data = await response.json().catch(() => ({}))
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}))
-                console.error('[Proposal] API Error:', response.status, errorData)
-                toast.error(errorData.error || "Failed to start proposal")
+                console.error('[Proposal] API Error:', response.status, data)
+                toast.error(data.error || "Failed to start proposal")
+                setThinkingModalOpen(false) // Close if error
+            } else {
+                if (data.proposalId) {
+                    setCreatedProposalId(data.proposalId)
+                }
             }
         }).catch(err => {
             console.error("Proposal start failed", err)
             toast.error("Failed to start proposal agent")
+            setThinkingModalOpen(false)
         })
     }
 
@@ -775,10 +783,14 @@ export default function TendersPage() {
                 tenderTitle={pendingTender?.title || "Tender"}
                 onClose={() => setThinkingModalOpen(false)}
                 onComplete={() => {
-                    setThinkingModalOpen(false)
-                    setPendingTender(null)
-                    // Redirect to favourites/dashboard to see the proposal in progress
-                    router.push('/favourites')
+                    // Redirect to result page directly
+                    // Keep modal open during redirect to prevent flash
+                    if (createdProposalId) {
+                        router.push(`/result?id=${createdProposalId}`)
+                    } else {
+                        // Fallback in case ID fetch failed, go to list
+                        router.push('/favourites')
+                    }
                 }}
             />
         </div>

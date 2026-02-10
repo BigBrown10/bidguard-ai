@@ -1,21 +1,24 @@
--- ⚡ Performance Indexes
--- Run this in your Supabase SQL Editor to speed up query performance
+-- ==========================================
+-- PERFORMANCE OPTIMIZATION INDEXES
+-- Checklist Item: 5. Index Your "Where" Filters
+-- ==========================================
 
--- 1. Speed up filtering tenders by sector (used in Tenders Page filtering)
-CREATE INDEX IF NOT EXISTS idx_tenders_sector ON tenders USING btree (sector);
+-- TENDERS TABLE
+-- Used heavily in the main feed filtering
+CREATE INDEX IF NOT EXISTS idx_tenders_sector ON tenders(sector);
+CREATE INDEX IF NOT EXISTS idx_tenders_value ON tenders(value);
+-- Composite index for the specific feed query: "active tenders by sector sorted by time"
+CREATE INDEX IF NOT EXISTS idx_tenders_feed ON tenders(sector, fetched_at DESC);
 
--- 2. Speed up filtering tenders by value (used in price filter)
--- Note: 'value' column is text/varchar in some schemas, if so, this helps exact matches or you might need a functional index
-CREATE INDEX IF NOT EXISTS idx_tenders_value ON tenders USING btree (value);
+-- PROFILES TABLE
+-- Used in Auth checks and middleware (Usually queried by ID, which is PK and indexed)
+-- Note: Email is stored in auth.users, not profiles public table.
 
--- 3. Speed up fetching saved tenders for a user (used in personalization/exclusion)
-CREATE INDEX IF NOT EXISTS idx_saved_tenders_user_id ON saved_tenders USING btree (user_id);
+-- PROPOSALS TABLE
+-- Used in "My Proposals" dashboard list
+CREATE INDEX IF NOT EXISTS idx_proposals_user_id ON proposals(user_id);
+CREATE INDEX IF NOT EXISTS idx_proposals_tender_id ON proposals(tender_id);
+CREATE INDEX IF NOT EXISTS idx_proposals_created_at ON proposals(created_at DESC);
 
--- 4. Speed up profile lookup (middleware & headers)
-CREATE INDEX IF NOT EXISTS idx_profiles_id ON profiles USING btree (id);
-
--- 5. Speed up checking if a tender is already in a proposal
-CREATE INDEX IF NOT EXISTS idx_proposals_tender_id ON proposals USING btree (tender_id);
-
--- 6. Speed up admin dashboard stats (filtering by status)
-CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals USING btree (status);
+-- ANALYTICS / LOGS (If applicable, generally good practice)
+-- CREATE INDEX IF NOT EXISTS idx_logs_created_at ON logs(created_at DESC);

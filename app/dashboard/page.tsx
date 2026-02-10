@@ -65,84 +65,94 @@ export default function DashboardPage() {
     const sectors = ['All', ...Array.from(new Set(savedTenders.map(t => t.tender_data?.sector || 'Other')))]
     const filteredTenders = filterSector === 'All' ? savedTenders : savedTenders.filter(t => t.tender_data?.sector === filterSector)
 
-    // Fetch saved tenders
+    // Consolidated Data Fetching
     useEffect(() => {
-        const fetchSaved = async () => {
+        let isMounted = true
+
+        const loadDashboardData = async () => {
             if (!supabase) return
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
-            setUser(user)
 
-            const { data, error } = await supabase
-                .from('saved_tenders')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-
-            if (data) setSavedTenders(data)
-            setLoading(false)
-        }
-        fetchSaved()
-    }, [])
-
-    // Fetch proposals (with polling for active jobs)
-    useEffect(() => {
-        const fetchProposals = async () => {
             try {
-                const res = await fetch('/api/proposals/list')
-                const data = await res.json()
-                if (data.proposals) {
-                    setProposals(data.proposals)
+                // 1. Get User
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user && isMounted) {
+                    setLoading(false)
+                    return
+                }
+                if (isMounted) setUser(user)
+
+                // 2. Fetch Tenders & Proposals in Parallel
+                const [savedRes, proposalsRes] = await Promise.all([
+                    supabase
+                        .from('saved_tenders')
+                        .select('*')
+                        .eq('user_id', user!.id)
+                        .order('created_at', { ascending: false }),
+                    fetch('/api/proposals/list')
+                ])
+
+                if (isMounted) {
+                    if (savedRes.data) setSavedTenders(savedRes.data)
+
+                    if (proposalsRes.ok) {
+                        const pData = await proposalsRes.json()
+                        if (pData.proposals) setProposals(pData.proposals)
+                    }
                 }
             } catch (e) {
-                console.error('Failed to fetch proposals:', e)
+                console.error("Dashboard Load Error:", e)
             } finally {
-                setProposalsLoading(false)
+                if (isMounted) {
+                    setLoading(false)
+                    setProposalsLoading(false)
+                }
             }
         }
 
-        fetchProposals()
+        loadDashboardData()
 
-        // Poll every 5 seconds
-        const interval = setInterval(() => {
-            // Track completions for notifications
-            const completed = proposals.filter(p => p.status === 'complete')
-            const prevCompleted = previousProposalsRef.current.filter(p => p.status === 'complete')
+        // Poll for updates (Proposals only)
+        const interval = setInterval(async () => {
+            if (!document.hidden) {
+                try {
+                    const res = await fetch('/api/proposals/list')
+                    const data = await res.json()
+                    if (data.proposals && isMounted) {
+                        setProposals(prev => {
+                            // Check for new completions
+                            const completed = data.proposals.filter((p: Proposal) => p.status === 'complete')
+                            const prevCompleted = prev.filter(p => p.status === 'complete')
 
-            if (completed.length > prevCompleted.length && previousProposalsRef.current.length > 0) {
-                // Find the new one(s)
-                const newIds = completed.map(p => p.id).filter(id => !prevCompleted.find(p => p.id === id))
-                newIds.forEach(id => {
-                    const prop = proposals.find(p => p.id === id)
-                    if (prop) {
-                        toast.success("Mission Accomplished", {
-                            description: `Proposal for "${prop.tender_title}" is ready for review.`,
-                            action: {
-                                label: "View",
-                                onClick: () => window.location.href = `/result?id=${prop.id}`
-                            }
+                            // Simple diff check for toast
+                            const newIds = completed.map((p: Proposal) => p.id).filter((id: string) => !prevCompleted.find(p => p.id === id))
+
+                            newIds.forEach((id: string) => {
+                                const prop = data.proposals.find((p: Proposal) => p.id === id)
+                                if (prop) {
+                                    toast.success("Mission Accomplished", {
+                                        description: `Proposal for "${prop.tender_title}" is ready for review.`,
+                                        action: {
+                                            label: "View",
+                                            onClick: () => window.location.href = `/result?id=${prop.id}`
+                                        }
+                                    })
+                                }
+                            })
+
+                            return data.proposals
                         })
                     }
-                })
+                } catch (e) {
+                    console.error("Polling Error:", e)
+                }
             }
-            previousProposalsRef.current = proposals
-
         }, 5000)
 
-        // Initial fetch
-        fetchProposals()
-
-        return () => clearInterval(interval)
-    }, [proposals]) // Use proposals state as dependency if we want to react to state updates, but here we are setting state inside.
-    // Actually the interval approach combined with fetching inside implies we don't need prop dependency for the interval, but we do for the ref check.
-    // Better pattern: Just do the check inside the fetch success block.
-    // I will refactor to do the check inside `fetchProposals` in the next replacement block for cleanliness, or just stick to this.
-    // Let's stick to modifying the existing effect but refined:
-    // We can't rely on `proposals` dependency if we are setting it, it might cause loops or stale closures in interval.
-
-    // NEW PLAN:
-    // Modify `useEffect` to use a ref for the polling interval and manage the check inside the `fetchProposals` function itself.
-    // See the larger replacement below.
+        return () => {
+            isMounted = false
+            clearInterval(interval)
+        }
+    }, [])
 
     const initiateProposal = (tender: Tender) => {
         const params = new URLSearchParams({

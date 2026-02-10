@@ -97,7 +97,6 @@ async function run() {
                         value: item.value,
                         source_url: item.link,
                         sector: 'Defence/Health',
-                        status: 'active',
                         fetched_at: new Date().toISOString()
                         // unique ID generation would happen here based on title/buyer hash
                     }, { onConflict: 'title' }); // Using title as temp key for mock
